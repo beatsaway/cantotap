@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech Emoji Interface</title>
+    <style>
+        /* Modern Dutch Minimalist Design System - Elder-Friendly */
+        :root {
+            --color-bg-primary: #FAFAF9;
+            --color-bg-secondary: #FFFFFF;
+            --color-surface: #FFFFFF;
+            --color-border: #D0D0D0;
+            --color-text-primary: #000000;
+            --color-text-secondary: #4A4A4A;
+            --color-accent: #1E5A7A;
+            --color-accent-hover: #164A66;
+            --color-active: #1E5A7A;
+            --color-active-bg: #D4E6F0;
+            --color-active-text: #000000;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --spacing-xs: 6px;
+            --spacing-sm: 12px;
+            --spacing-md: 20px;
+            --spacing-lg: 32px;
+            --spacing-xl: 40px;
+            --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+            /* Elder-friendly sizes */
+            --font-size-base: 18px;
+            --font-size-large: 22px;
+            --font-size-xlarge: 28px;
+            --touch-target-min: 56px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            background: var(--color-bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: var(--font-size-base);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Improve scrolling for mobile */
+        .audio-grid::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .audio-grid::-webkit-scrollbar-track {
+            background: var(--color-bg-primary);
+        }
+
+        .audio-grid::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 6px;
+        }
+
+        .audio-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--color-text-secondary);
+        }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--color-bg-secondary);
+            border-bottom: 2px solid var(--color-border);
+            position: relative;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            flex-shrink: 0;
+        }
+
+        .category-tab {
+            padding: var(--spacing-md) var(--spacing-xl);
+            font-size: var(--font-size-large);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            background: var(--color-surface);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            color: var(--color-text-primary);
+            position: relative;
+            min-height: var(--touch-target-min);
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .category-tab:hover {
+            background: var(--color-bg-primary);
+            border-color: var(--color-accent);
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .category-tab.active {
+            background: var(--color-active-bg);
+            border-color: var(--color-active);
+            color: var(--color-active-text);
+            font-weight: 700;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .category-tab:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .info-button {
+            position: fixed;
+            bottom: var(--spacing-md);
+            right: var(--spacing-md);
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            opacity: 0.7;
+        }
+
+        .info-button:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--color-accent);
+            box-shadow: var(--shadow-md);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .info-button:active {
+            transform: scale(0.95);
+        }
+
+        .info-button:focus-visible {
+            outline: 2px solid var(--color-active);
+            outline-offset: 2px;
+            opacity: 1;
+        }
+
+        @media (max-width: 767px) {
+            .category-tabs {
+                gap: var(--spacing-xs);
+                padding: var(--spacing-sm) var(--spacing-xs);
+            }
+            
+            .category-tab {
+                flex: 1;
+                min-width: 0;
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm) var(--spacing-xs);
+                min-height: 44px;
+            }
+
+            .info-button {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                bottom: var(--spacing-sm);
+                right: var(--spacing-sm);
+            }
+        }
+
+        .audio-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            gap: 8px;
+            background: var(--color-bg-primary);
+            padding: 8px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 480px) {
+            .audio-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .audio-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 12px;
+                padding: 12px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .audio-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 14px;
+                padding: 14px;
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .audio-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 16px;
+                padding: 16px;
+                max-width: 1600px;
+                margin: 0 auto;
+            }
+        }
+
+        .audio-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 100%;
+            height: 140px;
+            min-width: 0;
+            min-height: 140px;
+            max-height: 140px;
+            padding: 12px 8px;
+            transition: all var(--transition-base);
+            position: relative;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 767px) {
+            .audio-item {
+                height: 120px;
+                min-height: 120px;
+                max-height: 120px;
+                padding: 10px 6px;
+            }
+        }
+
+        .audio-item:hover {
+            background: var(--color-bg-primary);
+            border-color: var(--color-accent);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .audio-item:active {
+            transform: translateY(-1px);
+            transition: transform var(--transition-fast);
+        }
+
+        .audio-item.playing {
+            background: var(--color-active-bg);
+            border-color: var(--color-active);
+            border-width: 3px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .emoji {
+            font-size: 56px;
+            line-height: 1;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+            transition: transform var(--transition-base);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 767px) {
+            .emoji {
+                font-size: 40px;
+                margin-bottom: 4px;
+            }
+        }
+
+        .audio-item:hover .emoji {
+            transform: scale(1.08);
+        }
+
+        .audio-item.playing .emoji {
+            animation: subtlePulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes subtlePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.12);
+            }
+        }
+
+        .filename {
+            margin-top: 0;
+            font-size: 18px;
+            color: var(--color-text-primary);
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            max-width: 100%;
+            z-index: 2;
+            pointer-events: none;
+            letter-spacing: 0.02em;
+            line-height: 1.3;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        @media (max-width: 767px) {
+            .filename {
+                font-size: 16px;
+                line-height: 1.2;
+            }
+        }
+
+        .audio-item:hover .filename {
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .audio-item.playing .filename {
+            color: var(--color-active);
+            font-weight: 700;
+        }
+
+        /* Refined animations - subtle and purposeful */
+        .emoji-face.animate {
+            animation: gentleBounce 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes gentleBounce {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-4px) scale(1.02);
+            }
+        }
+
+        .emoji-face-updown.animate {
+            animation: faceUpDown 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes faceUpDown {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            25% {
+                transform: translateY(-6px);
+            }
+            75% {
+                transform: translateY(6px);
+            }
+        }
+
+        .emoji-face-leftright.animate {
+            animation: faceLeftRight 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes faceLeftRight {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-6px);
+            }
+            75% {
+                transform: translateX(6px);
+            }
+        }
+
+        .emoji-hand.animate {
+            animation: subtleWave 2.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes subtleWave {
+            0%, 100% {
+                transform: rotate(0deg) scale(1);
+            }
+            25% {
+                transform: rotate(-2deg) scale(1.01);
+            }
+            75% {
+                transform: rotate(2deg) scale(1.01);
+            }
+        }
+
+        .emoji-object.animate {
+            animation: gentleFloat 3.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-6px) scale(1.015);
+            }
+        }
+
+        .emoji-arrow-up.animate {
+            animation: arrowUp 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes arrowUp {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .emoji-arrow-down.animate {
+            animation: arrowDown 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes arrowDown {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(5px);
+            }
+        }
+
+        .emoji-arrow-left.animate {
+            animation: arrowLeft 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes arrowLeft {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(-5px);
+            }
+        }
+
+        .emoji-arrow-right.animate {
+            animation: arrowRight 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes arrowRight {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+        }
+
+        .emoji-food.animate {
+            animation: foodBounce 3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes foodBounce {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translateY(-3px) rotate(-1.5deg) scale(1.01);
+            }
+            75% {
+                transform: translateY(-3px) rotate(1.5deg) scale(1.01);
+            }
+        }
+
+        .emoji-music.animate {
+            animation: musicRotate 3.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes musicRotate {
+            0%, 100% {
+                transform: rotate(0deg) translateY(0) scale(1);
+            }
+            25% {
+                transform: rotate(-4deg) translateY(-2px) scale(1.01);
+            }
+            75% {
+                transform: rotate(4deg) translateY(-2px) scale(1.01);
+            }
+        }
+
+        .emoji-nature.animate {
+            animation: natureSway 4.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes natureSway {
+            0%, 100% {
+                transform: rotate(0deg) translateY(0) scale(1);
+            }
+            25% {
+                transform: rotate(-1.5deg) translateY(-3px) scale(1.01);
+            }
+            75% {
+                transform: rotate(1.5deg) translateY(-3px) scale(1.01);
+            }
+        }
+
+        /* Focus states for accessibility - Elder-friendly high visibility */
+        .category-tab:focus-visible {
+            outline: 3px solid var(--color-active);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 6px rgba(30, 90, 122, 0.2);
+        }
+
+        .audio-item:focus-visible {
+            outline: 3px solid var(--color-active);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 6px rgba(30, 90, 122, 0.2);
+        }
+
+        /* Touch-friendly - prevent text selection on mobile */
+        .audio-item,
+        .category-tab {
+            -webkit-tap-highlight-color: rgba(30, 90, 122, 0.2);
+            -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--color-border);
+            position: relative;
+            animation: modalFadeIn var(--transition-base);
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            background: transparent;
+            border: none;
+            font-size: var(--font-size-xlarge);
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+        }
+
+        .modal-close:hover {
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-xlarge);
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .modal-body {
+            font-size: var(--font-size-base);
+            color: var(--color-text-primary);
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .modal-body a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color var(--transition-base);
+        }
+
+        .modal-body a:hover {
+            color: var(--color-accent-hover);
+            text-decoration: underline;
+        }
+
+        .modal-body br {
+            margin: var(--spacing-sm) 0;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --color-border: #000000;
+                --color-text-primary: #000000;
+                --color-text-secondary: #000000;
+                --color-active: #0000FF;
+            }
+            
+            .audio-item {
+                border-width: 3px;
+            }
+            
+            .category-tab {
+                border-width: 3px;
+            }
+
+            .info-button {
+                border-width: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+            <div class="modal-title">About CantoTap</div>
+            <div class="modal-body">
+                CantoTap is designed for users who understand Cantonese but cannot speak it, yet can use their fingers to communicate. Simply tap on the emoji buttons to hear common Cantonese phrases spoken aloud.<br><br>
+                Developed by<br>
+                <a href="https://youtube.com/beatsaway" target="_blank">BeatsAway</a><br><br>
+                <a href="https://buymeacoffee.com/beatsaway" target="_blank">Support this developer</a>
+            </div>
+        </div>
+    </div>
+    <div class="audio-grid" id="audioGrid"></div>
+
+    <script>
+        // Define groups with emoji, text to speak, and category
+        const groups = [
+            // 常用 (Common/Frequently used)
+            { files: [21], name: '係', emoji: '🙂‍↕️', category: '常用' },
+            { files: [22], name: '唔係', emoji: '🙂‍↔️', category: '常用' },
+            { files: [23, 24], name: '好', emoji: '👍', category: '常用' },
+            { files: [], name: '唔好', emoji: '👎', category: '常用' },
+            { files: [44, 45, 46, 47], name: '好正', emoji: '💯', category: '常用' },
+            { files: [25], name: '麻麻', emoji: '🤷', category: '常用' },
+            { files: [29], name: '唔夠', emoji: '🤔', category: '常用' },
+            { files: [30], name: '夠啦', emoji: '👌', category: '常用' },
+            { files: [38, 39, 40], name: '唔舒服', emoji: '😟', category: '常用' },
+            { files: [], name: '幾舒服', emoji: '😊', category: '常用' },
+
+            // 乜D (What D)
+            { files: [1, 2, 3], name: '熱D', emoji: '🔆', category: '乜D' },
+            { files: [4, 5, 6], name: '凍D', emoji: '❄️', category: '乜D' },
+            { files: [12, 13, 14], name: '近D', emoji: '🏠', category: '乜D' },
+            { files: [15, 16, 17], name: '遠D', emoji: '🏡', category: '乜D' },
+            { files: [], name: '多D', emoji: '➕', category: '乜D' },
+            { files: [], name: '少D', emoji: '➖', category: '乜D' },
+            { files: [43, 7, 8], name: '高D', emoji: '⬆️', category: '乜D' },
+            { files: [41], name: '左D', emoji: '⬅️', category: '乜D' },
+            { files: [48], name: '右D', emoji: '➡️', category: '乜D' },
+            { files: [9, 10, 11], name: '低D', emoji: '⬇️', category: '乜D' },
+            { files: [], name: '大聲D', emoji: '🔊', category: '乜D' },
+            { files: [], name: '細聲D', emoji: '🔇', category: '乜D' },
+            { files: [], name: '大力D', emoji: '💪', category: '乜D' },
+            { files: [], name: '細力D', emoji: '🤏', category: '乜D' },
+            { files: [], name: '光D', emoji: '🌖', category: '乜D' },
+            { files: [], name: '暗D', emoji: '🌒', category: '乜D' },
+
+            // 想乜乜 (Want what)
+            { files: [26, 27, 28], name: '想食', emoji: '🍛', category: '想乜乜' },
+            { files: [31, 32, 42], name: '想飲', emoji: '🥤', category: '想乜乜' },
+            { files: [33], name: '想聽音樂', emoji: '🎵', category: '想乜乜' },
+            { files: [34], name: '想睇動物', emoji: '🐾', category: '想乜乜' },
+            { files: [35], name: '想睇花草', emoji: '🌳', category: '想乜乜' },
+            { files: [36], name: '想睇相', emoji: '📷', category: '想乜乜' },
+            { files: [37], name: '想睇電視', emoji: '📺', category: '想乜乜' },
+            { files: [], name: '想起身', emoji: '🧍', category: '想乜乜' },
+            { files: [], name: '想訓低', emoji: '🛌', category: '想乜乜' },
+            { files: [], name: '想坐', emoji: '🪑', category: '想乜乜' },
+            { files: [], name: '想廁所', emoji: '🚽', category: '想乜乜' }
+        ];
+
+        const groupItems = {};
+        let currentlyPlayingElement = null;
+        let currentUtterance = null;
+        const groupPlayedSounds = {}; // Track which sounds have been played in each group
+        let currentCategory = '常用'; // Default category
+
+        // Cantonese Word → English Words (legitimate words that sound similar)
+        const cantoneseToEnglishPhonetic = {
+            '係': 'height',
+            '唔係': 'ohm height',
+            '好': 'whole',
+            '唔好': 'ohm whole',
+            '好正': 'whole jeng',
+            '麻麻': 'ma ma',
+            '唔夠': 'ohm go',
+            '夠啦': 'go laugh',
+            '熱D': 'yeet dee',
+            '凍D': 'don\'t dee',
+            '近D': 'cunt dee',
+            '遠D': 'yearn dee',
+            '高D': 'go dee',
+            '左D': 'jaw dee',
+            '右D': 'yo dee',
+            '低D': 'die dee',
+            '多D': 'door dee',
+            '少D': 'silk dee',
+            '大聲D': 'die sing dee',
+            '細聲D': 'side sing dee',
+            '大力D': 'die leg dee',
+            '細力D': 'side leg dee',
+            '光D': 'gone dee',
+            '暗D': 'arm dee',
+            '想食': 'song sick',
+            '想飲': 'song yum',
+            '唔舒服': 'ohm she folk',
+            '幾舒服': 'gay she folk',
+            '想聽音樂': 'song ting yum orc',
+            '想睇動物': 'song tie don\'t mud',
+            '想睇花草': 'song tie far chao',
+            '想睇相': 'song tie song',
+            '想睇電視': 'song tie dean see',
+            '想起身': 'song hay son',
+            '想訓低': 'song fun die',
+            '想坐': 'song chore',
+            '想廁所': 'song cheese saw'
+        };
+
+        // Check if Web Speech API is available
+        if (!('speechSynthesis' in window)) {
+            alert('Sorry, your browser does not support Text-to-Speech. Please use a modern browser like Chrome, Edge, or Safari.');
+        }
+
+        // Function to get animation duration in milliseconds based on animation class
+        function getAnimationDuration(animationClass) {
+            const durations = {
+                'emoji-face': 3000,
+                'emoji-face-updown': 2000,
+                'emoji-face-leftright': 2000,
+                'emoji-hand': 2500,
+                'emoji-object': 4000,
+                'emoji-arrow-up': 2000,
+                'emoji-arrow-down': 2000,
+                'emoji-arrow-left': 2000,
+                'emoji-arrow-right': 2000,
+                'emoji-food': 3500,
+                'emoji-music': 4000,
+                'emoji-nature': 5000
+            };
+            return durations[animationClass] || 3000;
+        }
+
+        // Function to determine emoji type and return appropriate animation class
+        function getEmojiAnimationClass(emoji) {
+            // Specific face animations - check these first
+            if (emoji.includes('🙂‍↕️')) {
+                return 'emoji-face-updown';
+            }
+            if (emoji.includes('🙂‍↔️')) {
+                return 'emoji-face-leftright';
+            }
+            
+            // Other faces - gentle bounce
+            if (emoji.includes('🙂') || emoji.includes('🥶') || emoji.includes('🥵') || emoji.includes('😟')) {
+                return 'emoji-face';
+            }
+            
+            // Hand gestures - subtle wave
+            if (emoji.includes('👍') || emoji.includes('🤷') || emoji.includes('🤔') || emoji.includes('👌')) {
+                return 'emoji-hand';
+            }
+            
+            // Arrows - directional movement
+            if (emoji.includes('⬆️')) {
+                return 'emoji-arrow-up';
+            }
+            if (emoji.includes('⬇️')) {
+                return 'emoji-arrow-down';
+            }
+            if (emoji.includes('⬅️')) {
+                return 'emoji-arrow-left';
+            }
+            if (emoji.includes('➡️')) {
+                return 'emoji-arrow-right';
+            }
+            
+            // Food and drinks - subtle bounce
+            if (emoji.includes('🍛') || emoji.includes('🥤')) {
+                return 'emoji-food';
+            }
+            
+            // Music - gentle rotate
+            if (emoji.includes('🎵')) {
+                return 'emoji-music';
+            }
+            
+            // Nature - gentle sway
+            if (emoji.includes('🌳') || emoji.includes('🐾')) {
+                return 'emoji-nature';
+            }
+            
+            // Buildings - gentle float
+            if (emoji.includes('🏠') || emoji.includes('🏡')) {
+                return 'emoji-object';
+            }
+            
+            // Default: objects (gentle float)
+            return 'emoji-object';
+        }
+
+        // Stop all currently playing speech
+        function stopAllPlaying() {
+            if (currentUtterance) {
+                window.speechSynthesis.cancel();
+                currentUtterance = null;
+            }
+            if (currentlyPlayingElement) {
+                currentlyPlayingElement.classList.remove('playing');
+                currentlyPlayingElement = null;
+            }
+        }
+
+        // Play group function - plays text-to-speech, remembers what's been played
+        function playGroup(group, itemElement) {
+            const groupKey = itemElement.dataset.group;
+            
+            // Stop any currently playing speech
+            stopAllPlaying();
+            
+            // Initialize played sounds tracking for this group if not exists
+            if (!groupPlayedSounds.hasOwnProperty(groupKey)) {
+                groupPlayedSounds[groupKey] = [];
+            }
+            
+            // Find next unplayed sound
+            let nextIndex = -1;
+            for (let i = 0; i < group.files.length; i++) {
+                if (!groupPlayedSounds[groupKey].includes(i)) {
+                    nextIndex = i;
+                    break;
+                }
+            }
+            
+            // If all sounds have been played, reset and start from beginning
+            if (nextIndex === -1) {
+                groupPlayedSounds[groupKey] = [];
+                nextIndex = 0;
+            }
+            
+            // Mark this sound as played
+            groupPlayedSounds[groupKey].push(nextIndex);
+            
+            // Use English phonetic approximation for better Cantonese pronunciation
+            const originalText = group.name || '';
+            let textToSpeak = cantoneseToEnglishPhonetic[originalText] || originalText;
+            
+            if (!textToSpeak) {
+                console.warn('No text to speak for group:', group);
+                return;
+            }
+            
+            // Create speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Try to find an English voice (for English phonetic approximations)
+            const voices = window.speechSynthesis.getVoices();
+            let englishVoice = null;
+            
+            // Look for English voices - prioritize en-US
+            // Common identifiers: 'en', 'English', 'United States', 'en-US'
+            for (let voice of voices) {
+                const voiceName = voice.name.toLowerCase();
+                const voiceLang = voice.lang.toLowerCase();
+                
+                // Priority 1: en-US (US English)
+                if (voiceLang.includes('en-us') || voiceLang === 'en-us') {
+                    englishVoice = voice;
+                    console.log('Found English voice (en-US):', voice.name, voice.lang);
+                    break;
+                }
+            }
+            
+            // Priority 2: Any English variant
+            if (!englishVoice) {
+                for (let voice of voices) {
+                    const voiceLang = voice.lang.toLowerCase();
+                    const voiceName = voice.name.toLowerCase();
+                    if (voiceLang.includes('en') || voiceName.includes('english')) {
+                        englishVoice = voice;
+                        console.log('Found English voice:', voice.name, voice.lang);
+                        break;
+                    }
+                }
+            }
+            
+            // Set voice and language
+            if (englishVoice) {
+                utterance.voice = englishVoice;
+                utterance.lang = englishVoice.lang;
+                console.log('Using English voice for Cantonese phonetic:', englishVoice.name, 'with lang:', englishVoice.lang);
+                console.log('Speaking:', textToSpeak, '(original:', originalText + ')');
+            } else {
+                // Fallback: use English language code
+                utterance.lang = 'en-US';
+                console.warn('No English voice found, using en-US language code');
+                console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+                console.log('Speaking:', textToSpeak, '(original:', originalText + ')');
+            }
+            
+            // Configure speech settings
+            utterance.rate = 1.4; // 40% faster (1.4x speed)
+            utterance.pitch = 1.0; // Normal pitch
+            utterance.volume = 1.0; // Full volume
+            
+            // When speech starts
+            utterance.onstart = () => {
+                itemElement.classList.add('playing');
+                currentlyPlayingElement = itemElement;
+                currentUtterance = utterance;
+            };
+            
+            // When speech ends
+            utterance.onend = () => {
+                itemElement.classList.remove('playing');
+                currentlyPlayingElement = null;
+                currentUtterance = null;
+            };
+            
+            // When speech errors
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event);
+                itemElement.classList.remove('playing');
+                currentlyPlayingElement = null;
+                currentUtterance = null;
+            };
+            
+            // Speak the text
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Create category tabs
+        function createCategoryTabs() {
+            const categories = ['常用', '乜D', '想乜乜'];
+            const tabsContainer = document.createElement('div');
+            tabsContainer.className = 'category-tabs';
+            
+            categories.forEach(category => {
+                const tab = document.createElement('button');
+                tab.className = `category-tab ${category === currentCategory ? 'active' : ''}`;
+                tab.textContent = category;
+                tab.dataset.category = category;
+                
+                tab.addEventListener('click', () => {
+                    // Update active tab
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update current category
+                    currentCategory = category;
+                    
+                    // Refresh displayed items
+                    filterAndDisplayItems();
+                });
+                
+                tabsContainer.appendChild(tab);
+            });
+
+            document.body.insertBefore(tabsContainer, document.getElementById('audioGrid'));
+        }
+
+        // Create floating info button
+        function createInfoButton() {
+            const infoButton = document.createElement('button');
+            infoButton.className = 'info-button';
+            infoButton.textContent = '?';
+            infoButton.setAttribute('aria-label', 'About');
+            infoButton.addEventListener('click', () => {
+                document.getElementById('infoModal').classList.add('active');
+            });
+            document.body.appendChild(infoButton);
+        }
+
+        // Modal functionality
+        function setupModal() {
+            const modal = document.getElementById('infoModal');
+            const closeButton = document.getElementById('modalClose');
+            
+            // Close button click
+            closeButton.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+            
+            // Click outside modal to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+            
+            // ESC key to close
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+
+        // Filter and display items based on current category
+        function filterAndDisplayItems() {
+            const grid = document.getElementById('audioGrid');
+            
+            // Clear existing items
+            grid.innerHTML = '';
+            // Clear groupItems object
+            Object.keys(groupItems).forEach(key => delete groupItems[key]);
+            
+            // Filter groups by current category
+            const filteredGroups = groups.filter(group => group.category === currentCategory);
+            
+            // Create items for filtered groups
+            filteredGroups.forEach((group, index) => {
+                const originalIndex = groups.indexOf(group);
+                const item = document.createElement('div');
+                item.className = 'audio-item group';
+                item.dataset.group = originalIndex;
+                
+                // Use emoji and name from group object
+                const emoji = group.emoji || '🎵';
+                const name = group.name || '';
+                
+                // Get animation class based on emoji type
+                const animationClass = getEmojiAnimationClass(emoji);
+                
+                item.innerHTML = `
+                    <div class="emoji ${animationClass}" data-animation-class="${animationClass}">${emoji}</div>
+                    <div class="filename">${name}</div>
+                `;
+                
+                // Get the emoji element
+                const emojiElement = item.querySelector('.emoji');
+                
+                // Add click handler to trigger animation and play speech
+                item.addEventListener('click', () => {
+                    // Trigger animation
+                    emojiElement.classList.add('animate');
+                    
+                    // Remove animate class after animation completes
+                    const animationDuration = getAnimationDuration(animationClass);
+                    setTimeout(() => {
+                        emojiElement.classList.remove('animate');
+                    }, animationDuration);
+                    
+                    // Play text-to-speech
+                    playGroup(group, item);
+                });
+                
+                grid.appendChild(item);
+                groupItems[originalIndex] = item;
+            });
+        }
+
+        // Create audio items - all items are groups, displayed in natural array order
+        function createAudioItems() {
+            filterAndDisplayItems();
+        }
+
+        // Load voices when they become available
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            
+            // Log English-related voices
+            const englishVoices = voices.filter(v => {
+                const lang = v.lang.toLowerCase();
+                const name = v.name.toLowerCase();
+                return lang.includes('en') || name.includes('english');
+            });
+            
+            if (englishVoices.length > 0) {
+                console.log('English voices found:', englishVoices.map(v => `${v.name} (${v.lang})`));
+            } else {
+                console.warn('No English voices found. Browser may use default voice.');
+            }
+            
+            // Also log Chinese voices (as fallback option)
+            const chineseVoices = voices.filter(v => {
+                const lang = v.lang.toLowerCase();
+                return lang.includes('zh');
+            });
+            if (chineseVoices.length > 0) {
+                console.log('Chinese voices available (fallback):', chineseVoices.map(v => `${v.name} (${v.lang})`));
+            }
+        }
+        
+        // Some browsers load voices asynchronously - wait for them
+        let voicesLoaded = false;
+        
+        function waitForVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0 && !voicesLoaded) {
+                voicesLoaded = true;
+                loadVoices();
+            }
+        }
+        
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                waitForVoices();
+                loadVoices();
+            };
+        }
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Setup modal
+            setupModal();
+            
+            // Create category tabs first
+            createCategoryTabs();
+            
+            // Create floating info button
+            createInfoButton();
+            
+            // Try loading voices immediately
+            waitForVoices();
+            loadVoices();
+            
+            // Also try after a short delay (some browsers need time)
+            setTimeout(() => {
+                waitForVoices();
+                loadVoices();
+            }, 500);
+            
+            createAudioItems();
+        });
+    </script>
+</body>
+</html>
+
