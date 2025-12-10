@@ -47,17 +47,52 @@
             flex-direction: column;
         }
 
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--color-bg-primary);
+            width: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--font-size-base);
+            font-weight: 400;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--color-text-secondary);
+            color: var(--color-text-primary);
+            outline: none;
+            transition: border-color 150ms ease;
+        }
+
+        .search-box:focus {
+            border-bottom-color: var(--color-text-primary);
+        }
+
+        .search-box::placeholder {
+            color: var(--color-text-secondary);
+        }
+
         .category-tabs {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: var(--spacing-lg);
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--color-bg-primary);
+            gap: var(--spacing-md);
             flex-wrap: wrap;
-            width: 100%;
-            box-sizing: border-box;
-            flex-shrink: 0;
         }
 
         .category-tab {
@@ -70,8 +105,10 @@
             color: var(--color-text-secondary);
             min-height: auto;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 2px;
         }
 
         .category-tab:hover {
@@ -81,6 +118,18 @@
         .category-tab.active {
             color: var(--color-text-primary);
             font-weight: 500;
+            background: #F0F0F0;
+        }
+
+        .category-english {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--color-text-secondary);
+        }
+
+        .category-tab:hover .category-english,
+        .category-tab.active .category-english {
+            color: var(--color-text-secondary);
         }
 
         .info-button {
@@ -106,15 +155,33 @@
         }
 
         @media (max-width: 767px) {
-            .category-tabs {
-                gap: var(--spacing-md);
+            .top-bar {
+                gap: var(--spacing-sm);
+            }
+
+            .search-container {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .search-box {
+                font-size: 15px;
                 padding: var(--spacing-sm);
+            }
+
+            .category-tabs {
+                gap: var(--spacing-sm);
+                flex-shrink: 0;
             }
             
             .category-tab {
                 font-size: var(--font-size-base);
                 padding: 4px var(--spacing-sm);
                 min-height: auto;
+            }
+
+            .category-english {
+                font-size: 10px;
             }
 
             .info-button {
@@ -237,6 +304,28 @@
         @media (max-width: 767px) {
             .english-translation {
                 font-size: 11px;
+            }
+        }
+
+        .phonetic-pronunciation {
+            font-size: 11px;
+            color: #87CEEB;
+            font-weight: 400;
+            text-align: center;
+            pointer-events: none;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0;
+            transition: opacity 150ms ease;
+        }
+
+        .audio-item.show-phonetic .phonetic-pronunciation {
+            opacity: 1;
+        }
+
+        @media (max-width: 767px) {
+            .phonetic-pronunciation {
+                font-size: 10px;
             }
         }
 
@@ -553,7 +642,7 @@
             <button class="modal-close" id="modalClose" aria-label="Close">×</button>
             <div class="modal-title">About CantoTap</div>
             <div class="modal-body">
-                CantoTap is designed for users who understand Cantonese but cannot speak it, yet can use their fingers to communicate. Simply tap on the emoji buttons to hear common Cantonese phrases spoken aloud.<br><br>
+                CantoTap is designed for users who want to communicate in Cantonese but can only move their fingers for now. Simply tap on the emoji buttons to hear common Cantonese phrases spoken aloud.<br><br>
                 Developed by<br>
                 <a href="https://youtube.com/beatsaway" target="_blank">BeatsAway</a><br><br>
                 <a href="https://buymeacoffee.com/beatsaway" target="_blank">Support this developer</a>
@@ -576,6 +665,12 @@
             { files: [30], name: '夠啦', emoji: '👌', category: '常用', english: 'Enough' },
             { files: [38, 39, 40], name: '唔舒服', emoji: '😟', category: '常用', english: 'Uncomfortable' },
             { files: [], name: '幾舒服', emoji: '😊', category: '常用', english: 'Comfortable' },
+            { files: [], name: '唔好意思', emoji: '🙇', category: '常用', english: 'Excuse me' },
+            { files: [], name: '幾多錢', emoji: '💰', category: '常用', english: 'How much' },
+            { files: [], name: '邊度', emoji: '📍', category: '常用', english: 'Where' },
+            { files: [], name: '要呢個', emoji: '👉', category: '常用', english: 'want this' },
+            { files: [], name: '要嗰個', emoji: '👈', category: '常用', english: 'want that' },
+            { files: [], name: '埋單', emoji: '💳', category: '常用', english: 'Check please' },
 
             // 乜D (What D)
             { files: [1, 2, 3], name: '熱D', emoji: '🔆', category: '乜D', english: 'Warmer' },
@@ -614,6 +709,7 @@
         let currentUtterance = null;
         const groupPlayedSounds = {}; // Track which sounds have been played in each group
         let currentCategory = '常用'; // Default category
+        let searchTerm = ''; // Search term for filtering
 
         // Cantonese Word → English Words (legitimate words that sound similar)
         const cantoneseToEnglishPhonetic = {
@@ -653,7 +749,13 @@
             '想起身': 'song hay son',
             '想訓低': 'song fun die',
             '想坐': 'song chore',
-            '想廁所': 'song cheese saw'
+            '想廁所': 'song cheese saw',
+            '唔好意思': 'ohm ho yee see',
+            '幾多錢': 'gay door chin',
+            '邊度': 'been dough',
+            '要呢個': 'you nay gore',
+            '要嗰個': 'you gore gore',
+            '埋單': 'my dan'
         };
 
         // Check if Web Speech API is available
@@ -868,17 +970,44 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // Create category tabs
-        function createCategoryTabs() {
-            const categories = ['常用', '乜D', '想乜乜'];
+        // Create top bar with search and category tabs
+        function createTopBar() {
+            const topBar = document.createElement('div');
+            topBar.className = 'top-bar';
+            
+            // Create search container
+            const searchContainer = document.createElement('div');
+            searchContainer.className = 'search-container';
+            
+            const searchBox = document.createElement('input');
+            searchBox.type = 'text';
+            searchBox.className = 'search-box';
+            searchBox.placeholder = 'Search...';
+            searchBox.setAttribute('aria-label', 'Search phrases');
+            
+            searchBox.addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                filterAndDisplayItems();
+            });
+            
+            // Create category tabs
+            const categories = [
+                { name: '常用', english: 'Common' },
+                { name: '乜D', english: 'More/Less' },
+                { name: '想乜乜', english: 'Want' }
+            ];
             const tabsContainer = document.createElement('div');
             tabsContainer.className = 'category-tabs';
             
             categories.forEach(category => {
                 const tab = document.createElement('button');
-                tab.className = `category-tab ${category === currentCategory ? 'active' : ''}`;
-                tab.textContent = category;
-                tab.dataset.category = category;
+                tab.className = `category-tab ${category.name === currentCategory ? 'active' : ''}`;
+                tab.dataset.category = category.name;
+                
+                tab.innerHTML = `
+                    <span>${category.name}</span>
+                    <span class="category-english">${category.english}</span>
+                `;
                 
                 tab.addEventListener('click', () => {
                     // Update active tab
@@ -886,7 +1015,7 @@
                     tab.classList.add('active');
                     
                     // Update current category
-                    currentCategory = category;
+                    currentCategory = category.name;
                     
                     // Refresh displayed items
                     filterAndDisplayItems();
@@ -894,8 +1023,12 @@
                 
                 tabsContainer.appendChild(tab);
             });
-
-            document.body.insertBefore(tabsContainer, document.getElementById('audioGrid'));
+            
+            topBar.appendChild(tabsContainer);
+            
+            searchContainer.appendChild(searchBox);
+            topBar.appendChild(searchContainer);
+            document.body.insertBefore(topBar, document.getElementById('audioGrid'));
         }
 
         // Create floating info button
@@ -935,7 +1068,7 @@
             });
         }
 
-        // Filter and display items based on current category
+        // Filter and display items based on current category and search term
         function filterAndDisplayItems() {
             const grid = document.getElementById('audioGrid');
             
@@ -944,8 +1077,18 @@
             // Clear groupItems object
             Object.keys(groupItems).forEach(key => delete groupItems[key]);
             
-            // Filter groups by current category
-            const filteredGroups = groups.filter(group => group.category === currentCategory);
+            // Filter groups by current category and search term
+            let filteredGroups = groups.filter(group => group.category === currentCategory);
+            
+            // If there's a search term, filter by it (search in name and english)
+            if (searchTerm.trim() !== '') {
+                const searchLower = searchTerm.toLowerCase().trim();
+                filteredGroups = filteredGroups.filter(group => {
+                    const nameMatch = (group.name || '').toLowerCase().includes(searchLower);
+                    const englishMatch = (group.english || '').toLowerCase().includes(searchLower);
+                    return nameMatch || englishMatch;
+                });
+            }
             
             // Create items for filtered groups
             filteredGroups.forEach((group, index) => {
@@ -958,6 +1101,7 @@
                 const emoji = group.emoji || '🎵';
                 const name = group.name || '';
                 const english = group.english || '';
+                const phonetic = cantoneseToEnglishPhonetic[name] || '';
                 
                 // Get animation class based on emoji type
                 const animationClass = getEmojiAnimationClass(emoji);
@@ -966,6 +1110,7 @@
                     <div class="emoji ${animationClass}" data-animation-class="${animationClass}">${emoji}</div>
                     <div class="filename">${name}</div>
                     <div class="english-translation">${english}</div>
+                    <div class="phonetic-pronunciation">${phonetic}</div>
                 `;
                 
                 // Get the emoji element
@@ -973,6 +1118,9 @@
                 
                 // Add click handler to trigger animation and play speech
                 item.addEventListener('click', () => {
+                    // Show phonetic pronunciation
+                    item.classList.add('show-phonetic');
+                    
                     // Trigger animation
                     emojiElement.classList.add('animate');
                     
@@ -1047,8 +1195,8 @@
             // Setup modal
             setupModal();
             
-            // Create category tabs first
-            createCategoryTabs();
+            // Create top bar with search and category tabs
+            createTopBar();
             
             // Create floating info button
             createInfoButton();
