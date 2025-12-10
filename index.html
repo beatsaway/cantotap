@@ -249,7 +249,7 @@
         }
 
         .emoji {
-            font-size: 64px;
+            font-size: 44px;
             line-height: 1;
             display: inline-block;
             margin-bottom: var(--spacing-sm);
@@ -257,7 +257,7 @@
 
         @media (max-width: 767px) {
             .emoji {
-                font-size: 48px;
+                font-size: 36px;
             }
         }
 
@@ -275,7 +275,7 @@
         }
 
         .filename {
-            font-size: var(--font-size-base);
+            font-size: 14px;
             color: var(--color-text-primary);
             font-weight: 400;
             text-align: center;
@@ -285,7 +285,7 @@
 
         @media (max-width: 767px) {
             .filename {
-                font-size: 15px;
+                font-size: 13px;
             }
         }
 
@@ -294,7 +294,7 @@
         }
 
         .english-translation {
-            font-size: 12px;
+            font-size: 16px;
             color: var(--color-text-secondary);
             font-weight: 400;
             text-align: center;
@@ -303,7 +303,7 @@
 
         @media (max-width: 767px) {
             .english-translation {
-                font-size: 11px;
+                font-size: 15px;
             }
         }
 
@@ -670,7 +670,11 @@
             { files: [], name: '邊度', emoji: '📍', category: '常用', english: 'Where' },
             { files: [], name: '要呢個', emoji: '👉', category: '常用', english: 'want this' },
             { files: [], name: '要嗰個', emoji: '👈', category: '常用', english: 'want that' },
-            { files: [], name: '埋單', emoji: '💳', category: '常用', english: 'Check please' },
+            { files: [], name: '埋單唔該', emoji: '💳', category: '常用', english: 'Check please' },
+            { files: [], name: '唔該', emoji: '🙏', category: '常用', english: 'Please' },
+            { files: [], name: '痛', emoji: '😣', category: '常用', english: 'Pain' },
+            { files: [], name: '攰', emoji: '😴', category: '常用', english: 'Tired' },
+            { files: [], name: '明白', emoji: '✅', category: '常用', english: 'I understand' },
 
             // 乜D (What D)
             { files: [1, 2, 3], name: '熱D', emoji: '🔆', category: '乜D', english: 'Warmer' },
@@ -689,10 +693,12 @@
             { files: [], name: '細力D', emoji: '🤏', category: '乜D', english: 'Softer' },
             { files: [], name: '光D', emoji: '🌖', category: '乜D', english: 'Brighter' },
             { files: [], name: '暗D', emoji: '🌒', category: '乜D', english: 'Darker' },
+            { files: [], name: '快D', emoji: '⚡', category: '乜D', english: 'Faster' },
+            { files: [], name: '慢D', emoji: '🐌', category: '乜D', english: 'Slower' },
+            { files: [], name: '長D', emoji: '📏', category: '乜D', english: 'Longer' },
+            { files: [], name: '短D', emoji: '✂️', category: '乜D', english: 'Shorter' },
 
             // 想乜乜 (Want what)
-            { files: [26, 27, 28], name: '想食', emoji: '🍛', category: '想乜乜', english: 'Want to eat' },
-            { files: [31, 32, 42], name: '想飲', emoji: '🥤', category: '想乜乜', english: 'Want to drink' },
             { files: [33], name: '想聽音樂', emoji: '🎵', category: '想乜乜', english: 'Want to listen to music' },
             { files: [34], name: '想睇動物', emoji: '🐾', category: '想乜乜', english: 'Want to see animals' },
             { files: [35], name: '想睇花草', emoji: '🌳', category: '想乜乜', english: 'Want to see plants' },
@@ -701,7 +707,18 @@
             { files: [], name: '想起身', emoji: '🧍', category: '想乜乜', english: 'Want to stand up' },
             { files: [], name: '想訓低', emoji: '🛌', category: '想乜乜', english: 'Want to lie down' },
             { files: [], name: '想坐', emoji: '🪑', category: '想乜乜', english: 'Want to sit' },
-            { files: [], name: '想廁所', emoji: '🚽', category: '想乜乜', english: 'Want to use toilet' }
+            { files: [], name: '想廁所', emoji: '🚽', category: '想乜乜', english: 'Want to use toilet' },
+            { files: [], name: '想轉身', emoji: '🔄', category: '想乜乜', english: 'Want to turn over' },
+            { files: [], name: '想換衫', emoji: '👕', category: '想乜乜', english: 'Want to change clothes' },
+            { files: [], name: '想飲水', emoji: '🥤', category: '想乜乜', english: 'Want to drink' },
+            { files: [], name: '想食嘢', emoji: '🍽️', category: '想乜乜', english: 'Want to eat' },
+            { files: [], name: '想抹身', emoji: '🧽', category: '想乜乜', english: 'Want to wipe body' },
+            { files: [], name: '想換片', emoji: '🩹', category: '想乜乜', english: 'Want to change pad' },
+            { files: [], name: '想按摩', emoji: '💆', category: '想乜乜', english: 'Want massage' },
+            { files: [], name: '想開電視', emoji: '📺', category: '想乜乜', english: 'Want to turn on TV' },
+            { files: [], name: '想睇時間', emoji: '🕐', category: '想乜乜', english: 'Want to see time' },
+            { files: [], name: '想落街', emoji: '🚶', category: '想乜乜', english: 'Want to go out' },
+            { files: [], name: '想瞓覺', emoji: '😴', category: '想乜乜', english: 'Want to sleep' }
         ];
 
         const groupItems = {};
@@ -737,8 +754,6 @@
             '細力D': 'side leg dee',
             '光D': 'gone dee',
             '暗D': 'arm dee',
-            '想食': 'song sick',
-            '想飲': 'song yum',
             '唔舒服': 'ohm she folk',
             '幾舒服': 'gay she folk',
             '想聽音樂': 'song ting yum orc',
@@ -755,7 +770,26 @@
             '邊度': 'been dough',
             '要呢個': 'you nay gore',
             '要嗰個': 'you gore gore',
-            '埋單': 'my dan'
+            '埋單唔該': 'my dan ohm guy',
+            '唔該': 'ohm guy',
+            '痛': 'tong',
+            '攰': 'gway',
+            '明白': 'ming back',
+            '快D': 'fire dee',
+            '慢D': 'man dee',
+            '長D': 'chong dee',
+            '短D': 'dune dee',
+            '想轉身': 'song june sun',
+            '想換衫': 'song woon sam',
+            '想飲水': 'song yum yeah',
+            '想食嘢': 'song sick yeah',
+            '想抹身': 'song mut sun',
+            '想換片': 'song woon pin',
+            '想按摩': 'song on mall',
+            '想開電視': 'song hoi din see',
+            '想睇時間': 'song tie see garn',
+            '想落街': 'song lock guy',
+            '想瞓覺': 'song fun gow'
         };
 
         // Check if Web Speech API is available
