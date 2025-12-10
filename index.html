@@ -5,38 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text-to-Speech Emoji Interface</title>
     <style>
-        /* Modern Dutch Minimalist Design System - Elder-Friendly */
+        /* Minimal Dutch Style Design */
         :root {
-            --color-bg-primary: #FAFAF9;
-            --color-bg-secondary: #FFFFFF;
-            --color-surface: #FFFFFF;
-            --color-border: #D0D0D0;
+            --color-bg-primary: #FFFFFF;
             --color-text-primary: #000000;
-            --color-text-secondary: #4A4A4A;
-            --color-accent: #1E5A7A;
-            --color-accent-hover: #164A66;
-            --color-active: #1E5A7A;
-            --color-active-bg: #D4E6F0;
-            --color-active-text: #000000;
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --spacing-xs: 6px;
-            --spacing-sm: 12px;
-            --spacing-md: 20px;
-            --spacing-lg: 32px;
-            --spacing-xl: 40px;
-            --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-            /* Elder-friendly sizes */
-            --font-size-base: 18px;
-            --font-size-large: 22px;
-            --font-size-xlarge: 28px;
-            --touch-target-min: 56px;
+            --color-text-secondary: #666666;
+            --color-active: #000000;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --font-size-base: 16px;
+            --font-size-large: 18px;
+            --touch-target-min: 48px;
         }
 
         * {
@@ -55,156 +35,92 @@
             width: 100%;
             height: 100%;
             overflow-x: hidden;
-            overflow-y: hidden;
+            overflow-y: auto;
             background: var(--color-bg-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             font-size: var(--font-size-base);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             color: var(--color-text-primary);
-            line-height: 1.6;
+            line-height: 1.4;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Improve scrolling for mobile */
-        .audio-grid::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        .audio-grid::-webkit-scrollbar-track {
-            background: var(--color-bg-primary);
-        }
-
-        .audio-grid::-webkit-scrollbar-thumb {
-            background: var(--color-border);
-            border-radius: 6px;
-        }
-
-        .audio-grid::-webkit-scrollbar-thumb:hover {
-            background: var(--color-text-secondary);
         }
 
         .category-tabs {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: var(--spacing-md);
+            gap: var(--spacing-lg);
             padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--color-bg-secondary);
-            border-bottom: 2px solid var(--color-border);
-            position: relative;
-            z-index: 10;
-            box-shadow: var(--shadow-sm);
+            background: var(--color-bg-primary);
             flex-wrap: wrap;
             width: 100%;
             box-sizing: border-box;
-            max-width: 100%;
             flex-shrink: 0;
         }
 
         .category-tab {
-            padding: var(--spacing-md) var(--spacing-xl);
+            padding: var(--spacing-sm);
             font-size: var(--font-size-large);
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            background: var(--color-surface);
-            border: 2px solid var(--color-border);
-            border-radius: var(--radius-md);
+            font-weight: 400;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            transition: all var(--transition-base);
-            color: var(--color-text-primary);
-            position: relative;
-            min-height: var(--touch-target-min);
-            min-width: 120px;
+            color: var(--color-text-secondary);
+            min-height: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1;
-            box-shadow: var(--shadow-sm);
         }
 
         .category-tab:hover {
-            background: var(--color-bg-primary);
-            border-color: var(--color-accent);
             color: var(--color-text-primary);
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
         }
 
         .category-tab.active {
-            background: var(--color-active-bg);
-            border-color: var(--color-active);
-            color: var(--color-active-text);
-            font-weight: 700;
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
-        }
-
-        .category-tab:active {
-            transform: translateY(0);
-            box-shadow: var(--shadow-sm);
+            color: var(--color-text-primary);
+            font-weight: 500;
         }
 
         .info-button {
             position: fixed;
             bottom: var(--spacing-md);
             right: var(--spacing-md);
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             padding: 0;
-            font-size: 18px;
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid var(--color-border);
-            border-radius: 50%;
+            font-size: 16px;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            transition: all var(--transition-base);
             color: var(--color-text-secondary);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow-sm);
             z-index: 100;
-            backdrop-filter: blur(8px);
-            opacity: 0.7;
         }
 
         .info-button:hover {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: var(--color-accent);
-            box-shadow: var(--shadow-md);
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .info-button:active {
-            transform: scale(0.95);
-        }
-
-        .info-button:focus-visible {
-            outline: 2px solid var(--color-active);
-            outline-offset: 2px;
-            opacity: 1;
+            color: var(--color-text-primary);
         }
 
         @media (max-width: 767px) {
             .category-tabs {
-                gap: var(--spacing-xs);
-                padding: var(--spacing-sm) var(--spacing-xs);
+                gap: var(--spacing-md);
+                padding: var(--spacing-sm);
             }
             
             .category-tab {
-                flex: 1;
-                min-width: 0;
                 font-size: var(--font-size-base);
-                padding: var(--spacing-sm) var(--spacing-xs);
-                min-height: 44px;
+                padding: 4px var(--spacing-sm);
+                min-height: auto;
             }
 
             .info-button {
-                width: 32px;
-                height: 32px;
-                font-size: 16px;
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
                 bottom: var(--spacing-sm);
                 right: var(--spacing-sm);
             }
@@ -212,51 +128,34 @@
 
         .audio-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             width: 100%;
             flex: 1;
             min-height: 0;
-            min-width: 0;
-            gap: 8px;
             background: var(--color-bg-primary);
-            padding: 8px;
+            padding: var(--spacing-sm);
+            gap: var(--spacing-sm);
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             box-sizing: border-box;
         }
 
-        @media (min-width: 480px) {
-            .audio-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-                padding: 10px;
-            }
-        }
-
         @media (min-width: 768px) {
             .audio-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 12px;
-                padding: 12px;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
             }
         }
 
         @media (min-width: 1024px) {
             .audio-grid {
-                grid-template-columns: repeat(6, 1fr);
-                gap: 14px;
-                padding: 14px;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
             }
         }
 
         @media (min-width: 1440px) {
             .audio-grid {
-                grid-template-columns: repeat(8, 1fr);
-                gap: 16px;
-                padding: 16px;
-                max-width: 1600px;
-                margin: 0 auto;
+                grid-template-columns: repeat(8, minmax(0, 1fr));
             }
         }
 
@@ -265,71 +164,34 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             width: 100%;
-            height: 140px;
             min-width: 0;
-            min-height: 140px;
-            max-height: 140px;
-            padding: 12px 8px;
-            transition: all var(--transition-base);
-            position: relative;
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: background 150ms ease;
             box-sizing: border-box;
-        }
-
-        @media (max-width: 767px) {
-            .audio-item {
-                height: 120px;
-                min-height: 120px;
-                max-height: 120px;
-                padding: 10px 6px;
-            }
+            min-height: 120px;
         }
 
         .audio-item:hover {
-            background: var(--color-bg-primary);
-            border-color: var(--color-accent);
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .audio-item:active {
-            transform: translateY(-1px);
-            transition: transform var(--transition-fast);
+            background: #FAFAFA;
         }
 
         .audio-item.playing {
-            background: var(--color-active-bg);
-            border-color: var(--color-active);
-            border-width: 3px;
-            box-shadow: var(--shadow-md);
+            background: #F5F5F5;
         }
 
         .emoji {
-            font-size: 56px;
+            font-size: 64px;
             line-height: 1;
             display: inline-block;
-            position: relative;
-            z-index: 1;
-            transition: transform var(--transition-base);
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-            margin-bottom: 6px;
+            margin-bottom: var(--spacing-sm);
         }
 
         @media (max-width: 767px) {
             .emoji {
-                font-size: 40px;
-                margin-bottom: 4px;
+                font-size: 48px;
             }
-        }
-
-        .audio-item:hover .emoji {
-            transform: scale(1.08);
         }
 
         .audio-item.playing .emoji {
@@ -346,37 +208,36 @@
         }
 
         .filename {
-            margin-top: 0;
-            font-size: 18px;
+            font-size: var(--font-size-base);
             color: var(--color-text-primary);
-            font-weight: 600;
+            font-weight: 400;
             text-align: center;
-            width: 100%;
-            max-width: 100%;
-            z-index: 2;
             pointer-events: none;
-            letter-spacing: 0.02em;
-            line-height: 1.3;
-            box-sizing: border-box;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            margin-bottom: 4px;
         }
 
         @media (max-width: 767px) {
             .filename {
-                font-size: 16px;
-                line-height: 1.2;
+                font-size: 15px;
             }
         }
 
-        .audio-item:hover .filename {
-            font-weight: 700;
-            color: var(--color-accent);
+        .audio-item.playing .filename {
+            font-weight: 500;
         }
 
-        .audio-item.playing .filename {
-            color: var(--color-active);
-            font-weight: 700;
+        .english-translation {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            font-weight: 400;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        @media (max-width: 767px) {
+            .english-translation {
+                font-size: 11px;
+            }
         }
 
         /* Refined animations - subtle and purposeful */
@@ -554,23 +415,21 @@
             }
         }
 
-        /* Focus states for accessibility - Elder-friendly high visibility */
+        /* Focus states for accessibility */
         .category-tab:focus-visible {
-            outline: 3px solid var(--color-active);
-            outline-offset: 3px;
-            box-shadow: 0 0 0 6px rgba(30, 90, 122, 0.2);
+            outline: 2px solid var(--color-active);
+            outline-offset: 2px;
         }
 
         .audio-item:focus-visible {
-            outline: 3px solid var(--color-active);
-            outline-offset: 3px;
-            box-shadow: 0 0 0 6px rgba(30, 90, 122, 0.2);
+            outline: 2px solid var(--color-active);
+            outline-offset: 2px;
         }
 
         /* Touch-friendly - prevent text selection on mobile */
         .audio-item,
         .category-tab {
-            -webkit-tap-highlight-color: rgba(30, 90, 122, 0.2);
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
             -webkit-touch-callout: none;
             user-select: none;
             -webkit-user-select: none;
@@ -608,17 +467,16 @@
         }
 
         .modal-content {
-            background: var(--color-surface);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-xl);
+            background: var(--color-bg-primary);
+            border-radius: 0;
+            padding: var(--spacing-lg);
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            border: 2px solid var(--color-border);
+            border: 1px solid #000000;
             position: relative;
-            animation: modalFadeIn var(--transition-base);
+            animation: modalFadeIn 200ms ease;
         }
 
         @keyframes modalFadeIn {
@@ -638,48 +496,43 @@
             right: var(--spacing-md);
             background: transparent;
             border: none;
-            font-size: var(--font-size-xlarge);
+            font-size: 24px;
             cursor: pointer;
-            color: var(--color-text-secondary);
-            width: 40px;
-            height: 40px;
+            color: var(--color-text-primary);
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition-base);
         }
 
         .modal-close:hover {
-            background: var(--color-bg-primary);
-            color: var(--color-text-primary);
+            color: var(--color-text-secondary);
         }
 
         .modal-title {
-            font-size: var(--font-size-xlarge);
-            font-weight: 700;
+            font-size: var(--font-size-large);
+            font-weight: 500;
             color: var(--color-text-primary);
-            margin-bottom: var(--spacing-lg);
-            text-align: center;
+            margin-bottom: var(--spacing-md);
+            text-align: left;
         }
 
         .modal-body {
             font-size: var(--font-size-base);
             color: var(--color-text-primary);
-            line-height: 1.8;
-            text-align: center;
+            line-height: 1.6;
+            text-align: left;
         }
 
         .modal-body a {
-            color: var(--color-accent);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color var(--transition-base);
+            color: var(--color-text-primary);
+            text-decoration: underline;
+            font-weight: 400;
         }
 
         .modal-body a:hover {
-            color: var(--color-accent-hover);
-            text-decoration: underline;
+            color: var(--color-text-secondary);
         }
 
         .modal-body br {
@@ -688,23 +541,8 @@
 
         /* High contrast mode support */
         @media (prefers-contrast: high) {
-            :root {
-                --color-border: #000000;
-                --color-text-primary: #000000;
-                --color-text-secondary: #000000;
-                --color-active: #0000FF;
-            }
-            
             .audio-item {
-                border-width: 3px;
-            }
-            
-            .category-tab {
-                border-width: 3px;
-            }
-
-            .info-button {
-                border-width: 3px;
+                border: 1px solid #000000;
             }
         }
     </style>
@@ -728,47 +566,47 @@
         // Define groups with emoji, text to speak, and category
         const groups = [
             // 常用 (Common/Frequently used)
-            { files: [21], name: '係', emoji: '🙂‍↕️', category: '常用' },
-            { files: [22], name: '唔係', emoji: '🙂‍↔️', category: '常用' },
-            { files: [23, 24], name: '好', emoji: '👍', category: '常用' },
-            { files: [], name: '唔好', emoji: '👎', category: '常用' },
-            { files: [44, 45, 46, 47], name: '好正', emoji: '💯', category: '常用' },
-            { files: [25], name: '麻麻', emoji: '🤷', category: '常用' },
-            { files: [29], name: '唔夠', emoji: '🤔', category: '常用' },
-            { files: [30], name: '夠啦', emoji: '👌', category: '常用' },
-            { files: [38, 39, 40], name: '唔舒服', emoji: '😟', category: '常用' },
-            { files: [], name: '幾舒服', emoji: '😊', category: '常用' },
+            { files: [21], name: '係', emoji: '🙂‍↕️', category: '常用', english: 'Yes' },
+            { files: [22], name: '唔係', emoji: '🙂‍↔️', category: '常用', english: 'No' },
+            { files: [23, 24], name: '好', emoji: '👍', category: '常用', english: 'Good' },
+            { files: [], name: '唔好', emoji: '👎', category: '常用', english: 'Not good' },
+            { files: [44, 45, 46, 47], name: '好正', emoji: '💯', category: '常用', english: 'Very good' },
+            { files: [25], name: '麻麻', emoji: '🤷', category: '常用', english: 'So-so' },
+            { files: [29], name: '唔夠', emoji: '🤔', category: '常用', english: 'Not enough' },
+            { files: [30], name: '夠啦', emoji: '👌', category: '常用', english: 'Enough' },
+            { files: [38, 39, 40], name: '唔舒服', emoji: '😟', category: '常用', english: 'Uncomfortable' },
+            { files: [], name: '幾舒服', emoji: '😊', category: '常用', english: 'Comfortable' },
 
             // 乜D (What D)
-            { files: [1, 2, 3], name: '熱D', emoji: '🔆', category: '乜D' },
-            { files: [4, 5, 6], name: '凍D', emoji: '❄️', category: '乜D' },
-            { files: [12, 13, 14], name: '近D', emoji: '🏠', category: '乜D' },
-            { files: [15, 16, 17], name: '遠D', emoji: '🏡', category: '乜D' },
-            { files: [], name: '多D', emoji: '➕', category: '乜D' },
-            { files: [], name: '少D', emoji: '➖', category: '乜D' },
-            { files: [43, 7, 8], name: '高D', emoji: '⬆️', category: '乜D' },
-            { files: [41], name: '左D', emoji: '⬅️', category: '乜D' },
-            { files: [48], name: '右D', emoji: '➡️', category: '乜D' },
-            { files: [9, 10, 11], name: '低D', emoji: '⬇️', category: '乜D' },
-            { files: [], name: '大聲D', emoji: '🔊', category: '乜D' },
-            { files: [], name: '細聲D', emoji: '🔇', category: '乜D' },
-            { files: [], name: '大力D', emoji: '💪', category: '乜D' },
-            { files: [], name: '細力D', emoji: '🤏', category: '乜D' },
-            { files: [], name: '光D', emoji: '🌖', category: '乜D' },
-            { files: [], name: '暗D', emoji: '🌒', category: '乜D' },
+            { files: [1, 2, 3], name: '熱D', emoji: '🔆', category: '乜D', english: 'Warmer' },
+            { files: [4, 5, 6], name: '凍D', emoji: '❄️', category: '乜D', english: 'Colder' },
+            { files: [12, 13, 14], name: '近D', emoji: '🏠', category: '乜D', english: 'Closer' },
+            { files: [15, 16, 17], name: '遠D', emoji: '🏡', category: '乜D', english: 'Further' },
+            { files: [], name: '多D', emoji: '➕', category: '乜D', english: 'More' },
+            { files: [], name: '少D', emoji: '➖', category: '乜D', english: 'Less' },
+            { files: [43, 7, 8], name: '高D', emoji: '⬆️', category: '乜D', english: 'Higher' },
+            { files: [41], name: '左D', emoji: '⬅️', category: '乜D', english: 'Left' },
+            { files: [48], name: '右D', emoji: '➡️', category: '乜D', english: 'Right' },
+            { files: [9, 10, 11], name: '低D', emoji: '⬇️', category: '乜D', english: 'Lower' },
+            { files: [], name: '大聲D', emoji: '🔊', category: '乜D', english: 'Louder' },
+            { files: [], name: '細聲D', emoji: '🔇', category: '乜D', english: 'Quieter' },
+            { files: [], name: '大力D', emoji: '💪', category: '乜D', english: 'Harder' },
+            { files: [], name: '細力D', emoji: '🤏', category: '乜D', english: 'Softer' },
+            { files: [], name: '光D', emoji: '🌖', category: '乜D', english: 'Brighter' },
+            { files: [], name: '暗D', emoji: '🌒', category: '乜D', english: 'Darker' },
 
             // 想乜乜 (Want what)
-            { files: [26, 27, 28], name: '想食', emoji: '🍛', category: '想乜乜' },
-            { files: [31, 32, 42], name: '想飲', emoji: '🥤', category: '想乜乜' },
-            { files: [33], name: '想聽音樂', emoji: '🎵', category: '想乜乜' },
-            { files: [34], name: '想睇動物', emoji: '🐾', category: '想乜乜' },
-            { files: [35], name: '想睇花草', emoji: '🌳', category: '想乜乜' },
-            { files: [36], name: '想睇相', emoji: '📷', category: '想乜乜' },
-            { files: [37], name: '想睇電視', emoji: '📺', category: '想乜乜' },
-            { files: [], name: '想起身', emoji: '🧍', category: '想乜乜' },
-            { files: [], name: '想訓低', emoji: '🛌', category: '想乜乜' },
-            { files: [], name: '想坐', emoji: '🪑', category: '想乜乜' },
-            { files: [], name: '想廁所', emoji: '🚽', category: '想乜乜' }
+            { files: [26, 27, 28], name: '想食', emoji: '🍛', category: '想乜乜', english: 'Want to eat' },
+            { files: [31, 32, 42], name: '想飲', emoji: '🥤', category: '想乜乜', english: 'Want to drink' },
+            { files: [33], name: '想聽音樂', emoji: '🎵', category: '想乜乜', english: 'Want to listen to music' },
+            { files: [34], name: '想睇動物', emoji: '🐾', category: '想乜乜', english: 'Want to see animals' },
+            { files: [35], name: '想睇花草', emoji: '🌳', category: '想乜乜', english: 'Want to see plants' },
+            { files: [36], name: '想睇相', emoji: '📷', category: '想乜乜', english: 'Want to see photos' },
+            { files: [37], name: '想睇電視', emoji: '📺', category: '想乜乜', english: 'Want to watch TV' },
+            { files: [], name: '想起身', emoji: '🧍', category: '想乜乜', english: 'Want to stand up' },
+            { files: [], name: '想訓低', emoji: '🛌', category: '想乜乜', english: 'Want to lie down' },
+            { files: [], name: '想坐', emoji: '🪑', category: '想乜乜', english: 'Want to sit' },
+            { files: [], name: '想廁所', emoji: '🚽', category: '想乜乜', english: 'Want to use toilet' }
         ];
 
         const groupItems = {};
@@ -1113,12 +951,13 @@
             filteredGroups.forEach((group, index) => {
                 const originalIndex = groups.indexOf(group);
                 const item = document.createElement('div');
-                item.className = 'audio-item group';
+                item.className = 'audio-item';
                 item.dataset.group = originalIndex;
                 
                 // Use emoji and name from group object
                 const emoji = group.emoji || '🎵';
                 const name = group.name || '';
+                const english = group.english || '';
                 
                 // Get animation class based on emoji type
                 const animationClass = getEmojiAnimationClass(emoji);
@@ -1126,6 +965,7 @@
                 item.innerHTML = `
                     <div class="emoji ${animationClass}" data-animation-class="${animationClass}">${emoji}</div>
                     <div class="filename">${name}</div>
+                    <div class="english-translation">${english}</div>
                 `;
                 
                 // Get the emoji element
@@ -1228,4 +1068,5 @@
     </script>
 </body>
 </html>
+
 
