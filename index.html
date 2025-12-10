@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text-to-Speech Emoji Interface</title>
+    <title>CantoTap - Cantonese Text-to-Speech</title>
+    <meta name="description" content="Tap emoji buttons to hear common Cantonese phrases">
+    <link rel="manifest" href="data:application/json,{%22name%22:%22CantoTap%22,%22short_name%22:%22CantoTap%22,%22description%22:%22Cantonese%20Text-to-Speech%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23FFFFFF%22,%22theme_color%22:%22%23000000%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%3E%3Ctext x=%2796%27 y=%27120%27 font-size=%27100%27 text-anchor=%27middle%27%3E%F0%9F%8C%9F%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+    <meta name="theme-color" content="#000000">
     <style>
         /* Minimal Dutch Style Design */
         :root {
@@ -643,6 +646,7 @@
             <div class="modal-title">About CantoTap</div>
             <div class="modal-body">
                 CantoTap is designed for users who want to speak Cantonese but can't, like a foreigner, learner, or disabled person. Simply tap on the emoji buttons to hear common Cantonese phrases spoken aloud.<br><br>
+                <a href="#" id="installPWA" style="display: none;">📱 Install as App</a><br><br>
                 Developed by<br>
                 <a href="https://youtube.com/beatsaway" target="_blank">BeatsAway</a><br><br>
                 <a href="https://buymeacoffee.com/beatsaway" target="_blank">Support this developer</a>
@@ -1117,11 +1121,19 @@
             // If there's a search term, filter by it (search in name and english)
             if (searchTerm.trim() !== '') {
                 const searchLower = searchTerm.toLowerCase().trim();
-                filteredGroups = filteredGroups.filter(group => {
-                    const nameMatch = (group.name || '').toLowerCase().includes(searchLower);
-                    const englishMatch = (group.english || '').toLowerCase().includes(searchLower);
-                    return nameMatch || englishMatch;
-                });
+                
+                // Special case: "thank you" should match "唔該"
+                if (searchLower === 'thank you' || searchLower === 'thankyou') {
+                    filteredGroups = filteredGroups.filter(group => {
+                        return group.name === '唔該';
+                    });
+                } else {
+                    filteredGroups = filteredGroups.filter(group => {
+                        const nameMatch = (group.name || '').toLowerCase().includes(searchLower);
+                        const englishMatch = (group.english || '').toLowerCase().includes(searchLower);
+                        return nameMatch || englishMatch;
+                    });
+                }
             }
             
             // Create items for filtered groups
@@ -1246,7 +1258,52 @@
             }, 500);
             
             createAudioItems();
+            
+            // PWA Install functionality
+            setupPWAInstall();
         });
+        
+        // PWA Install setup
+        let deferredPrompt;
+        const installButton = document.getElementById('installPWA');
+        
+        function setupPWAInstall() {
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:text/javascript,self.addEventListener("fetch",function(e){});').catch(() => {});
+            }
+            
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                if (installButton) {
+                    installButton.style.display = 'inline';
+                }
+            });
+            
+            // Handle install button click
+            if (installButton) {
+                installButton.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            installButton.style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    }
+                });
+            }
+            
+            // Hide install button if already installed
+            window.addEventListener('appinstalled', () => {
+                if (installButton) {
+                    installButton.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
     </script>
 </body>
 </html>
