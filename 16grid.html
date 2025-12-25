@@ -636,6 +636,11 @@
                 this.areaMixDirections = { 1: 'none', 2: 'none', 3: 'none', 4: 'none' };
                 this.activeAreas = new Set(); // Tracks area numbers (1-16) that have sounds
                 
+                // Performance: Limit active areas per dot to prevent too many voices
+                this.MAX_AREAS_PER_DOT = 3; // Only keep 3 most recent areas active
+                this.areaHistory = []; // Track order of areas added
+                this.lastDebugUpdate = 0; // Track last debug display update for throttling
+                
                 // Start sound for initial area
                 this.addAreaSound(initialArea);
                 
@@ -693,6 +698,43 @@
                     return; // Already exists
                 }
                 
+                // Performance: Check global voice limit before creating new voices
+                const currentTotalVoices = countTotalActiveVoices();
+                const voicesPerArea = 3; // Each area has 3 voices (chord)
+                
+                // If we're at the limit, clean up oldest inactive areas first
+                if (currentTotalVoices + voicesPerArea > MAX_TOTAL_VOICES) {
+                    // Clean up areas with mix < 5% that aren't current
+                    const areasToClean = [];
+                    this.areaSounds.forEach((soundData, num) => {
+                        const areaType = ((num - 1) % 4) + 1;
+                        const mix = this.areaMixRatios[areaType];
+                        if (mix < 5 && num !== this.currentCell) {
+                            areasToClean.push(num);
+                        }
+                    });
+                    // Clean up oldest first
+                    areasToClean.sort((a, b) => {
+                        const idxA = this.areaHistory.indexOf(a);
+                        const idxB = this.areaHistory.indexOf(b);
+                        return idxA - idxB;
+                    });
+                    areasToClean.slice(0, 2).forEach(num => {
+                        this.cleanupAreaSound(num);
+                    });
+                }
+                
+                // Performance: Limit areas per dot - remove oldest if at limit
+                if (this.areaSounds.size >= this.MAX_AREAS_PER_DOT) {
+                    // Find oldest area that's not current
+                    const oldestArea = this.areaHistory.find(num => 
+                        num !== this.currentCell && this.areaSounds.has(num)
+                    );
+                    if (oldestArea) {
+                        this.cleanupAreaSound(oldestArea);
+                    }
+                }
+                
                 // Create mix gain for this area
                 const mixGain = new Tone.Gain(0); // Start at 0, will transition
                 mixGain.connect(this.masterGain);
@@ -730,6 +772,13 @@
                     pitchOffset: pitchOffset,
                     volumeMultiplier: volumeMultiplier
                 });
+                
+                // Track in history
+                this.areaHistory.push(areaNum);
+                // Keep history limited
+                if (this.areaHistory.length > 10) {
+                    this.areaHistory.shift();
+                }
                 
                 // If this is the current cell, set mix to 100% for this area type
                 if (areaNum === this.currentCell) {
@@ -917,22 +966,10 @@
                     
                     // Calculate volume for this area (only if mix > 0)
                     if (mix > 0.1) {
-                        let maxVolume = 0;
-                        soundData.voices.forEach(voice => {
-                            if (voice && voice.volumeGain) {
-                                try {
-                                    const voiceVol = voice.volumeGain.gain.value;
-                                    const mixVol = soundData.mixGain.gain.value;
-                                    const totalVol = voiceVol * mixVol; // Combined volume
-                                    maxVolume = Math.max(maxVolume, totalVol);
-                                } catch (e) {
-                                    // Fallback
-                                    const baseVol = soundData.volumeMultiplier || 0;
-                                    const mixVol = mix / 100;
-                                    maxVolume = Math.max(maxVolume, baseVol * mixVol);
-                                }
-                            }
-                        });
+                        // Performance: Simplified volume calculation (cache mixGain value)
+                        const mixVol = mix / 100;
+                        const baseVol = soundData.volumeMultiplier || 0;
+                        const maxVolume = baseVol * mixVol; // Simplified calculation
                         
                         const isCurrentArea = (areaNum === this.currentCell);
                         activeAreaInfo.push({
@@ -944,8 +981,12 @@
                         });
                     }
                     
-                    // Cleanup if mix reaches 0
+                    // Cleanup if mix reaches 0 (more aggressive cleanup for performance)
                     if (mix <= 0.1 && !this.activeAreas.has(areaNum)) {
+                        // Immediate cleanup - don't wait
+                        this.cleanupAreaSound(areaNum);
+                    } else if (mix < 5 && !this.activeAreas.has(areaNum) && countTotalActiveVoices() > MAX_TOTAL_VOICES * 0.8) {
+                        // Aggressive cleanup when approaching voice limit
                         this.cleanupAreaSound(areaNum);
                     }
                 });
@@ -953,8 +994,12 @@
                 // Sort by area number for consistent display
                 activeAreaInfo.sort((a, b) => a.areaNum - b.areaNum);
                 
-                // Update debug display with all active areas
-                this.updateDebugDisplay(activeAreaInfo, this.currentCell);
+                // Update debug display with all active areas (throttled for performance)
+                if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 100) {
+                    // Only update debug display every 100ms
+                    this.updateDebugDisplay(activeAreaInfo, this.currentCell);
+                    this.lastDebugUpdate = currentTime;
+                }
             }
             
             // Update debug display for this dot - show all active areas
@@ -984,18 +1029,54 @@
                 const soundData = this.areaSounds.get(areaNum);
                 if (!soundData) return;
                 
-                // Release all voices
+                // Immediately stop and dispose all voices (more aggressive cleanup)
                 soundData.voices.forEach(voice => {
-                    if (voice && voice.stop) {
-                        voice.stop();
+                    if (voice) {
+                        // Stop oscillators immediately
+                        try {
+                            if (voice.oscillator) voice.oscillator.stop();
+                            if (voice.oscillator2) voice.oscillator2.stop();
+                            if (voice.oscillator3) voice.oscillator3.stop();
+                            if (voice.oscillator4) voice.oscillator4.stop();
+                            if (voice.noise) voice.noise.stop();
+                        } catch (e) {
+                            // Ignore errors if already stopped
+                        }
+                        // Dispose nodes immediately
+                        try {
+                            if (voice.oscillator) voice.oscillator.dispose();
+                            if (voice.oscillator2) voice.oscillator2.dispose();
+                            if (voice.oscillator3) voice.oscillator3.dispose();
+                            if (voice.oscillator4) voice.oscillator4.dispose();
+                            if (voice.envelope) voice.envelope.dispose();
+                            if (voice.envelope2) voice.envelope2.dispose();
+                            if (voice.envelope3) voice.envelope3.dispose();
+                            if (voice.envelope4) voice.envelope4.dispose();
+                            if (voice.noise) voice.noise.dispose();
+                            if (voice.noiseEnv) voice.noiseEnv.dispose();
+                            if (voice.pan) voice.pan.dispose();
+                            if (voice.volumeGain) voice.volumeGain.dispose();
+                            if (voice.filter) voice.filter.dispose();
+                        } catch (e) {
+                            // Ignore disposal errors
+                        }
                     }
                 });
                 
-                // Dispose gain
-                soundData.mixGain.disconnect();
-                soundData.mixGain.dispose();
+                // Dispose gain immediately
+                try {
+                    soundData.mixGain.disconnect();
+                    soundData.mixGain.dispose();
+                } catch (e) {
+                    // Ignore disposal errors
+                }
                 
                 this.areaSounds.delete(areaNum);
+                // Remove from history
+                const historyIdx = this.areaHistory.indexOf(areaNum);
+                if (historyIdx >= 0) {
+                    this.areaHistory.splice(historyIdx, 1);
+                }
                 // Note: Don't reset areaMixRatios here - they're shared by area type
                 // They'll be reset naturally when all areas of that type are cleaned up
             }
@@ -1056,6 +1137,20 @@
 
         // Multitouch tracking - using DotMixer instances
         const dotMixers = new Map(); // Map of touchId -> DotMixer instance
+        
+        // Performance optimization: Limit total active voices globally
+        const MAX_TOTAL_VOICES = 150; // Limit total voices across all dots (6 dots * ~25 voices each)
+        
+        // Track total active voices
+        function countTotalActiveVoices() {
+            let total = 0;
+            dotMixers.forEach((mixer) => {
+                mixer.areaSounds.forEach((soundData) => {
+                    total += soundData.voices.length;
+                });
+            });
+            return total;
+        }
 
         // Helper function to find cell from coordinates
         function findCellFromCoordinates(x, y) {
@@ -1220,29 +1315,48 @@
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        // Continuous update loop for mix percentages (60fps)
+        // Continuous update loop for mix percentages (optimized with requestAnimationFrame)
+        let animationFrameId = null;
         function updateAllDotMixers() {
             dotMixers.forEach((mixer) => {
                 if (!mixer.isFading) {
                     mixer.updateMixPercentages();
                 }
             });
+            
+            // Continue animation loop
+            animationFrameId = requestAnimationFrame(updateAllDotMixers);
         }
         
-        setInterval(updateAllDotMixers, 1000 / 60);
+        // Start animation loop
+        animationFrameId = requestAnimationFrame(updateAllDotMixers);
 
         // Cleanup on visibility change
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
+                // Cancel animation frame
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
                 dotMixers.forEach((mixer) => {
                     mixer.startFade();
                 });
                 dotMixers.clear();
+            } else {
+                // Restart animation loop when visible again
+                if (!animationFrameId) {
+                    animationFrameId = requestAnimationFrame(updateAllDotMixers);
+                }
             }
         });
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             dotMixers.forEach((mixer) => {
                 mixer.startFade();
             });
