@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Score Calculator / 橋牌計分器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header h1 .zh {
+            font-size: 24px;
+            display: block;
+            margin-top: 5px;
+            opacity: 0.95;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .header p .zh {
+            display: block;
+            margin-top: 3px;
+            font-size: 13px;
+        }
+        
+        .keyterms-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .keyterms-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .keyterms-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 30px;
+        }
+        
+        .keyterms-panel.show {
+            display: block;
+        }
+        
+        .keyterms-panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .keyterms-panel h2 .zh {
+            display: block;
+            margin-top: 5px;
+            font-size: 20px;
+            color: #764ba2;
+        }
+        
+        .keyterms-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .keyterms-panel .close-btn:hover {
+            background: #c82333;
+        }
+        
+        .term-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .term-item .term {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        .term-item .term-zh {
+            font-weight: bold;
+            color: #764ba2;
+            font-size: 15px;
+            display: block;
+            margin-top: 3px;
+        }
+        
+        .term-item .definition {
+            margin-top: 8px;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .term-item .definition-zh {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .overlay.show {
+            display: block;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        
+        .calculator-section {
+            padding: 30px;
+            border-right: 1px solid #eee;
+        }
+        
+        .guide-section {
+            padding: 30px;
+            background: #f8f9fa;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .form-group label .zh {
+            display: block;
+            font-size: 13px;
+            color: #888;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .form-group small .zh {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .result h3 .zh {
+            display: block;
+            font-size: 16px;
+            color: #764ba2;
+            margin-top: 3px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+        }
+        
+        .result-item .label {
+            color: #666;
+        }
+        
+        .result-item .label .zh {
+            display: block;
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+        
+        .result-item .value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .guide-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 22px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .guide-section h2 .zh {
+            display: block;
+            font-size: 20px;
+            color: #764ba2;
+            margin-top: 5px;
+        }
+        
+        .guide-section h3 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .guide-section h3 .zh {
+            display: block;
+            font-size: 15px;
+            color: #856404;
+            margin-top: 3px;
+        }
+        
+        .guide-section p,
+        .guide-section ul {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .guide-section p .zh {
+            display: block;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .guide-section ul {
+            margin-left: 20px;
+        }
+        
+        .guide-section li {
+            margin-bottom: 8px;
+        }
+        
+        .guide-section li .zh {
+            display: block;
+            margin-top: 3px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .guide-section code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #d63384;
+        }
+        
+        .example {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .example strong {
+            color: #856404;
+        }
+        
+        .example .zh {
+            display: block;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #856404;
+        }
+        
+        .bilingual {
+            line-height: 1.8;
+        }
+        
+        .bilingual .zh {
+            display: block;
+            margin-top: 3px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .calculator-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .guide-section {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay" onclick="closeKeyTerms()"></div>
+    <div class="keyterms-panel" id="keytermsPanel">
+        <button class="close-btn" onclick="closeKeyTerms()">×</button>
+        <h2>Key Terms / 關鍵詞彙<span class="zh">重要術語解釋</span></h2>
+        
+        <div class="term-item">
+            <div class="term">Contract / 合約</div>
+            <div class="term-zh">合約</div>
+            <div class="definition">The bid that becomes the final contract for the hand.</div>
+            <div class="definition-zh">成為該局最終合約嘅叫牌。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Tricks / 墩</div>
+            <div class="term-zh">墩</div>
+            <div class="definition">A round of four cards, one from each player. You need 6 tricks as "book" plus the level bid.</div>
+            <div class="definition-zh">四個玩家各出一張牌組成嘅一輪。基本需要6墩，再加叫牌級數。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Vulnerability / 有局</div>
+            <div class="term-zh">有局</div>
+            <div class="definition">Affects bonuses and penalties. Rotates: Neither → NS → EW → Both.</div>
+            <div class="definition-zh">影響獎分同罰分。輪流：無局 → 南北有局 → 東西有局 → 雙方有局。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Doubled / 加倍</div>
+            <div class="term-zh">加倍</div>
+            <div class="definition">Doubles contract points and changes overtrick/undertrick values.</div>
+            <div class="definition-zh">將合約分數加倍，並改變超墩同欠墩嘅分數。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Redoubled / 再加倍</div>
+            <div class="term-zh">再加倍</div>
+            <div class="definition">Quadruples contract points and further increases overtrick/undertrick values.</div>
+            <div class="definition-zh">將合約分數變成四倍，並進一步增加超墩同欠墩嘅分數。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Overtricks / 超墩</div>
+            <div class="term-zh">超墩</div>
+            <div class="definition">Extra tricks won beyond the contract. Awarded bonus points.</div>
+            <div class="definition-zh">超過合約要求贏到嘅額外墩數。會獲得額外分數。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Undertricks / 欠墩</div>
+            <div class="term-zh">欠墩</div>
+            <div class="definition">Tricks short of the contract. Results in penalties.</div>
+            <div class="definition-zh">未達到合約要求嘅墩數。會導致罰分。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Game / 成局</div>
+            <div class="term-zh">成局</div>
+            <div class="definition">Contract worth 100+ points. Awards game bonus (300/500).</div>
+            <div class="definition-zh">合約分數達到100分或以上。會獲得成局獎分（300/500分）。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Small Slam / 小滿貫</div>
+            <div class="term-zh">小滿貫</div>
+            <div class="definition">6-level contract. Bonus: 500 (non-vul) or 750 (vul).</div>
+            <div class="definition-zh">6級合約。獎分：500分（無局）或750分（有局）。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Grand Slam / 大滿貫</div>
+            <div class="term-zh">大滿貫</div>
+            <div class="definition">7-level contract. Bonus: 1000 (non-vul) or 1500 (vul).</div>
+            <div class="definition-zh">7級合約。獎分：1000分（無局）或1500分（有局）。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Book / 基本墩</div>
+            <div class="term-zh">基本墩</div>
+            <div class="definition">The first 6 tricks don't count toward contract points. Only tricks 7-13 count.</div>
+            <div class="definition-zh">頭6墩唔計入合約分數。只有第7-13墩先計分。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Strain / 花色</div>
+            <div class="term-zh">花色</div>
+            <div class="definition">The suit or no-trump of the contract (C, D, H, S, NT).</div>
+            <div class="definition-zh">合約嘅花色或無將（梅花、方塊、紅心、黑桃、無將）。</div>
+        </div>
+        
+        <div class="term-item">
+            <div class="term">Level / 級數</div>
+            <div class="term-zh">級數</div>
+            <div class="definition">The number in the contract (1-7). Level + 6 = tricks needed.</div>
+            <div class="definition-zh">合約入面嘅數字（1-7）。級數 + 6 = 需要嘅墩數。</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <button class="keyterms-btn" onclick="showKeyTerms()">Key Terms / 關鍵詞彙</button>
+            <h1>🎴 Bridge Score Calculator<span class="zh">橋牌計分器</span></h1>
+            <p>Quick and easy scoring for contract bridge<span class="zh">快速簡單嘅合約橋牌計分</span></p>
+        </div>
+        
+        <div class="content">
+            <div class="calculator-section">
+                <form id="scoreForm">
+                    <div class="form-group">
+                        <label for="contract">Contract<span class="zh">合約</span></label>
+                        <input type="text" id="contract" placeholder="e.g., 4S, 3NT, 2H" required>
+                        <small>Format: Level + Suit (C/D/H/S/NT)<span class="zh">格式：級數 + 花色（C/D/H/S/NT）</span></small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tricks">Tricks Made<span class="zh">贏到嘅墩數</span></label>
+                        <input type="number" id="tricks" min="0" max="13" placeholder="0-13" required>
+                        <small>Total number of tricks won<span class="zh">總共贏到幾多墩</span></small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vulnerability">Vulnerability<span class="zh">有局情況</span></label>
+                        <select id="vulnerability" required>
+                            <option value="none">Neither Vulnerable / 雙方無局</option>
+                            <option value="we">We Are Vulnerable / 我方有局</option>
+                            <option value="they">They Are Vulnerable / 對方有局</option>
+                            <option value="both">Both Vulnerable / 雙方有局</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="doubled">Doubled/Redoubled<span class="zh">加倍/再加倍</span></label>
+                        <select id="doubled">
+                            <option value="none">No / 無</option>
+                            <option value="x">Doubled / 加倍</option>
+                            <option value="xx">Redoubled / 再加倍</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="btn" onclick="calculateScore()">Calculate Score / 計算分數</button>
+                </form>
+                
+                <div id="result" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="guide-section">
+                <h2>📖 Scoring Guide<span class="zh">計分指南</span></h2>
+                
+                <h3>Contract Points<span class="zh">合約分數</span></h3>
+                <p>Points for tricks bid and made (above book of 6):<span class="zh">叫到同做到嘅墩數分數（基本6墩以上）：</span></p>
+                <ul>
+                    <li><code>Clubs/Diamonds</code>: 20 points per trick<span class="zh"><code>梅花/方塊</code>：每墩20分</span></li>
+                    <li><code>Hearts/Spades</code>: 30 points per trick<span class="zh"><code>紅心/黑桃</code>：每墩30分</span></li>
+                    <li><code>No Trump</code>: 40 (1st trick) + 30 (each additional)<span class="zh"><code>無將</code>：40分（第1墩）+ 30分（之後每墩）</span></li>
+                </ul>
+                
+                <h3>Game Bonus<span class="zh">成局獎分</span></h3>
+                <p>Awarded when contract points ≥ 100:<span class="zh">當合約分數 ≥ 100分時獲得：</span></p>
+                <ul>
+                    <li>Non-vulnerable: <strong>300 points</strong><span class="zh">無局：<strong>300分</strong></span></li>
+                    <li>Vulnerable: <strong>500 points</strong><span class="zh">有局：<strong>500分</strong></span></li>
+                </ul>
+                
+                <h3>Slam Bonuses<span class="zh">滿貫獎分</span></h3>
+                <ul>
+                    <li><strong>Small Slam</strong> (6-level):<span class="zh"><strong>小滿貫</strong>（6級）：</span>
+                        <ul>
+                            <li>Non-vul: 500 | Vul: 750<span class="zh">無局：500分 | 有局：750分</span></li>
+                        </ul>
+                    </li>
+                    <li><strong>Grand Slam</strong> (7-level):<span class="zh"><strong>大滿貫</strong>（7級）：</span>
+                        <ul>
+                            <li>Non-vul: 1000 | Vul: 1500<span class="zh">無局：1000分 | 有局：1500分</span></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h3>Overtricks<span class="zh">超墩</span></h3>
+                <p>Extra tricks beyond contract:<span class="zh">超過合約要求嘅額外墩數：</span></p>
+                <ul>
+                    <li><strong>Undoubled</strong>: Same as contract trick value<span class="zh"><strong>無加倍</strong>：同合約墩數分數一樣</span></li>
+                    <li><strong>Doubled</strong>: 100 (non-vul) / 200 (vul) per trick<span class="zh"><strong>加倍</strong>：每墩100分（無局）/ 200分（有局）</span></li>
+                    <li><strong>Redoubled</strong>: 200 (non-vul) / 400 (vul) per trick<span class="zh"><strong>再加倍</strong>：每墩200分（無局）/ 400分（有局）</span></li>
+                </ul>
+                
+                <h3>Undertricks (Penalties)<span class="zh">欠墩（罰分）</span></h3>
+                <p>For each trick short of contract:<span class="zh">每欠一墩：</span></p>
+                <ul>
+                    <li><strong>Undoubled</strong>: 50 (non-vul) / 100 (vul)<span class="zh"><strong>無加倍</strong>：50分（無局）/ 100分（有局）</span></li>
+                    <li><strong>Doubled</strong>:<span class="zh"><strong>加倍</strong>：</span>
+                        <ul>
+                            <li>Non-vul: 100, 200, 300, 300...<span class="zh">無局：100, 200, 300, 300...</span></li>
+                            <li>Vul: 200, 300, 300, 300...<span class="zh">有局：200, 300, 300, 300...</span></li>
+                        </ul>
+                    </li>
+                    <li><strong>Redoubled</strong>:<span class="zh"><strong>再加倍</strong>：</span>
+                        <ul>
+                            <li>Non-vul: 200, 400, 600, 600...<span class="zh">無局：200, 400, 600, 600...</span></li>
+                            <li>Vul: 400, 600, 600, 600...<span class="zh">有局：400, 600, 600, 600...</span></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="example">
+                    <strong>Example:</strong> 4♠ contract, made 10 tricks, non-vulnerable<span class="zh"><strong>例子：</strong> 4♠合約，做到10墩，無局</span><br>
+                    Contract: 4 × 30 = 120 points<span class="zh">合約：4 × 30 = 120分</span><br>
+                    Game bonus: 300 points<span class="zh">成局獎分：300分</span><br>
+                    <strong>Total: 420 points</strong><span class="zh"><strong>總分：420分</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function calculateScore() {
+            const contractInput = document.getElementById('contract').value.toUpperCase().trim();
+            const tricksMade = parseInt(document.getElementById('tricks').value);
+            const vulnerability = document.getElementById('vulnerability').value;
+            const doubled = document.getElementById('doubled').value;
+            
+            // Validate contract format
+            const contractMatch = contractInput.match(/^([1-7])([CDHS]|NT)$/);
+            if (!contractMatch) {
+                alert('Invalid contract format. Use format like: 4S, 3NT, 2H\n無效合約格式。請用格式：4S, 3NT, 2H');
+                return;
+            }
+            
+            const level = parseInt(contractMatch[1]);
+            const strain = contractMatch[2];
+            const tricksBid = level + 6;
+            const overtricks = Math.max(0, tricksMade - tricksBid);
+            const undertricks = Math.max(0, tricksBid - tricksMade);
+            
+            const isVulnerable = vulnerability === 'we' || vulnerability === 'both';
+            const isDoubled = doubled === 'x';
+            const isRedoubled = doubled === 'xx';
+            
+            // Calculate contract points
+            let contractPoints = 0;
+            if (strain === 'C' || strain === 'D') {
+                contractPoints = level * 20;
+            } else if (strain === 'H' || strain === 'S') {
+                contractPoints = level * 30;
+            } else if (strain === 'NT') {
+                contractPoints = 40 + (level - 1) * 30;
+            }
+            
+            // Apply doubling/redoubling to contract points
+            if (isDoubled) {
+                contractPoints *= 2;
+            } else if (isRedoubled) {
+                contractPoints *= 4;
+            }
+            
+            // Game bonus (only if contract was made)
+            let gameBonus = 0;
+            if (undertricks === 0 && contractPoints >= 100) {
+                gameBonus = isVulnerable ? 500 : 300;
+            }
+            
+            // Slam bonuses (only if contract was made)
+            let slamBonus = 0;
+            if (undertricks === 0) {
+                if (level === 6) {
+                    slamBonus = isVulnerable ? 750 : 500;
+                } else if (level === 7) {
+                    slamBonus = isVulnerable ? 1500 : 1000;
+                }
+            }
+            
+            // Overtrick points
+            let overtrickPoints = 0;
+            if (overtricks > 0) {
+                if (isDoubled) {
+                    overtrickPoints = overtricks * (isVulnerable ? 200 : 100);
+                } else if (isRedoubled) {
+                    overtrickPoints = overtricks * (isVulnerable ? 400 : 200);
+                } else {
+                    // Undoubled overtricks use same trick value
+                    if (strain === 'C' || strain === 'D') {
+                        overtrickPoints = overtricks * 20;
+                    } else if (strain === 'H' || strain === 'S') {
+                        overtrickPoints = overtricks * 30;
+                    } else {
+                        overtrickPoints = overtricks * 30;
+                    }
+                }
+            }
+            
+            // Undertrick penalties
+            let undertrickPoints = 0;
+            if (undertricks > 0) {
+                if (isDoubled) {
+                    if (isVulnerable) {
+                        undertrickPoints = 200 + Math.max(0, (undertricks - 1)) * 300;
+                    } else {
+                        undertrickPoints = 100 + Math.max(0, (undertricks - 1)) * 200;
+                    }
+                } else if (isRedoubled) {
+                    if (isVulnerable) {
+                        undertrickPoints = 400 + Math.max(0, (undertricks - 1)) * 600;
+                    } else {
+                        undertrickPoints = 200 + Math.max(0, (undertricks - 1)) * 400;
+                    }
+                } else {
+                    undertrickPoints = undertricks * (isVulnerable ? 100 : 50);
+                }
+            }
+            
+            // Total score (positive if made, negative if set)
+            const totalScore = contractPoints + gameBonus + slamBonus + overtrickPoints - undertrickPoints;
+            
+            // Display result
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            const contractDisplay = level + (strain === 'NT' ? 'NT' : 
+                strain === 'C' ? '♣' : 
+                strain === 'D' ? '♦' : 
+                strain === 'H' ? '♥' : '♠');
+            
+            const doubledDisplay = isRedoubled ? 'XX' : isDoubled ? 'X' : '';
+            
+            resultDiv.innerHTML = `
+                <h3>Score Breakdown<span class="zh">分數明細</span></h3>
+                <div class="result-item">
+                    <span class="label">Contract:<span class="zh">合約</span></span>
+                    <span class="value">${contractDisplay}${doubledDisplay}</span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Tricks:<span class="zh">墩數</span></span>
+                    <span class="value">${tricksMade} (Bid: ${tricksBid})<span class="zh">${tricksMade}（叫：${tricksBid}）</span></span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Contract Points:<span class="zh">合約分數</span></span>
+                    <span class="value">${contractPoints}</span>
+                </div>
+                ${gameBonus > 0 ? `
+                <div class="result-item">
+                    <span class="label">Game Bonus:<span class="zh">成局獎分</span></span>
+                    <span class="value">+${gameBonus}</span>
+                </div>
+                ` : ''}
+                ${slamBonus > 0 ? `
+                <div class="result-item">
+                    <span class="label">Slam Bonus:<span class="zh">滿貫獎分</span></span>
+                    <span class="value">+${slamBonus}</span>
+                </div>
+                ` : ''}
+                ${overtrickPoints > 0 ? `
+                <div class="result-item">
+                    <span class="label">Overtricks:<span class="zh">超墩</span></span>
+                    <span class="value">+${overtrickPoints} (${overtricks} trick${overtricks > 1 ? 's' : ''})<span class="zh">+${overtrickPoints}（${overtricks}墩）</span></span>
+                </div>
+                ` : ''}
+                ${undertrickPoints > 0 ? `
+                <div class="result-item">
+                    <span class="label">Undertricks:<span class="zh">欠墩</span></span>
+                    <span class="value">-${undertrickPoints} (${undertricks} trick${undertricks > 1 ? 's' : ''})<span class="zh">-${undertrickPoints}（${undertricks}墩）</span></span>
+                </div>
+                ` : ''}
+                <div class="result-item">
+                    <span class="label">Total Score:<span class="zh">總分</span></span>
+                    <span class="value">${totalScore >= 0 ? '+' : ''}${totalScore}</span>
+                </div>
+            `;
+        }
+        
+        // Allow Enter key to calculate
+        document.getElementById('scoreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateScore();
+        });
+        
+        document.getElementById('contract').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateScore();
+            }
+        });
+        
+        document.getElementById('tricks').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateScore();
+            }
+        });
+        
+        function showKeyTerms() {
+            document.getElementById('keytermsPanel').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+        }
+        
+        function closeKeyTerms() {
+            document.getElementById('keytermsPanel').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeKeyTerms();
+            }
+        });
+    </script>
+</body>
+</html>
