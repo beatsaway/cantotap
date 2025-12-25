@@ -893,8 +893,11 @@
                 this.masterGain = new Tone.Gain(1.0);
                 this.masterGain.toDestination();
                 
-                // Mix transition rate (per frame/update)
-                this.mixTransitionRate = 0.05; // 5% per update
+                // Mix transition rate - matches demoold.html's 3-second crossfade duration
+                // 100% over 3 seconds = 33.33% per second = ~0.556% per frame at 60fps
+                // Using time-based calculation for frame-rate independence
+                this.mixTransitionRate = 33.33 / 60; // ~0.556% per frame (matches 3s crossfade)
+                this.lastUpdateTime = performance.now();
                 
                 // Current position
                 this.currentX = x;
@@ -1023,31 +1026,40 @@
                 this.updateMixPercentages();
             }
             
-            // Update mix percentages towards targets
+            // Update mix percentages towards targets (time-based like demoold.html)
             updateMixPercentages() {
+                const currentTime = performance.now();
+                const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
+                this.lastUpdateTime = currentTime;
+                
+                // Clamp deltaTime to prevent large jumps (e.g., if tab was inactive)
+                const clampedDeltaTime = Math.max(0.001, Math.min(deltaTime, 0.1)); // Between 1ms and 100ms
+                
+                // Calculate change per frame (33.33% per second * delta time)
+                // This matches demoold.html's MIXRATIO_RATE of 33.33%/s for 3-second crossfade
+                const changePerFrame = (33.33 / 100) * clampedDeltaTime; // Convert % to 0-1 range
+                
                 this.areaSounds.forEach((soundData, areaNum) => {
                     const currentMix = soundData.mixPercent;
-                    const targetMix = soundData.targetMix;
                     
                     // If in this area, target is 100%, otherwise 0%
                     const isInArea = (areaNum === this.currentCell);
-                    const newTarget = isInArea ? 1.0 : 0.0;
-                    soundData.targetMix = newTarget;
+                    const targetMix = isInArea ? 1.0 : 0.0;
                     
                     // Transition towards target
                     let newMix;
-                    if (currentMix < newTarget) {
+                    if (currentMix < targetMix) {
                         // Increasing
-                        newMix = Math.min(1.0, currentMix + this.mixTransitionRate);
-                    } else if (currentMix > newTarget) {
+                        newMix = Math.min(1.0, currentMix + changePerFrame);
+                    } else if (currentMix > targetMix) {
                         // Decreasing
-                        newMix = Math.max(0.0, currentMix - this.mixTransitionRate);
+                        newMix = Math.max(0.0, currentMix - changePerFrame);
                     } else {
                         newMix = currentMix;
                     }
                     
                     soundData.mixPercent = newMix;
-                    soundData.mixGain.gain.value = newMix;
+                    soundData.mixGain.gain.rampTo(newMix, 0.05); // Smooth ramp
                     
                     // If mix reaches 0 and we're not in this area, we could clean up
                     // But we'll keep it until dot fades to allow re-entry
