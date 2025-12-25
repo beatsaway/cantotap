@@ -127,7 +127,7 @@
             pointer-events: none !important;
             z-index: 1000;
             transform: translate(-50%, -50%);
-            transition: opacity 2s ease-out;
+            transition: opacity 0.5s ease-out;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             will-change: transform;
             opacity: 1;
@@ -267,28 +267,28 @@
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.35,
-                    release: 0.3
+                    release: 0.2
                 });
                 
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.25,
-                    release: 0.3
+                    release: 0.2
                 });
                 
                 const env3 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.15,
-                    release: 0.3
+                    release: 0.2
                 });
                 
                 const env4 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.1,
-                    release: 0.3
+                    release: 0.2
                 });
                 
                 const harmonicGain2 = new Tone.Gain(0.3);
@@ -305,7 +305,7 @@
                     attack: 0.01,
                     decay: 0.07,
                     sustain: 0,
-                    release: 0
+                    release: 0.2
                 });
 
                 const noiseGain = new Tone.Gain();
@@ -402,7 +402,7 @@
                     attack: 0.01,
                     decay: 2.0,
                     sustain: 0.35,  // Increased from 0.1 to match area 1's sustain level
-                    release: 0.5
+                    release: 0.2
                 });
                 
                 const osc2 = new Tone.Oscillator({
@@ -414,7 +414,7 @@
                     attack: 0.01,
                     decay: 1.5,
                     sustain: 0.25,  // Increased from 0.05 to better match other areas
-                    release: 0.3
+                    release: 0.2
                 });
                 
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
@@ -472,7 +472,7 @@
                     attack: 0.3,
                     decay: 0.2,
                     sustain: 0.4,  // Reduced from 0.7 to match area 1/2 loudness
-                    release: 0.8
+                    release: 0.2
                 });
                 
                 const filter = new Tone.Filter({
@@ -1086,6 +1086,12 @@
                 if (this.isFading) return;
                 this.isFading = true;
                 
+                // Track fade start time for safety cleanup
+                this.fadeStartTime = performance.now();
+                
+                // Store timeout ID for cleanup
+                this.fadeTimeoutId = null;
+                
                 // Release all sounds using ADSR release (matching demoold.html)
                 this.areaSounds.forEach((soundData, areaNum) => {
                     soundData.voices.forEach(voice => {
@@ -1099,23 +1105,44 @@
                     });
                 });
                 
-                // Start visual fade
+                // Start visual fade (faster fade - 0.5s instead of 2s)
+                this.dot.style.transition = 'opacity 0.5s ease-out';
                 this.dot.style.opacity = '0';
                 
-                // Cleanup after fade
-                setTimeout(() => {
-                    this.areaSounds.forEach((soundData, areaNum) => {
-                        this.cleanupAreaSound(areaNum);
-                    });
-                    if (this.dot && this.dot.parentNode) {
-                        this.dot.parentNode.removeChild(this.dot);
-                    }
-                    if (this.debugInfo && this.debugInfo.parentNode) {
-                        this.debugInfo.parentNode.removeChild(this.debugInfo);
-                    }
+                // Cleanup after fade (reduced to 0.6s to match visual fade)
+                this.fadeTimeoutId = setTimeout(() => {
+                    this.cleanupCompletely();
+                }, 600);
+            }
+            
+            // Complete cleanup - remove dot and all sounds
+            cleanupCompletely() {
+                // Clear timeout if it exists
+                if (this.fadeTimeoutId) {
+                    clearTimeout(this.fadeTimeoutId);
+                    this.fadeTimeoutId = null;
+                }
+                
+                // Cleanup all area sounds
+                this.areaSounds.forEach((soundData, areaNum) => {
+                    this.cleanupAreaSound(areaNum);
+                });
+                
+                // Remove visual elements immediately
+                if (this.dot && this.dot.parentNode) {
+                    this.dot.parentNode.removeChild(this.dot);
+                }
+                if (this.debugInfo && this.debugInfo.parentNode) {
+                    this.debugInfo.parentNode.removeChild(this.debugInfo);
+                }
+                
+                // Dispose master gain
+                try {
                     this.masterGain.disconnect();
                     this.masterGain.dispose();
-                }, 2000);
+                } catch (e) {
+                    // Ignore disposal errors
+                }
             }
         }
 
@@ -1217,11 +1244,13 @@
                 activeTouchIds.add(e.touches[i].identifier);
             }
             
-            // Remove orphaned dots
+            // Remove orphaned dots (touches that are no longer in the active list)
             dotMixers.forEach((mixer, touchId) => {
-                if (!activeTouchIds.has(touchId)) {
+                if (!activeTouchIds.has(touchId) && !mixer.isFading) {
                     mixer.startFade();
-                    dotMixers.delete(touchId);
+                    setTimeout(() => {
+                        dotMixers.delete(touchId);
+                    }, 700);
                 }
             });
             
@@ -1249,9 +1278,10 @@
                 const mixer = dotMixers.get(touchId);
                 if (mixer) {
                     mixer.startFade();
+                    // Remove from map after fade completes
                     setTimeout(() => {
                         dotMixers.delete(touchId);
-                    }, 2100);
+                    }, 700); // Match the 600ms fade + small buffer
                 }
             }
         }
@@ -1303,7 +1333,21 @@
                     mixer.startFade();
                     setTimeout(() => {
                         dotMixers.delete(mouseTouchId);
-                    }, 2100);
+                    }, 700); // Match the 600ms fade + small buffer
+                }
+                mouseTouchId = null;
+            }
+        });
+        
+        // Also handle mouseleave to catch cases where mouse leaves window
+        document.addEventListener('mouseleave', () => {
+            if (mouseTouchId) {
+                const mixer = dotMixers.get(mouseTouchId);
+                if (mixer) {
+                    mixer.startFade();
+                    setTimeout(() => {
+                        dotMixers.delete(mouseTouchId);
+                    }, 700);
                 }
                 mouseTouchId = null;
             }
@@ -1330,6 +1374,54 @@
         
         // Start animation loop
         animationFrameId = requestAnimationFrame(updateAllDotMixers);
+        
+        // Periodic cleanup check - ensures all dots are properly tracked and removed
+        setInterval(() => {
+            // Check for any dots in DOM that aren't in our map
+            const allDots = document.querySelectorAll('.touch-dot');
+            const allDebugInfos = document.querySelectorAll('.dot-debug-info');
+            
+            // Find orphaned dots (dots in DOM but not in dotMixers)
+            allDots.forEach(dot => {
+                let found = false;
+                dotMixers.forEach((mixer) => {
+                    if (mixer.dot === dot) {
+                        found = true;
+                    }
+                });
+                if (!found && dot.parentNode) {
+                    // Orphaned dot - remove it
+                    dot.parentNode.removeChild(dot);
+                }
+            });
+            
+            // Find orphaned debug infos
+            allDebugInfos.forEach(debugInfo => {
+                let found = false;
+                dotMixers.forEach((mixer) => {
+                    if (mixer.debugInfo === debugInfo) {
+                        found = true;
+                    }
+                });
+                if (!found && debugInfo.parentNode) {
+                    // Orphaned debug info - remove it
+                    debugInfo.parentNode.removeChild(debugInfo);
+                }
+            });
+            
+            // Also check if any mixers are fading but haven't been cleaned up
+            dotMixers.forEach((mixer, touchId) => {
+                if (mixer.isFading) {
+                    // Check if fade timeout has passed (safety check)
+                    const now = performance.now();
+                    if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
+                        // Fade should have completed - force cleanup
+                        mixer.cleanupCompletely();
+                        dotMixers.delete(touchId);
+                    }
+                }
+            });
+        }, 1000); // Check every second
 
         // Cleanup on visibility change
         document.addEventListener('visibilitychange', () => {
@@ -1346,7 +1438,7 @@
             } else {
                 // Restart animation loop when visible again
                 if (!animationFrameId) {
-                    animationFrameId = requestAnimationFrame(updateAllDotMixers); 
+                    animationFrameId = requestAnimationFrame(updateAllDotMixers);
                 }
             }
         });
