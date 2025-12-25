@@ -152,6 +152,66 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             max-width: 150px;
         }
+
+        /* Global debug panel */
+        .global-debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #fff;
+            z-index: 2000;
+            pointer-events: none;
+            line-height: 1.4;
+        }
+
+        .global-debug-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #0ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .global-debug-panel .mixer-entry {
+            margin: 8px 0;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #0ff;
+            border-radius: 4px;
+        }
+
+        .global-debug-panel .mixer-entry.fading {
+            border-left-color: #f00;
+            opacity: 0.6;
+        }
+
+        .global-debug-panel .mixer-entry .dot-status {
+            color: #0f0;
+        }
+
+        .global-debug-panel .mixer-entry .dot-status.gone {
+            color: #f00;
+        }
+
+        .global-debug-panel .mixer-entry .sound-list {
+            margin-top: 4px;
+            padding-left: 12px;
+            font-size: 0.7rem;
+        }
+
+        .global-debug-panel .mixer-entry .sound-item {
+            margin: 2px 0;
+            color: #ff0;
+        }
     </style>
 </head>
 <body>
@@ -172,6 +232,12 @@
         <div class="grid-cell" data-cell="14">Area 14</div>
         <div class="grid-cell" data-cell="15">Area 15</div>
         <div class="grid-cell" data-cell="16">Area 16</div>
+    </div>
+
+    <!-- Global Debug Panel -->
+    <div class="global-debug-panel" id="globalDebugPanel">
+        <h3>DotMixer Instances Debug</h3>
+        <div id="debugContent">No active instances</div>
     </div>
 
     <script>
@@ -1359,6 +1425,83 @@
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
+        // Update global debug panel
+        function updateGlobalDebugPanel() {
+            const debugPanel = document.getElementById('globalDebugPanel');
+            const debugContent = document.getElementById('debugContent');
+            if (!debugPanel || !debugContent) return;
+
+            if (dotMixers.size === 0) {
+                debugContent.textContent = 'No active instances';
+                return;
+            }
+
+            let html = '';
+            let index = 0;
+            
+            dotMixers.forEach((mixer, touchId) => {
+                index++;
+                
+                // Check dot visibility
+                let dotStatus = 'gone';
+                let dotOpacity = 0;
+                if (mixer.dot && mixer.dot.parentNode) {
+                    const computedStyle = window.getComputedStyle(mixer.dot);
+                    dotOpacity = parseFloat(computedStyle.opacity) || 0;
+                    if (dotOpacity > 0.1) {
+                        dotStatus = 'visible';
+                    }
+                }
+                
+                // Get sound information
+                const sounds = [];
+                mixer.areaSounds.forEach((soundData, areaNum) => {
+                    const areaType = ((areaNum - 1) % 4) + 1;
+                    const mix = mixer.areaMixRatios[areaType] || 0;
+                    const vol = soundData.volumeMultiplier || 0;
+                    const isCurrent = (areaNum === mixer.currentCell);
+                    
+                    if (mix > 0.1) {
+                        sounds.push({
+                            area: areaNum,
+                            type: areaType,
+                            mix: mix.toFixed(1),
+                            vol: (vol * 100).toFixed(1),
+                            voices: soundData.voices.length,
+                            isCurrent: isCurrent
+                        });
+                    }
+                });
+                
+                // Sort sounds by area number
+                sounds.sort((a, b) => a.area - b.area);
+                
+                const fadingClass = mixer.isFading ? ' fading' : '';
+                const dotStatusClass = dotStatus === 'visible' ? '' : ' gone';
+                
+                html += `<div class="mixer-entry${fadingClass}">`;
+                html += `<strong>#${index} TouchID: ${touchId}</strong><br>`;
+                html += `Dot: <span class="dot-status${dotStatusClass}">${dotStatus.toUpperCase()}</span> (opacity: ${dotOpacity.toFixed(2)})<br>`;
+                html += `Current Cell: ${mixer.currentCell || 'none'}<br>`;
+                html += `Fading: ${mixer.isFading ? 'YES' : 'NO'}<br>`;
+                
+                if (sounds.length > 0) {
+                    html += `<div class="sound-list">Sounds (${sounds.length}):<br>`;
+                    sounds.forEach(sound => {
+                        const currentMarker = sound.isCurrent ? '→' : ' ';
+                        html += `<div class="sound-item">${currentMarker}Area ${sound.area} (Type ${sound.type}): Mix ${sound.mix}%, Vol ${sound.vol}%, ${sound.voices} voices</div>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="sound-list">No active sounds</div>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            debugContent.innerHTML = html;
+        }
+
         // Continuous update loop for mix percentages (optimized with requestAnimationFrame)
         let animationFrameId = null;
         function updateAllDotMixers() {
@@ -1367,6 +1510,9 @@
                     mixer.updateMixPercentages();
                 }
             });
+            
+            // Update global debug panel
+            updateGlobalDebugPanel();
             
             // Continue animation loop
             animationFrameId = requestAnimationFrame(updateAllDotMixers);
