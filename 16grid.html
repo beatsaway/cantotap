@@ -1185,6 +1185,106 @@
             });
             return total;
         }
+        
+        // Cleanup orphaned sounds - sounds that don't belong to any active dot
+        function cleanupOrphanedSounds() {
+            if (!synth) return;
+            
+            const releaseTime = synth.releaseTime || DOT_FADE_DURATION;
+            
+            // Check all dotMixers - if a mixer's dot is missing, cleanup its sounds
+            dotMixers.forEach((mixer, touchId) => {
+                // If dot is missing from DOM, trigger release and cleanup
+                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
+                    if (!mixer.isFading) {
+                        // Trigger release envelopes first (so sounds fade out properly)
+                        mixer.areaSounds.forEach((soundData, areaNum) => {
+                            soundData.voices.forEach(voice => {
+                                if (voice) {
+                                    if (voice.envelope) voice.envelope.triggerRelease();
+                                    if (voice.envelope2) voice.envelope2.triggerRelease();
+                                    if (voice.envelope3) voice.envelope3.triggerRelease();
+                                    if (voice.envelope4) voice.envelope4.triggerRelease();
+                                    if (voice.noiseEnv) voice.noiseEnv.triggerRelease();
+                                }
+                            });
+                        });
+                        mixer.isFading = true;
+                        mixer.fadeStartTime = performance.now();
+                    }
+                    // Cleanup after release time completes
+                    setTimeout(() => {
+                        mixer.cleanupCompletely();
+                        dotMixers.delete(touchId);
+                    }, (releaseTime * 1000) + 100);
+                }
+                
+                // If mixer is fading but past release time, force cleanup
+                if (mixer.isFading && mixer.fadeStartTime) {
+                    const now = performance.now();
+                    if ((now - mixer.fadeStartTime) > (releaseTime * 1000) + 200) {
+                        // Release should have completed - force cleanup
+                        mixer.cleanupCompletely();
+                        dotMixers.delete(touchId);
+                    }
+                }
+            });
+            
+            // Check for any mixGains that are connected but their mixer is gone
+            // This is a safety net for edge cases
+            try {
+                dotMixers.forEach((mixer, touchId) => {
+                    try {
+                        // Check if masterGain is still connected
+                        if (mixer.masterGain && mixer.masterGain.numberOfInputs === 0 && mixer.masterGain.numberOfOutputs === 0) {
+                            // MasterGain is disconnected - trigger release then cleanup
+                            if (!mixer.isFading) {
+                                mixer.areaSounds.forEach((soundData, areaNum) => {
+                                    soundData.voices.forEach(voice => {
+                                        if (voice) {
+                                            if (voice.envelope) voice.envelope.triggerRelease();
+                                            if (voice.envelope2) voice.envelope2.triggerRelease();
+                                            if (voice.envelope3) voice.envelope3.triggerRelease();
+                                            if (voice.envelope4) voice.envelope4.triggerRelease();
+                                            if (voice.noiseEnv) voice.noiseEnv.triggerRelease();
+                                        }
+                                    });
+                                });
+                                mixer.isFading = true;
+                                mixer.fadeStartTime = performance.now();
+                            }
+                            setTimeout(() => {
+                                mixer.cleanupCompletely();
+                                dotMixers.delete(touchId);
+                            }, (releaseTime * 1000) + 100);
+                        }
+                    } catch (e) {
+                        // MasterGain might be disposed - trigger release then cleanup
+                        if (!mixer.isFading) {
+                            mixer.areaSounds.forEach((soundData, areaNum) => {
+                                soundData.voices.forEach(voice => {
+                                    if (voice) {
+                                        if (voice.envelope) voice.envelope.triggerRelease();
+                                        if (voice.envelope2) voice.envelope2.triggerRelease();
+                                        if (voice.envelope3) voice.envelope3.triggerRelease();
+                                        if (voice.envelope4) voice.envelope4.triggerRelease();
+                                        if (voice.noiseEnv) voice.noiseEnv.triggerRelease();
+                                    }
+                                });
+                            });
+                            mixer.isFading = true;
+                            mixer.fadeStartTime = performance.now();
+                        }
+                        setTimeout(() => {
+                            mixer.cleanupCompletely();
+                            dotMixers.delete(touchId);
+                        }, (releaseTime * 1000) + 100);
+                    }
+                });
+            } catch (e) {
+                // Ignore errors in cleanup check
+            }
+        }
 
         // Helper function to find cell from coordinates
         function findCellFromCoordinates(x, y) {
@@ -1386,15 +1486,16 @@
         // Start animation loop
         animationFrameId = requestAnimationFrame(updateAllDotMixers);
         
-        // Periodic cleanup check - ensures all dots are properly tracked and removed
+        // Periodic cleanup check - ensures all dots and sounds are properly tracked and removed
         setInterval(() => {
+            // CRITICAL: First, cleanup orphaned sounds (sounds without dots)
+            cleanupOrphanedSounds();
+            
             // Check for any dots in DOM that aren't in our map
             const allDots = document.querySelectorAll('.touch-dot');
             const allDebugInfos = document.querySelectorAll('.dot-debug-info');
             
             // Find orphaned dots (dots in DOM but not in dotMixers)
-            // CRITICAL: If a dot is orphaned, its mixer might still exist but not be in the map
-            // We need to find the mixer and clean up its sounds
             allDots.forEach(dot => {
                 let foundMixer = null;
                 dotMixers.forEach((mixer, touchId) => {
@@ -1404,24 +1505,8 @@
                 });
                 
                 if (!foundMixer && dot.parentNode) {
-                    // Orphaned dot - try to find its mixer by checking all mixers
-                    // (in case it was removed from map but mixer still exists)
-                    let mixerFound = false;
-                    dotMixers.forEach((mixer) => {
-                        if (mixer.dot === dot) {
-                            mixerFound = true;
-                            // Found mixer - ensure it's fading/cleaned up
-                            if (!mixer.isFading) {
-                                mixer.startFade();
-                            }
-                        }
-                    });
-                    
-                    // If still no mixer found, just remove the visual element
-                    // (sounds should have been cleaned up when mixer was removed)
-                    if (!mixerFound) {
-                        dot.parentNode.removeChild(dot);
-                    }
+                    // Orphaned dot - remove it (sounds should be cleaned up by cleanupOrphanedSounds)
+                    dot.parentNode.removeChild(dot);
                 }
             });
             
@@ -1436,37 +1521,6 @@
                 if (!found && debugInfo.parentNode) {
                     // Orphaned debug info - remove it
                     debugInfo.parentNode.removeChild(debugInfo);
-                }
-            });
-            
-            // Also check if any mixers are fading but haven't been cleaned up
-            // CRITICAL: Ensure all fading mixers eventually get cleaned up
-            dotMixers.forEach((mixer, touchId) => {
-                if (mixer.isFading) {
-                    // Check if fade timeout has passed (safety check)
-                    const now = performance.now();
-                    if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
-                        // Fade should have completed - force cleanup to ensure sounds are released
-                        mixer.cleanupCompletely();
-                        dotMixers.delete(touchId);
-                    }
-                }
-            });
-            
-            // CRITICAL: Check for mixers whose dots are missing from DOM
-            // This ensures sounds are always released when dots are removed
-            dotMixers.forEach((mixer, touchId) => {
-                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
-                    // Dot was removed from DOM but mixer still exists - cleanup sounds immediately
-                    if (!mixer.isFading) {
-                        mixer.startFade(); // This will trigger sound release
-                    }
-                    // Force cleanup after fade duration
-                    const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
-                    setTimeout(() => {
-                        mixer.cleanupCompletely();
-                        dotMixers.delete(touchId);
-                    }, (fadeDuration * 1000) + 100);
                 }
             });
         }, 1000); // Check every second
