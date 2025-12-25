@@ -1054,17 +1054,19 @@
                 });
             }
             
-            // Start fade and release sounds
+            // Start fade and release sounds immediately
             startFade() {
                 if (this.isFading) return;
                 this.isFading = true;
                 
+                // Release all sounds immediately when fade starts
+                this.releaseAllSounds();
+                
                 // Start visual fade
                 this.dot.style.opacity = '0';
                 
-                // Release all sounds after fade completes
+                // Remove dot from DOM after fade completes
                 setTimeout(() => {
-                    this.releaseAllSounds();
                     if (this.dot && this.dot.parentNode) {
                         this.dot.parentNode.removeChild(this.dot);
                     }
