@@ -242,6 +242,142 @@
 
     <script>
        
+        // Voice class - wraps voice objects and checks if owner DotMixer still exists
+        class Voice {
+            constructor(voiceData, ownerTouchId) {
+                this.voiceData = voiceData; // The actual voice object with oscillators, envelopes, etc.
+                this.ownerTouchId = ownerTouchId; // Touch ID of the DotMixer that owns this voice
+                this.isTerminated = false;
+                this.isFading = false;
+                this.fadeStartTime = null;
+            }
+            
+            // Check if owner DotMixer still exists
+            checkOwnerExists() {
+                if (this.isTerminated) return false;
+                
+                // Check if dotMixers is available (should always be, but safety check)
+                if (typeof dotMixers === 'undefined' || !dotMixers) {
+                    // dotMixers not available yet - terminate immediately
+                    this.terminate();
+                    return false;
+                }
+                
+                // Check if owner exists in dotMixers map
+                if (!dotMixers.has(this.ownerTouchId)) {
+                    // Owner doesn't exist - start fading
+                    if (!this.isFading) {
+                        this.startFade();
+                    }
+                    return false;
+                }
+                
+                // Owner exists - check if it's fading
+                const owner = dotMixers.get(this.ownerTouchId);
+                if (owner && owner.isFading && !this.isFading) {
+                    // Owner is fading - start fading this voice too
+                    this.startFade();
+                }
+                
+                return true;
+            }
+            
+            // Start fading and terminate
+            startFade() {
+                if (this.isFading || this.isTerminated) return;
+                
+                this.isFading = true;
+                this.fadeStartTime = performance.now();
+                
+                // Trigger release on all envelopes
+                if (this.voiceData.envelope) {
+                    try {
+                        this.voiceData.envelope.triggerRelease();
+                    } catch (e) {}
+                }
+                if (this.voiceData.envelope2) {
+                    try {
+                        this.voiceData.envelope2.triggerRelease();
+                    } catch (e) {}
+                }
+                if (this.voiceData.envelope3) {
+                    try {
+                        this.voiceData.envelope3.triggerRelease();
+                    } catch (e) {}
+                }
+                if (this.voiceData.envelope4) {
+                    try {
+                        this.voiceData.envelope4.triggerRelease();
+                    } catch (e) {}
+                }
+                if (this.voiceData.noiseEnv) {
+                    try {
+                        this.voiceData.noiseEnv.triggerRelease();
+                    } catch (e) {}
+                }
+                
+                // Schedule termination after release time
+                setTimeout(() => {
+                    this.terminate();
+                }, 500); // Wait for release to complete
+            }
+            
+            // Completely terminate and dispose
+            terminate() {
+                if (this.isTerminated) return;
+                this.isTerminated = true;
+                
+                // Stop all oscillators
+                try {
+                    if (this.voiceData.oscillator) this.voiceData.oscillator.stop();
+                    if (this.voiceData.oscillator2) this.voiceData.oscillator2.stop();
+                    if (this.voiceData.oscillator3) this.voiceData.oscillator3.stop();
+                    if (this.voiceData.oscillator4) this.voiceData.oscillator4.stop();
+                    if (this.voiceData.noise) this.voiceData.noise.stop();
+                } catch (e) {}
+                
+                // Dispose all nodes
+                try {
+                    if (this.voiceData.oscillator) this.voiceData.oscillator.dispose();
+                    if (this.voiceData.oscillator2) this.voiceData.oscillator2.dispose();
+                    if (this.voiceData.oscillator3) this.voiceData.oscillator3.dispose();
+                    if (this.voiceData.oscillator4) this.voiceData.oscillator4.dispose();
+                    if (this.voiceData.envelope) this.voiceData.envelope.dispose();
+                    if (this.voiceData.envelope2) this.voiceData.envelope2.dispose();
+                    if (this.voiceData.envelope3) this.voiceData.envelope3.dispose();
+                    if (this.voiceData.envelope4) this.voiceData.envelope4.dispose();
+                    if (this.voiceData.noise) this.voiceData.noise.dispose();
+                    if (this.voiceData.noiseEnv) this.voiceData.noiseEnv.dispose();
+                    if (this.voiceData.pan) this.voiceData.pan.dispose();
+                    if (this.voiceData.volumeGain) this.voiceData.volumeGain.dispose();
+                    if (this.voiceData.filter) this.voiceData.filter.dispose();
+                } catch (e) {}
+            }
+            
+            // Proxy all voiceData properties for backward compatibility
+            get oscillator() { return this.voiceData.oscillator; }
+            get oscillator2() { return this.voiceData.oscillator2; }
+            get oscillator3() { return this.voiceData.oscillator3; }
+            get oscillator4() { return this.voiceData.oscillator4; }
+            get envelope() { return this.voiceData.envelope; }
+            get envelope2() { return this.voiceData.envelope2; }
+            get envelope3() { return this.voiceData.envelope3; }
+            get envelope4() { return this.voiceData.envelope4; }
+            get noise() { return this.voiceData.noise; }
+            get noiseEnv() { return this.voiceData.noiseEnv; }
+            get pan() { return this.voiceData.pan; }
+            get volumeGain() { return this.voiceData.volumeGain; }
+            get filter() { return this.voiceData.filter; }
+            
+            // Proxy stop method
+            stop() {
+                if (this.voiceData.stop) {
+                    this.voiceData.stop();
+                }
+                this.terminate();
+            }
+        }
+
         class WaterSynthTone {
             constructor() {
                 // Create reverb with very wet signal (like original: 1.0 reverb, 0.3 dry)
@@ -445,11 +581,12 @@
             }
 
             // Create area 1 voices connected to a given gain node (for DotMixer)
-            createArea1Voices(pitchOffset, volumeMultiplier, outputGain) {
+            createArea1Voices(pitchOffset, volumeMultiplier, outputGain, ownerTouchId) {
                 const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createWaterVoice(freq, 0.02, 0.03, pitchOffset, volumeMultiplier, outputGain)
-                );
+                return chordFrequencies.map(freq => {
+                    const voiceData = this.createWaterVoice(freq, 0.02, 0.03, pitchOffset, volumeMultiplier, outputGain);
+                    return new Voice(voiceData, ownerTouchId);
+                });
             }
 
             // Create a bell/chime sound
@@ -515,11 +652,12 @@
             }
 
             // Create area 2 voices
-            createArea2Voices(pitchOffset, volumeMultiplier, outputGain) {
+            createArea2Voices(pitchOffset, volumeMultiplier, outputGain, ownerTouchId) {
                 const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
+                return chordFrequencies.map(freq => {
+                    const voiceData = this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain);
+                    return new Voice(voiceData, ownerTouchId);
+                });
             }
 
             // Create a pad/string-like sound
@@ -576,11 +714,12 @@
             }
 
             // Create area 3 voices
-            createArea3Voices(pitchOffset, volumeMultiplier, outputGain) {
+            createArea3Voices(pitchOffset, volumeMultiplier, outputGain, ownerTouchId) {
                 const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
+                return chordFrequencies.map(freq => {
+                    const voiceData = this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain);
+                    return new Voice(voiceData, ownerTouchId);
+                });
             }
 
             // Create a brass/synth lead sound
@@ -661,11 +800,12 @@
             }
 
             // Create area 4 voices
-            createArea4Voices(pitchOffset, volumeMultiplier, outputGain) {
+            createArea4Voices(pitchOffset, volumeMultiplier, outputGain, ownerTouchId) {
                 const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createLeadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
+                return chordFrequencies.map(freq => {
+                    const voiceData = this.createLeadVoice(freq, pitchOffset, volumeMultiplier, outputGain);
+                    return new Voice(voiceData, ownerTouchId);
+                });
             }
         }
 
@@ -822,13 +962,13 @@
                 let voices = [];
                 const areaType = ((areaNum - 1) % 4) + 1;
                 if (areaType === 1) {
-                    voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
+                    voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain, this.touchId);
                 } else if (areaType === 2) {
-                    voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
+                    voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain, this.touchId);
                 } else if (areaType === 3) {
-                    voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
+                    voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain, this.touchId);
                 } else {
-                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
+                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain, this.touchId);
                 }
                 
                 this.areaSounds.set(areaNum, {
@@ -1047,6 +1187,11 @@
                         });
                     }
                     
+                    // Filter out terminated voices
+                    soundData.voices = soundData.voices.filter(voice => 
+                        voice && voice instanceof Voice && !voice.isTerminated
+                    );
+                    
                     // Cleanup if mix reaches 0 (more aggressive cleanup for performance)
                     if (mix <= 0.1 && !this.activeAreas.has(areaNum)) {
                         // Immediate cleanup - don't wait
@@ -1095,37 +1240,10 @@
                 const soundData = this.areaSounds.get(areaNum);
                 if (!soundData) return;
                 
-                // Immediately stop and dispose all voices (more aggressive cleanup)
+                // Terminate all voices (Voice class handles cleanup)
                 soundData.voices.forEach(voice => {
-                    if (voice) {
-                        // Stop oscillators immediately
-                        try {
-                            if (voice.oscillator) voice.oscillator.stop();
-                            if (voice.oscillator2) voice.oscillator2.stop();
-                            if (voice.oscillator3) voice.oscillator3.stop();
-                            if (voice.oscillator4) voice.oscillator4.stop();
-                            if (voice.noise) voice.noise.stop();
-                        } catch (e) {
-                            // Ignore errors if already stopped
-                        }
-                        // Dispose nodes immediately
-                        try {
-                            if (voice.oscillator) voice.oscillator.dispose();
-                            if (voice.oscillator2) voice.oscillator2.dispose();
-                            if (voice.oscillator3) voice.oscillator3.dispose();
-                            if (voice.oscillator4) voice.oscillator4.dispose();
-                            if (voice.envelope) voice.envelope.dispose();
-                            if (voice.envelope2) voice.envelope2.dispose();
-                            if (voice.envelope3) voice.envelope3.dispose();
-                            if (voice.envelope4) voice.envelope4.dispose();
-                            if (voice.noise) voice.noise.dispose();
-                            if (voice.noiseEnv) voice.noiseEnv.dispose();
-                            if (voice.pan) voice.pan.dispose();
-                            if (voice.volumeGain) voice.volumeGain.dispose();
-                            if (voice.filter) voice.filter.dispose();
-                        } catch (e) {
-                            // Ignore disposal errors
-                        }
+                    if (voice && voice instanceof Voice) {
+                        voice.terminate();
                     }
                 });
                 
@@ -1234,12 +1352,16 @@
         // Performance optimization: Limit total active voices globally
         const MAX_TOTAL_VOICES = 150; // Limit total voices across all dots (6 dots * ~25 voices each)
         
-        // Track total active voices
+        // Track total active voices (excluding terminated ones)
         function countTotalActiveVoices() {
             let total = 0;
             dotMixers.forEach((mixer) => {
                 mixer.areaSounds.forEach((soundData) => {
-                    total += soundData.voices.length;
+                    soundData.voices.forEach(voice => {
+                        if (voice && voice instanceof Voice && !voice.isTerminated) {
+                            total++;
+                        }
+                    });
                 });
             });
             return total;
@@ -1502,14 +1624,44 @@
             debugContent.innerHTML = html;
         }
 
+        // Check for orphaned voices across all mixers
+        function checkOrphanedVoices() {
+            // Collect all voices from all mixers
+            const allVoices = [];
+            dotMixers.forEach((mixer) => {
+                mixer.areaSounds.forEach((soundData) => {
+                    soundData.voices.forEach(voice => {
+                        if (voice && voice instanceof Voice) {
+                            allVoices.push(voice);
+                        }
+                    });
+                });
+            });
+            
+            // Check each voice if its owner still exists
+            allVoices.forEach(voice => {
+                if (!voice.isTerminated) {
+                    voice.checkOwnerExists();
+                }
+            });
+        }
+
         // Continuous update loop for mix percentages (optimized with requestAnimationFrame)
         let animationFrameId = null;
+        let lastOrphanCheck = 0;
         function updateAllDotMixers() {
             dotMixers.forEach((mixer) => {
                 if (!mixer.isFading) {
                     mixer.updateMixPercentages();
                 }
             });
+            
+            // Check for orphaned voices periodically (every 200ms)
+            const now = performance.now();
+            if (now - lastOrphanCheck > 200) {
+                checkOrphanedVoices();
+                lastOrphanCheck = now;
+            }
             
             // Update global debug panel
             updateGlobalDebugPanel();
