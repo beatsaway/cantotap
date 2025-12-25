@@ -211,6 +211,157 @@
             margin-right: 1rem;
         }
 
+        .bidding-calculator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            color: white;
+        }
+
+        .bidding-calculator h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .calculator-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .calculator-controls label {
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .calculator-controls select {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-width: 120px;
+        }
+
+        .calculator-controls select:focus {
+            outline: 3px solid #ffc107;
+        }
+
+        .calculator-result {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .calculator-result.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-bid {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 0.5rem 0;
+        }
+
+        .result-tricks {
+            font-size: 1.3rem;
+            color: #764ba2;
+            margin: 0.5rem 0;
+        }
+
+        .result-example {
+            font-size: 1.1rem;
+            color: #555;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .result-special {
+            background: #fff3cd;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            color: #856404;
+            font-weight: 500;
+        }
+
+        .scoring-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .scoring-section h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .score-result {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .score-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .score-display.positive {
+            color: #28a745;
+        }
+
+        .score-display.negative {
+            color: #dc3545;
+        }
+
+        .score-breakdown {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .score-breakdown div {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .score-breakdown strong {
+            color: #667eea;
+        }
+
         @media (max-width: 768px) {
             .nav-links {
                 flex-direction: column;
@@ -288,12 +439,15 @@
                 <h2><span class="step-number">2</span>認識牌同基本規則</h2>
 
                 <h3>牌嘅大小</h3>
-                <p>橋牌入面，牌係咁樣排大小嘅：</p>
+                <p>橋牌入面，每種花色嘅牌都係咁樣排大小嘅（無論係將牌定係普通花色都一樣）：</p>
                 <ul>
-                    <li><strong>無將（NT / No Trump）：</strong> A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2</li>
-                    <li><strong>有將（Suit）：</strong> A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2</li>
+                    <li><strong>牌嘅大小順序：</strong> A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2</li>
                 </ul>
-                <p>注意：如果係有將合約，將牌可以贏過其他所有花色。如果係無將合約，所有花色都係平等嘅。</p>
+                <p><strong>重要分別：</strong></p>
+                <ul>
+                    <li><strong>無將合約（NT）：</strong> 所有花色都係平等嘅，同一花色入面最大嘅牌就贏</li>
+                    <li><strong>有將合約：</strong> 將牌（trump）可以贏過所有非將牌，即使係細嘅將牌（例如 ♠2）都可以贏過最大嘅非將牌（例如 ♥A）。同一花色入面，仍然係最大嘅牌贏</li>
+                </ul>
 
                 <h3>花色</h3>
                 <p>橋牌有四種花色，由大到細係：</p>
@@ -361,6 +515,71 @@
                             <td>7 無將（大滿貫）</td>
                         </tr>
                     </table>
+                </div>
+
+                <div class="bidding-calculator">
+                    <h4>🔢 叫牌計算器</h4>
+                    <div class="calculator-controls">
+                        <label for="bid-number">數字：</label>
+                        <select id="bid-number">
+                            <option value="">請選擇</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                        <label for="bid-pattern">花色：</label>
+                        <select id="bid-pattern">
+                            <option value="">請選擇</option>
+                            <option value="♠">♠ 黑桃</option>
+                            <option value="♥">♥ 紅心</option>
+                            <option value="♦">♦ 方塊</option>
+                            <option value="♣">♣ 梅花</option>
+                            <option value="NT">NT 無將</option>
+                        </select>
+                    </div>
+                    <div class="calculator-result" id="calculator-result">
+                        <div class="result-bid" id="result-bid"></div>
+                        <div class="result-tricks" id="result-tricks"></div>
+                        <div class="result-example" id="result-example"></div>
+                        <div class="result-special" id="result-special" style="display: none;"></div>
+                    </div>
+
+                    <div class="scoring-section" id="scoring-section" style="display: none;">
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem;">📊 計分計算器</h4>
+                        <div class="calculator-controls">
+                            <label for="result-type">結果：</label>
+                            <select id="result-type">
+                                <option value="">請選擇</option>
+                                <option value="made">✅ 完成合約</option>
+                                <option value="overtricks">⬆️ 超墩</option>
+                                <option value="down">❌ 欠墩</option>
+                            </select>
+                            <label for="tricks-diff" id="tricks-diff-label">超/欠墩數：</label>
+                            <select id="tricks-diff">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                            </select>
+                            <label for="vulnerable">局況：</label>
+                            <select id="vulnerable">
+                                <option value="non-vul">無局</option>
+                                <option value="vul">有局</option>
+                            </select>
+                        </div>
+                        <div class="score-result" id="score-result" style="display: none;">
+                            <div class="score-display" id="score-display"></div>
+                            <div class="score-breakdown" id="score-breakdown"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <h3>大牌點（HCP - High Card Points）</h3>
@@ -554,6 +773,211 @@
                 }
             });
         });
+
+        // Bidding Calculator
+        const bidNumber = document.getElementById('bid-number');
+        const bidPattern = document.getElementById('bid-pattern');
+        const resultDiv = document.getElementById('calculator-result');
+        const resultBid = document.getElementById('result-bid');
+        const resultTricks = document.getElementById('result-tricks');
+        const resultExample = document.getElementById('result-example');
+        const resultSpecial = document.getElementById('result-special');
+        const scoringSection = document.getElementById('scoring-section');
+        const resultType = document.getElementById('result-type');
+        const tricksDiff = document.getElementById('tricks-diff');
+        const vulnerable = document.getElementById('vulnerable');
+        const scoreResult = document.getElementById('score-result');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreBreakdown = document.getElementById('score-breakdown');
+
+        const patternNames = {
+            '♠': '黑桃',
+            '♥': '紅心',
+            '♦': '方塊',
+            '♣': '梅花',
+            'NT': '無將'
+        };
+
+        function isGame(number, pattern) {
+            return (number === '3' && pattern === 'NT') ||
+                   (number === '4' && (pattern === '♥' || pattern === '♠')) ||
+                   (number === '5' && (pattern === '♣' || pattern === '♦'));
+        }
+
+        function calculateBid() {
+            const number = bidNumber.value;
+            const pattern = bidPattern.value;
+
+            if (!number || !pattern) {
+                resultDiv.classList.remove('show');
+                scoringSection.style.display = 'none';
+                return;
+            }
+
+            const tricks = 6 + parseInt(number);
+            const bidDisplay = number + pattern;
+            const patternName = patternNames[pattern];
+            const example = number + ' ' + patternName;
+
+            resultBid.textContent = bidDisplay;
+            resultTricks.textContent = `${tricks}墩（6 + ${number}）`;
+            resultExample.textContent = `例子：${example}`;
+
+            // Special notes
+            resultSpecial.style.display = 'none';
+            if (number === '3' && pattern === 'NT') {
+                resultSpecial.textContent = '成局';
+                resultSpecial.style.display = 'block';
+            } else if (number === '4' && (pattern === '♥' || pattern === '♠')) {
+                resultSpecial.textContent = '成局';
+                resultSpecial.style.display = 'block';
+            } else if (number === '5' && (pattern === '♣' || pattern === '♦')) {
+                resultSpecial.textContent = '成局';
+                resultSpecial.style.display = 'block';
+            } else if (number === '6') {
+                resultSpecial.textContent = '小滿貫';
+                resultSpecial.style.display = 'block';
+            } else if (number === '7') {
+                resultSpecial.textContent = '大滿貫';
+                resultSpecial.style.display = 'block';
+            }
+
+            resultDiv.classList.add('show');
+            scoringSection.style.display = 'block';
+            calculateScore();
+        }
+
+        function updateTricksDiffLabel() {
+            const result = resultType.value;
+            const label = document.getElementById('tricks-diff-label');
+            const tricksDiffSelect = document.getElementById('tricks-diff');
+
+            if (result === 'made') {
+                if (label) label.style.display = 'none';
+                tricksDiffSelect.style.display = 'none';
+                tricksDiffSelect.value = '0';
+            } else {
+                if (label) label.style.display = '';
+                tricksDiffSelect.style.display = '';
+                if (result === 'overtricks') {
+                    if (label) label.textContent = '超墩數：';
+                } else if (result === 'down') {
+                    if (label) label.textContent = '欠墩數：';
+                } else {
+                    if (label) label.textContent = '超/欠墩數：';
+                }
+            }
+        }
+
+        function calculateScore() {
+            const number = bidNumber.value;
+            const pattern = bidPattern.value;
+            const result = resultType.value;
+            const diff = parseInt(tricksDiff.value);
+            const vul = vulnerable.value === 'vul';
+
+            if (!number || !pattern || !result) {
+                scoreResult.style.display = 'none';
+                return;
+            }
+
+            updateTricksDiffLabel();
+
+            const targetTricks = 6 + parseInt(number);
+            let totalScore = 0;
+            let breakdown = [];
+
+            // Calculate contract points
+            if (result === 'made' || result === 'overtricks') {
+                const contractTricks = parseInt(number);
+                let contractPoints = 0;
+                const actualDiff = result === 'made' ? 0 : diff;
+
+                // Calculate points for contract tricks
+                if (pattern === 'NT') {
+                    contractPoints = 40 + (contractTricks - 1) * 30;
+                } else if (pattern === '♠' || pattern === '♥') {
+                    contractPoints = contractTricks * 30;
+                } else { // ♣ or ♦
+                    contractPoints = contractTricks * 20;
+                }
+
+                totalScore += contractPoints;
+                breakdown.push(`<div><strong>合約分數：</strong>${contractPoints}分</div>`);
+
+                // Overtricks
+                if (actualDiff > 0) {
+                    let overtrickPoints = 0;
+                    if (pattern === 'NT') {
+                        overtrickPoints = actualDiff * 30;
+                    } else if (pattern === '♠' || pattern === '♥') {
+                        overtrickPoints = actualDiff * 30;
+                    } else {
+                        overtrickPoints = actualDiff * 20;
+                    }
+                    totalScore += overtrickPoints;
+                    breakdown.push(`<div><strong>超墩分數：</strong>${overtrickPoints}分（${actualDiff}墩）</div>`);
+                }
+
+                // Game bonus
+                if (isGame(number, pattern)) {
+                    const gameBonus = vul ? 500 : 300;
+                    totalScore += gameBonus;
+                    breakdown.push(`<div><strong>成局獎：</strong>${gameBonus}分（${vul ? '有局' : '無局'}）</div>`);
+                }
+
+                // Slam bonuses
+                if (number === '6') {
+                    const slamBonus = vul ? 750 : 500;
+                    totalScore += slamBonus;
+                    breakdown.push(`<div><strong>小滿貫獎：</strong>${slamBonus}分（${vul ? '有局' : '無局'}）</div>`);
+                } else if (number === '7') {
+                    const slamBonus = vul ? 1500 : 1000;
+                    totalScore += slamBonus;
+                    breakdown.push(`<div><strong>大滿貫獎：</strong>${slamBonus}分（${vul ? '有局' : '無局'}）</div>`);
+                }
+
+                scoreDisplay.textContent = `總分：+${totalScore}分`;
+                scoreDisplay.className = 'score-display positive';
+            } else if (result === 'down') {
+                // Penalty for going down
+                const downTricks = diff;
+                let penalty = 0;
+
+                if (vul) {
+                    // Vulnerable penalties
+                    if (downTricks === 1) penalty = 200;
+                    else if (downTricks === 2) penalty = 500;
+                    else if (downTricks === 3) penalty = 800;
+                    else penalty = 800 + (downTricks - 3) * 300;
+                } else {
+                    // Non-vulnerable penalties
+                    if (downTricks === 1) penalty = 100;
+                    else if (downTricks === 2) penalty = 300;
+                    else if (downTricks === 3) penalty = 500;
+                    else penalty = 500 + (downTricks - 3) * 300;
+                }
+
+                totalScore = penalty;
+                breakdown.push(`<div><strong>欠墩：</strong>${downTricks}墩</div>`);
+                breakdown.push(`<div><strong>罰分：</strong>${penalty}分（${vul ? '有局' : '無局'}）</div>`);
+
+                scoreDisplay.textContent = `罰分：-${totalScore}分`;
+                scoreDisplay.className = 'score-display negative';
+            }
+
+            scoreBreakdown.innerHTML = breakdown.join('');
+            scoreResult.style.display = 'block';
+        }
+
+        bidNumber.addEventListener('change', calculateBid);
+        bidPattern.addEventListener('change', calculateBid);
+        resultType.addEventListener('change', () => {
+            updateTricksDiffLabel();
+            calculateScore();
+        });
+        tricksDiff.addEventListener('change', calculateScore);
+        vulnerable.addEventListener('change', calculateScore);
     </script>
 </body>
 </html>
