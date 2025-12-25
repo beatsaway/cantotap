@@ -964,14 +964,20 @@
         function removeTouchDot(touchId) {
             const touchData = activeTouches.get(touchId);
             if (touchData && touchData.dot) {
-                touchData.dot.style.opacity = '0';
-                setTimeout(() => {
-                    if (touchData.dot && touchData.dot.parentNode) {
-                        touchData.dot.parentNode.removeChild(touchData.dot);
-                    }
-                }, 100);
+                // Immediately remove from DOM
+                if (touchData.dot.parentNode) {
+                    touchData.dot.parentNode.removeChild(touchData.dot);
+                }
+                // Remove from map
                 activeTouches.delete(touchId);
             }
+        }
+
+        // Clean up all touch dots (for edge cases like page visibility change)
+        function cleanupAllTouchDots() {
+            activeTouches.forEach((touchData, touchId) => {
+                removeTouchDot(touchId);
+            });
         }
 
         // Handle touch and mouse events
@@ -1245,6 +1251,20 @@
         function handleTouchMove(e) {
             e.preventDefault();
             
+            // First, check for touches that are no longer active (orphaned dots)
+            const activeTouchIds = new Set();
+            for (let i = 0; i < e.touches.length; i++) {
+                activeTouchIds.add(e.touches[i].identifier);
+            }
+            
+            // Remove dots for touches that are no longer in the active list
+            activeTouches.forEach((touchData, touchId) => {
+                if (!activeTouchIds.has(touchId)) {
+                    // This touch is no longer active, clean it up
+                    removeTouchDot(touchId);
+                }
+            });
+            
             // Process all active touches (not just changed ones) to update all dots
             for (let i = 0; i < e.touches.length; i++) {
                 const touch = e.touches[i];
@@ -1279,9 +1299,9 @@
                 const touchData = activeTouches.get(touchId);
                 if (touchData) {
                     // Handle the touch end for this cell
-                    handleEnd({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY }, touchData.cell);
+                    handleEnd({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, touchData.cell);
                     
-                    // Remove the dot
+                    // Remove the dot immediately
                     removeTouchDot(touchId);
                 }
             }
@@ -1305,6 +1325,33 @@
         document.addEventListener('touchmove', handleTouchMove, { passive: false });
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        // Cleanup on visibility change (when user switches tabs, etc.)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                cleanupAllTouchDots();
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', cleanupAllTouchDots);
+
+        // Periodic cleanup check (safety net - removes any orphaned dots)
+        setInterval(() => {
+            // Check if any dots are still in the DOM but not in our map
+            const allDots = document.querySelectorAll('.touch-dot');
+            allDots.forEach(dot => {
+                let found = false;
+                activeTouches.forEach((touchData) => {
+                    if (touchData.dot === dot) {
+                        found = true;
+                    }
+                });
+                if (!found && dot.parentNode) {
+                    dot.parentNode.removeChild(dot);
+                }
+            });
+        }, 1000);
 
         // Also handle global mouse up in case mouse leaves the cell
         document.addEventListener('mouseup', () => {
