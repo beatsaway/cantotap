@@ -120,11 +120,12 @@
             height: 30px;
             border-radius: 50%;
             border: 3px solid rgba(255, 255, 255, 0.8);
-            pointer-events: none;
+            pointer-events: none !important;
             z-index: 1000;
             transform: translate(-50%, -50%);
             transition: opacity 0.1s;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            will-change: transform;
         }
 
         .touch-dot.touch-0 { background-color: #ff6b6b; }
@@ -953,6 +954,7 @@
         function updateTouchDot(touchId, x, y) {
             const touchData = activeTouches.get(touchId);
             if (touchData && touchData.dot) {
+                // Use transform for better performance and to avoid layout issues
                 touchData.dot.style.left = x + 'px';
                 touchData.dot.style.top = y + 'px';
             }
@@ -1193,6 +1195,29 @@
             }
         }
 
+        // Helper function to find cell from coordinates (more reliable than elementFromPoint)
+        function findCellFromCoordinates(x, y) {
+            const gridContainer = document.querySelector('.grid-container');
+            if (!gridContainer) return null;
+            
+            const rect = gridContainer.getBoundingClientRect();
+            const relativeX = x - rect.left;
+            const relativeY = y - rect.top;
+            
+            // Grid is 4x4
+            const cellWidth = rect.width / 4;
+            const cellHeight = rect.height / 4;
+            
+            const col = Math.floor(relativeX / cellWidth);
+            const row = Math.floor(relativeY / cellHeight);
+            
+            // Validate bounds
+            if (col < 0 || col >= 4 || row < 0 || row >= 4) return null;
+            
+            const cellIndex = row * 4 + col;
+            return cells[cellIndex] || null;
+        }
+
         // Multitouch-aware touch handlers
         function handleTouchStart(e) {
             e.preventDefault();
@@ -1203,9 +1228,8 @@
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
                 
-                // Find which cell this touch is in
-                const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-                const cell = elementAtPoint?.closest('.grid-cell');
+                // Find which cell this touch is in using coordinates
+                const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
                 if (cell) {
                     // Create dot for this touch
@@ -1213,7 +1237,7 @@
                     activeTouches.set(touchId, { dot, cell });
                     
                     // Handle the touch start for this cell
-                    handleStart({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY }, cell);
+                    handleStart({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, cell);
                 }
             }
         }
@@ -1221,22 +1245,25 @@
         function handleTouchMove(e) {
             e.preventDefault();
             
-            // Process all touches in the event
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
+            // Process all active touches (not just changed ones) to update all dots
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
                 const touchId = touch.identifier;
                 
-                // Update dot position
+                const touchData = activeTouches.get(touchId);
+                if (!touchData) continue;
+                
+                // Update dot position for all active touches
                 updateTouchDot(touchId, touch.clientX, touch.clientY);
                 
-                // Find which cell this touch is in
-                const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-                const cell = elementAtPoint?.closest('.grid-cell');
+                // Find which cell this touch is in using coordinates (more reliable)
+                const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
-                const touchData = activeTouches.get(touchId);
-                if (touchData && cell) {
+                // Update the cell if it changed
+                if (cell) {
+                    touchData.cell = cell;
                     // Handle the touch move for this cell
-                    handleMove({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY }, cell);
+                    handleMove({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, cell);
                 }
             }
         }
