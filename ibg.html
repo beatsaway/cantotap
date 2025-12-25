@@ -351,11 +351,17 @@
             line-height: 1.8;
         }
 
-        .score-breakdown div {
+        .score-breakdown > div {
             margin: 0.5rem 0;
             padding: 0.5rem;
             background: #f8f9fa;
             border-radius: 5px;
+        }
+
+        .score-breakdown div[style*="font-size: 0.9rem"] {
+            background: transparent;
+            padding: 0.2rem 0.5rem;
+            margin: 0;
         }
 
         .score-breakdown strong {
@@ -887,6 +893,21 @@
             let totalScore = 0;
             let breakdown = [];
 
+            // Add suit scoring explanation
+            let suitInfo = '';
+            let suitExplanation = '';
+            if (pattern === 'NT') {
+                suitInfo = '無將（NT）：第1墩40分，其餘每墩30分';
+                suitExplanation = '無將最難打，所以分數最高';
+            } else if (pattern === '♠' || pattern === '♥') {
+                suitInfo = `高花（${patternNames[pattern]}）：每墩30分`;
+                suitExplanation = '高花（黑桃、紅心）比低花難打，所以分數較高';
+            } else {
+                suitInfo = `低花（${patternNames[pattern]}）：每墩20分`;
+                suitExplanation = '低花（方塊、梅花）相對容易，所以分數較低';
+            }
+            breakdown.push(`<div style="background: #e7f3ff; padding: 0.8rem; border-radius: 5px; margin-bottom: 1rem; border-left: 3px solid #2196F3;"><strong>花色計分規則：</strong>${suitInfo}<br><span style="font-size: 0.85rem; color: #555; font-style: italic;">💡 ${suitExplanation}</span></div>`);
+
             // Calculate contract points
             if (result === 'made' || result === 'overtricks') {
                 const contractTricks = parseInt(number);
@@ -894,29 +915,50 @@
                 const actualDiff = result === 'made' ? 0 : diff;
 
                 // Calculate points for contract tricks
+                let suitCategory = '';
+                let pointsPerTrick = 0;
+                let calculation = '';
+                
                 if (pattern === 'NT') {
+                    suitCategory = '無將（NT）';
+                    pointsPerTrick = 30;
                     contractPoints = 40 + (contractTricks - 1) * 30;
+                    calculation = `40分（第1墩）+ ${contractTricks - 1} × 30分（其餘${contractTricks - 1}墩）`;
                 } else if (pattern === '♠' || pattern === '♥') {
+                    suitCategory = '高花（' + patternNames[pattern] + '）';
+                    pointsPerTrick = 30;
                     contractPoints = contractTricks * 30;
+                    calculation = `${contractTricks}墩 × 30分/墩`;
                 } else { // ♣ or ♦
+                    suitCategory = '低花（' + patternNames[pattern] + '）';
+                    pointsPerTrick = 20;
                     contractPoints = contractTricks * 20;
+                    calculation = `${contractTricks}墩 × 20分/墩`;
                 }
 
                 totalScore += contractPoints;
                 breakdown.push(`<div><strong>合約分數：</strong>${contractPoints}分</div>`);
+                breakdown.push(`<div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">&nbsp;&nbsp;→ ${suitCategory}：每墩${pointsPerTrick}分</div>`);
+                breakdown.push(`<div style="font-size: 0.9rem; color: #666;">&nbsp;&nbsp;→ 計算：${calculation} = ${contractPoints}分</div>`);
 
                 // Overtricks
                 if (actualDiff > 0) {
                     let overtrickPoints = 0;
+                    let overtrickExplanation = '';
+                    
                     if (pattern === 'NT') {
                         overtrickPoints = actualDiff * 30;
+                        overtrickExplanation = `無將：${actualDiff}墩 × 30分/墩`;
                     } else if (pattern === '♠' || pattern === '♥') {
                         overtrickPoints = actualDiff * 30;
+                        overtrickExplanation = `高花（${patternNames[pattern]}）：${actualDiff}墩 × 30分/墩`;
                     } else {
                         overtrickPoints = actualDiff * 20;
+                        overtrickExplanation = `低花（${patternNames[pattern]}）：${actualDiff}墩 × 20分/墩`;
                     }
                     totalScore += overtrickPoints;
                     breakdown.push(`<div><strong>超墩分數：</strong>${overtrickPoints}分（${actualDiff}墩）</div>`);
+                    breakdown.push(`<div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">&nbsp;&nbsp;→ ${overtrickExplanation} = ${overtrickPoints}分</div>`);
                 }
 
                 // Game bonus
