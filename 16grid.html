@@ -171,7 +171,7 @@
             }
 
             // Create a water-like sound with pitch drop and noise
-            createWaterVoice(frequency, pitchDrop = 0.02, noiseAmount = 0.03, pitchOffset = 0, volumeMultiplier = 1.0) {
+            createWaterVoice(frequency, pitchDrop = 0.02, noiseAmount = 0.03, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
                 // Add natural variation (like original)
@@ -297,7 +297,7 @@
                 harmonicGain4.connect(volumeGain);
                 
                 volumeGain.connect(pan);
-                pan.connect(this.masterGainArea1);
+                pan.connect(outputNode || this.masterGainArea1);
 
                 // Connect noise: noise -> noiseGain -> noiseEnv -> pan
                 noise.connect(noiseGain);
@@ -410,8 +410,40 @@
                 this.activeVoices = [];
             }
 
+            // Create area 1 voices connected to a given gain node (for DotMixer)
+            createArea1Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createWaterVoice(freq, 0.02, 0.03, pitchOffset, volumeMultiplier, outputGain)
+                );
+            }
+
+            // Create area 2 voices connected to a given gain node (for DotMixer)
+            createArea2Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain)
+                );
+            }
+
+            // Create area 3 voices connected to a given gain node (for DotMixer)
+            createArea3Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
+                );
+            }
+
+            // Create area 4 voices connected to a given gain node (for DotMixer)
+            createArea4Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createBrassVoice(freq, pitchOffset, volumeMultiplier, outputGain)
+                );
+            }
+
             // Create a bell/chime sound (different from water sound)
-            createBellVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0) {
+            createBellVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
                 // Apply pitch offset
@@ -457,7 +489,7 @@
                 osc2.connect(env2);
                 env2.connect(volumeGain);
                 volumeGain.connect(pan);
-                pan.connect(this.masterGain);
+                pan.connect(outputNode || this.masterGain);
                 
                 // Start
                 osc.start(now);
@@ -550,7 +582,7 @@
             }
 
             // Create a pad/string-like sound (for area 3)
-            createPadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0) {
+            createPadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
                 // Apply pitch offset
@@ -594,7 +626,7 @@
                 filter.connect(env);
                 env.connect(volumeGain);
                 volumeGain.connect(pan);
-                pan.connect(this.masterGain);
+                pan.connect(outputNode || this.masterGain);
                 
                 // Start
                 osc.start(now);
@@ -679,7 +711,7 @@
             }
 
             // Create a brass/synth lead sound (for area 4) - loud and punchy
-            createBrassVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0) {
+            createBrassVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
                 // Apply pitch offset
@@ -744,7 +776,7 @@
                 osc2Gain.connect(volumeGain);
                 
                 volumeGain.connect(pan);
-                pan.connect(this.masterGain);
+                pan.connect(outputNode || this.masterGain);
                 
                 // Start
                 osc.start(now);
@@ -845,12 +877,223 @@
             }
         }
 
+        // DotMixer class - manages a dot and its sound mixing
+        class DotMixer {
+            constructor(touchId, x, y, areaColor, normalizedX, initialArea, synth) {
+                this.touchId = touchId;
+                this.synth = synth;
+                
+                // Create visual dot
+                this.dot = this.createVisualDot(x, y, areaColor, normalizedX);
+                
+                // Track area sounds: { areaNum: { voices: [...], mixGain: Tone.Gain, mixPercent: number, targetMix: number } }
+                this.areaSounds = new Map();
+                
+                // Master gain for this dot's mixed output
+                this.masterGain = new Tone.Gain(1.0);
+                this.masterGain.toDestination();
+                
+                // Mix transition rate (per frame/update)
+                this.mixTransitionRate = 0.05; // 5% per update
+                
+                // Current position
+                this.currentX = x;
+                this.currentY = y;
+                this.currentCell = initialArea;
+                
+                // Start sound for initial area
+                this.addAreaSound(initialArea, 1.0);
+                
+                // Track if fading (for cleanup)
+                this.isFading = false;
+            }
+            
+            createVisualDot(x, y, areaColor, normalizedX) {
+                const dot = document.createElement('div');
+                dot.className = 'touch-dot';
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+                dot.style.backgroundColor = areaColor;
+                
+                // Size based on X position: left (0) = 20px, right (1) = 40px
+                const minSize = 20;
+                const maxSize = 40;
+                const size = minSize + (normalizedX * (maxSize - minSize));
+                dot.style.width = size + 'px';
+                dot.style.height = size + 'px';
+                
+                document.body.appendChild(dot);
+                return dot;
+            }
+            
+            // Add or update area sound
+            addAreaSound(areaNum, targetMix) {
+                if (this.areaSounds.has(areaNum)) {
+                    // Update target mix
+                    this.areaSounds.get(areaNum).targetMix = targetMix;
+                    return;
+                }
+                
+                // Create new area sound
+                const mixGain = new Tone.Gain(0); // Start at 0, will transition to targetMix
+                mixGain.connect(this.masterGain);
+                
+                // Get pitch and volume from position (same logic as before)
+                const cell = cells[areaNum - 1];
+                if (!cell) return;
+                
+                const rect = cell.getBoundingClientRect();
+                const relativeX = this.currentX - rect.left;
+                const relativeY = this.currentY - rect.top;
+                const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                const normalizedY = Math.max(0, Math.min(1, relativeY / rect.height));
+                
+                const volumeMultiplier = 0.2 + (normalizedX * 0.8);
+                const pitchOffset = 0.5 - (normalizedY * 1.0);
+                
+                // Create voices based on area type
+                let voices = [];
+                if (areaNum === 1) {
+                    voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
+                } else if (areaNum === 2) {
+                    voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
+                } else if (areaNum === 3) {
+                    voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
+                } else if (areaNum === 4) {
+                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
+                } else {
+                    // For areas 5-16, cycle through area types
+                    const areaType = ((areaNum - 1) % 4) + 1;
+                    if (areaType === 1) {
+                        voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
+                    } else if (areaType === 2) {
+                        voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
+                    } else if (areaType === 3) {
+                        voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
+                    } else {
+                        voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
+                    }
+                }
+                
+                this.areaSounds.set(areaNum, {
+                    voices: voices,
+                    mixGain: mixGain,
+                    mixPercent: 0,
+                    targetMix: targetMix
+                });
+            }
+            
+            // Update position and handle area transitions
+            updatePosition(x, y, cell) {
+                this.currentX = x;
+                this.currentY = y;
+                
+                // Update dot visual position and size
+                this.dot.style.left = x + 'px';
+                this.dot.style.top = y + 'px';
+                
+                if (cell) {
+                    const cellNum = parseInt(cell.dataset.cell);
+                    const rect = cell.getBoundingClientRect();
+                    const relativeX = x - rect.left;
+                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                    
+                    // Update size
+                    const minSize = 20;
+                    const maxSize = 40;
+                    const size = minSize + (normalizedX * (maxSize - minSize));
+                    this.dot.style.width = size + 'px';
+                    this.dot.style.height = size + 'px';
+                    
+                    // Check if we're in a new area
+                    if (cellNum !== this.currentCell) {
+                        this.currentCell = cellNum;
+                        
+                        // If this area already has a sound, increase its mix
+                        if (this.areaSounds.has(cellNum)) {
+                            this.areaSounds.get(cellNum).targetMix = 1.0;
+                        } else {
+                            // Add new area sound at 100%
+                            this.addAreaSound(cellNum, 1.0);
+                        }
+                    }
+                }
+                
+                // Update all area sounds' mix percentages
+                this.updateMixPercentages();
+            }
+            
+            // Update mix percentages towards targets
+            updateMixPercentages() {
+                this.areaSounds.forEach((soundData, areaNum) => {
+                    const currentMix = soundData.mixPercent;
+                    const targetMix = soundData.targetMix;
+                    
+                    // If in this area, target is 100%, otherwise 0%
+                    const isInArea = (areaNum === this.currentCell);
+                    const newTarget = isInArea ? 1.0 : 0.0;
+                    soundData.targetMix = newTarget;
+                    
+                    // Transition towards target
+                    let newMix;
+                    if (currentMix < newTarget) {
+                        // Increasing
+                        newMix = Math.min(1.0, currentMix + this.mixTransitionRate);
+                    } else if (currentMix > newTarget) {
+                        // Decreasing
+                        newMix = Math.max(0.0, currentMix - this.mixTransitionRate);
+                    } else {
+                        newMix = currentMix;
+                    }
+                    
+                    soundData.mixPercent = newMix;
+                    soundData.mixGain.gain.value = newMix;
+                    
+                    // If mix reaches 0 and we're not in this area, we could clean up
+                    // But we'll keep it until dot fades to allow re-entry
+                });
+            }
+            
+            // Start fade and release sounds
+            startFade() {
+                if (this.isFading) return;
+                this.isFading = true;
+                
+                // Start visual fade
+                this.dot.style.opacity = '0';
+                
+                // Release all sounds after fade completes
+                setTimeout(() => {
+                    this.releaseAllSounds();
+                    if (this.dot && this.dot.parentNode) {
+                        this.dot.parentNode.removeChild(this.dot);
+                    }
+                }, 2000);
+            }
+            
+            // Release all sounds and clean up
+            releaseAllSounds() {
+                this.areaSounds.forEach((soundData, areaNum) => {
+                    // Release all voices
+                    soundData.voices.forEach(voice => {
+                        if (voice && voice.stop) {
+                            voice.stop();
+                        }
+                    });
+                    
+                    // Disconnect and dispose
+                    soundData.mixGain.disconnect();
+                    soundData.mixGain.dispose();
+                });
+                
+                this.areaSounds.clear();
+                this.masterGain.disconnect();
+                this.masterGain.dispose();
+            }
+        }
+
         // Initialize synth
         let synth = null;
-        let isPlaying = false;
-        let isPlayingArea2 = false;
-        let isPlayingArea3 = false;
-        let isPlayingArea4 = false;
 
         // Initialize on user interaction (required for audio context)
         function initAudio() {
@@ -865,8 +1108,8 @@
         // Get all grid cells
         const cells = document.querySelectorAll('.grid-cell');
 
-        // Multitouch tracking for visualization
-        const activeTouches = new Map(); // Map of touchId -> { dot element, cell }
+        // Multitouch tracking - now using DotMixer instances
+        const dotMixers = new Map(); // Map of touchId -> DotMixer instance
 
         // Color mapping for each area (16 areas total) - carefully chosen for maximum distinguishability
         const areaColors = [
@@ -904,78 +1147,28 @@
             cell.style.background = `linear-gradient(135deg, ${color}, ${darkerColor})`;
         });
 
-        // Create a touch dot with area-specific color and size based on X position
-        function createTouchDot(touchId, x, y, areaColor, normalizedX) {
-            const dot = document.createElement('div');
-            dot.className = 'touch-dot';
-            dot.style.left = x + 'px';
-            dot.style.top = y + 'px';
-            dot.style.backgroundColor = areaColor;
-            
-            // Size based on X position: left (0) = 20px, right (1) = 40px
-            const minSize = 20;
-            const maxSize = 40;
-            const size = minSize + (normalizedX * (maxSize - minSize));
-            dot.style.width = size + 'px';
-            dot.style.height = size + 'px';
-            
-            document.body.appendChild(dot);
-            return dot;
-        }
-
-        // Update touch dot position and size based on X position within cell
-        function updateTouchDot(touchId, x, y, cell) {
-            const touchData = activeTouches.get(touchId);
-            if (touchData && touchData.dot) {
-                // Update position
-                touchData.dot.style.left = x + 'px';
-                touchData.dot.style.top = y + 'px';
-                
-                // Update size based on X position within the cell
-                if (cell) {
-                    const rect = cell.getBoundingClientRect();
-                    const relativeX = x - rect.left;
-                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                    
-                    // Size based on X position: left (0) = 20px, right (1) = 40px
-                    const minSize = 20;
-                    const maxSize = 40;
-                    const size = minSize + (normalizedX * (maxSize - minSize));
-                    touchData.dot.style.width = size + 'px';
-                    touchData.dot.style.height = size + 'px';
-                }
-            }
-        }
-
-        // Remove touch dot with fade-out animation
-        function removeTouchDot(touchId) {
-            const touchData = activeTouches.get(touchId);
-            if (touchData && touchData.dot) {
-                // Start fade-out animation
-                touchData.dot.style.opacity = '0';
-                
-                // Remove from map and DOM after fade completes (2 seconds)
-                setTimeout(() => {
-                    // Remove from tracking map
-                    activeTouches.delete(touchId);
-                    
-                    // Remove from DOM
-                    if (touchData.dot && touchData.dot.parentNode) {
-                        touchData.dot.parentNode.removeChild(touchData.dot);
-                    }
-                }, 2000);
-            }
-        }
-
-        // Clean up all touch dots (for edge cases like page visibility change)
-        function cleanupAllTouchDots() {
-            activeTouches.forEach((touchData, touchId) => {
-                removeTouchDot(touchId);
+        // Clean up all dot mixers (for edge cases like page visibility change)
+        function cleanupAllDotMixers() {
+            dotMixers.forEach((mixer, touchId) => {
+                mixer.startFade();
             });
         }
+        
+        // Continuous update loop for mix percentages
+        function updateAllDotMixers() {
+            dotMixers.forEach((mixer) => {
+                if (!mixer.isFading) {
+                    mixer.updateMixPercentages();
+                }
+            });
+        }
+        
+        // Start update loop (60fps)
+        setInterval(updateAllDotMixers, 1000 / 60);
 
-        // Handle touch and mouse events
-        function handleStart(e, cell) {
+        // OLD HANDLERS REMOVED - Now using DotMixer system
+        // Handle touch and mouse events (DEPRECATED - kept for reference)
+        function handleStart_OLD(e, cell) {
             e.preventDefault();
             initAudio();
             
@@ -1223,6 +1416,8 @@
             e.preventDefault();
             initAudio();
             
+            if (!synth) return;
+            
             // Process all touches in the event
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
@@ -1234,11 +1429,15 @@
                 if (cell) {
                     // Limit to maximum 6 dots - remove oldest if at limit
                     const MAX_DOTS = 6;
-                    if (activeTouches.size >= MAX_DOTS) {
-                        // Remove the oldest touch (first entry in Map)
-                        const oldestTouchId = activeTouches.keys().next().value;
+                    if (dotMixers.size >= MAX_DOTS) {
+                        // Remove the oldest dot mixer (first entry in Map)
+                        const oldestTouchId = dotMixers.keys().next().value;
                         if (oldestTouchId !== undefined) {
-                            removeTouchDot(oldestTouchId);
+                            const oldestMixer = dotMixers.get(oldestTouchId);
+                            if (oldestMixer) {
+                                oldestMixer.startFade();
+                            }
+                            dotMixers.delete(oldestTouchId);
                         }
                     }
                     
@@ -1249,14 +1448,11 @@
                     
                     // Get the cell number to determine color
                     const cellNum = parseInt(cell.dataset.cell);
-                    const areaColor = areaColors[cellNum - 1] || '#ffffff'; // Default to white if cell number is invalid
+                    const areaColor = areaColors[cellNum - 1] || '#ffffff';
                     
-                    // Create dot for this touch with area color and size based on X position
-                    const dot = createTouchDot(touchId, touch.clientX, touch.clientY, areaColor, normalizedX);
-                    activeTouches.set(touchId, { dot, cell });
-                    
-                    // Handle the touch start for this cell
-                    handleStart({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, cell);
+                    // Create DotMixer for this touch
+                    const mixer = new DotMixer(touchId, touch.clientX, touch.clientY, areaColor, normalizedX, cellNum, synth);
+                    dotMixers.set(touchId, mixer);
                 }
             }
         }
@@ -1270,11 +1466,12 @@
                 activeTouchIds.add(e.touches[i].identifier);
             }
             
-            // Remove dots for touches that are no longer in the active list
-            activeTouches.forEach((touchData, touchId) => {
+            // Remove dot mixers for touches that are no longer in the active list
+            dotMixers.forEach((mixer, touchId) => {
                 if (!activeTouchIds.has(touchId)) {
-                    // This touch is no longer active, clean it up
-                    removeTouchDot(touchId);
+                    // This touch is no longer active, start fade
+                    mixer.startFade();
+                    dotMixers.delete(touchId);
                 }
             });
             
@@ -1283,24 +1480,14 @@
                 const touch = e.touches[i];
                 const touchId = touch.identifier;
                 
-                const touchData = activeTouches.get(touchId);
-                if (!touchData) continue;
+                const mixer = dotMixers.get(touchId);
+                if (!mixer || mixer.isFading) continue;
                 
-                // Find which cell this touch is in using coordinates (more reliable)
+                // Find which cell this touch is in using coordinates
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
-                // Update the cell if it changed
-                if (cell) {
-                    touchData.cell = cell;
-                }
-                
-                // Update dot position and size for all active touches
-                updateTouchDot(touchId, touch.clientX, touch.clientY, touchData.cell);
-                
-                // Handle the touch move for this cell
-                if (cell) {
-                    handleMove({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, cell);
-                }
+                // Update dot mixer position
+                mixer.updatePosition(touch.clientX, touch.clientY, cell);
             }
         }
 
@@ -1312,28 +1499,88 @@
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
                 
-                const touchData = activeTouches.get(touchId);
-                if (touchData) {
-                    // Handle the touch end for this cell
-                    handleEnd({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, touchData.cell);
-                    
-                    // Remove the dot immediately
-                    removeTouchDot(touchId);
+                const mixer = dotMixers.get(touchId);
+                if (mixer) {
+                    // Start fade (sounds will be released after fade completes)
+                    mixer.startFade();
+                    // Remove from map after fade starts (cleanup happens in startFade)
+                    setTimeout(() => {
+                        dotMixers.delete(touchId);
+                    }, 2100); // Slightly after fade completes
                 }
             }
         }
 
-        // Add event listeners to all cells
+        // Mouse events for desktop (using touch simulation)
         cells.forEach(cell => {
-            // Mouse events (for desktop) - keep existing behavior
-            cell.addEventListener('mousedown', (e) => handleStart(e, cell));
+            let mouseTouchId = null;
+            
+            cell.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                initAudio();
+                if (!synth) return;
+                
+                // Create a fake touch ID for mouse
+                mouseTouchId = 'mouse_' + Date.now();
+                
+                const cellNum = parseInt(cell.dataset.cell);
+                const rect = cell.getBoundingClientRect();
+                const relativeX = e.clientX - rect.left;
+                const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                const areaColor = areaColors[cellNum - 1] || '#ffffff';
+                
+                // Limit to maximum 6 dots
+                const MAX_DOTS = 6;
+                if (dotMixers.size >= MAX_DOTS) {
+                    const oldestTouchId = dotMixers.keys().next().value;
+                    if (oldestTouchId !== undefined) {
+                        const oldestMixer = dotMixers.get(oldestTouchId);
+                        if (oldestMixer) {
+                            oldestMixer.startFade();
+                        }
+                        dotMixers.delete(oldestTouchId);
+                    }
+                }
+                
+                const mixer = new DotMixer(mouseTouchId, e.clientX, e.clientY, areaColor, normalizedX, cellNum, synth);
+                dotMixers.set(mouseTouchId, mixer);
+            });
+            
             cell.addEventListener('mousemove', (e) => {
-                if (e.buttons === 1) { // Only if mouse button is pressed
-                    handleMove(e, cell);
+                if (e.buttons === 1 && mouseTouchId) {
+                    const mixer = dotMixers.get(mouseTouchId);
+                    if (mixer && !mixer.isFading) {
+                        const cell = findCellFromCoordinates(e.clientX, e.clientY);
+                        mixer.updatePosition(e.clientX, e.clientY, cell);
+                    }
                 }
             });
-            cell.addEventListener('mouseup', (e) => handleEnd(e, cell));
-            cell.addEventListener('mouseleave', (e) => handleEnd(e, cell));
+            
+            cell.addEventListener('mouseup', (e) => {
+                if (mouseTouchId) {
+                    const mixer = dotMixers.get(mouseTouchId);
+                    if (mixer) {
+                        mixer.startFade();
+                        setTimeout(() => {
+                            dotMixers.delete(mouseTouchId);
+                        }, 2100);
+                    }
+                    mouseTouchId = null;
+                }
+            });
+            
+            cell.addEventListener('mouseleave', (e) => {
+                if (mouseTouchId) {
+                    const mixer = dotMixers.get(mouseTouchId);
+                    if (mixer) {
+                        mixer.startFade();
+                        setTimeout(() => {
+                            dotMixers.delete(mouseTouchId);
+                        }, 2100);
+                    }
+                    mouseTouchId = null;
+                }
+            });
         });
 
         // Add global touch event listeners for multitouch support
@@ -1345,12 +1592,12 @@
         // Cleanup on visibility change (when user switches tabs, etc.)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                cleanupAllTouchDots();
+                cleanupAllDotMixers();
             }
         });
 
         // Cleanup on page unload
-        window.addEventListener('beforeunload', cleanupAllTouchDots);
+        window.addEventListener('beforeunload', cleanupAllDotMixers);
 
         // Periodic cleanup check (safety net - removes any orphaned dots)
         setInterval(() => {
@@ -1358,8 +1605,8 @@
             const allDots = document.querySelectorAll('.touch-dot');
             allDots.forEach(dot => {
                 let found = false;
-                activeTouches.forEach((touchData) => {
-                    if (touchData.dot === dot) {
+                dotMixers.forEach((mixer) => {
+                    if (mixer.dot === dot) {
                         found = true;
                     }
                 });
@@ -1368,30 +1615,6 @@
                 }
             });
         }, 1000);
-
-        // Also handle global mouse up in case mouse leaves the cell
-        document.addEventListener('mouseup', () => {
-            if (isPlaying && synth) {
-                synth.releaseChord();
-                isPlaying = false;
-                cells[0].classList.remove('active');
-            }
-            if (isPlayingArea2 && synth) {
-                synth.releaseBell();
-                isPlayingArea2 = false;
-                cells[1].classList.remove('active');
-            }
-            if (isPlayingArea3 && synth) {
-                synth.releasePad();
-                isPlayingArea3 = false;
-                cells[2].classList.remove('active');
-            }
-            if (isPlayingArea4 && synth) {
-                synth.releaseBrass();
-                isPlayingArea4 = false;
-                cells[3].classList.remove('active');
-            }
-        });
     </script>
 </body>
 </html>
