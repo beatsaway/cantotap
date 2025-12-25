@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>橋牌入門指南 - 香港學生版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .content-wrapper {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #555;
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
+        }
+
+        .example {
+            background: #e7f3ff;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            border-left: 4px solid #2196F3;
+        }
+
+        .example h4 {
+            color: #2196F3;
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .bidding-table {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+            margin-top: 3rem;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🃏 橋牌指南</div>
+            <ul class="nav-links">
+                <li><a href="#step1">步驟 1</a></li>
+                <li><a href="#step2">步驟 2</a></li>
+                <li><a href="#step3">步驟 3</a></li>
+                <li><a href="#step4">步驟 4</a></li>
+                <li><a href="#step5">步驟 5</a></li>
+                <li><a href="#step6">步驟 6</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="content-wrapper">
+            <div class="intro">
+                <h1>橋牌入門指南</h1>
+                <p>專為香港學生而設嘅完整橋牌教學，由零開始學識點玩橋牌</p>
+            </div>
+
+            <section id="step1">
+                <h2><span class="step-number">1</span>準備同基本設定</h2>
+                <p>橋牌係一個四個人玩嘅紙牌遊戲，兩個人一組做拍檔。呢個遊戲結合咗技巧、策略同埋拍檔之間嘅溝通，係全世界最受歡迎嘅紙牌遊戲之一。</p>
+                
+                <div class="card">
+                    <h4>點解要學橋牌？</h4>
+                    <ul>
+                        <li>訓練邏輯思維同解決問題嘅能力</li>
+                        <li>提升記憶力同專注力</li>
+                        <li>促進團隊合作同溝通</li>
+                        <li>提供社交互動同腦力刺激</li>
+                        <li>國際認可嘅智力運動</li>
+                    </ul>
+                </div>
+
+                <h3>基本設定</h3>
+                <p>橋牌用一副標準嘅52張牌。四個人圍住張枱坐，拍檔要對住坐：</p>
+                <ul>
+                    <li><strong>北（North）</strong> 同 <strong>南（South）</strong> 係一組拍檔</li>
+                    <li><strong>東（East）</strong> 同 <strong>西（West）</strong> 係一組拍檔</li>
+                    <li>派牌係順時針方向，由莊家左邊嘅玩家開始</li>
+                    <li>每個玩家會收到13張牌</li>
+                </ul>
+
+                <div class="highlight">
+                    <strong>準備好未？</strong> 搵齊四個朋友，準備一副牌，就可以開始玩啦！
+                </div>
+            </section>
+
+            <section id="step2">
+                <h2><span class="step-number">2</span>認識牌同基本規則</h2>
+
+                <h3>牌嘅大小</h3>
+                <p>橋牌入面，牌係咁樣排大小嘅：</p>
+                <ul>
+                    <li><strong>無將（NT / No Trump）：</strong> A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2</li>
+                    <li><strong>有將（Suit）：</strong> A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2</li>
+                </ul>
+                <p>注意：如果係有將合約，將牌可以贏過其他所有花色。如果係無將合約，所有花色都係平等嘅。</p>
+
+                <h3>花色</h3>
+                <p>橋牌有四種花色，由大到細係：</p>
+                <ol>
+                    <li><strong>黑桃（♠ Spades）</strong> - 最大嘅花色</li>
+                    <li><strong>紅心（♥ Hearts）</strong></li>
+                    <li><strong>方塊（♦ Diamonds）</strong></li>
+                    <li><strong>梅花（♣ Clubs）</strong> - 最細嘅花色</li>
+                </ol>
+                <p>無將（NT）係最高級，大過所有花色。</p>
+
+                <h3>墩（Tricks）</h3>
+                <p>一墩係由四張牌組成，每個玩家順時針輪流出牌。出最大嘅牌（或者最大嘅將牌，如果有人出將牌）嘅玩家就贏咗呢一墩。</p>
+
+                <div class="example">
+                    <h4>例子</h4>
+                    <p>如果北家出 ♠5，東家出 ♠8，南家出 ♠K，西家出 ♠2，咁南家就用黑桃K贏咗呢一墩。</p>
+                </div>
+            </section>
+
+            <section id="step3">
+                <h2><span class="step-number">3</span>叫牌階段</h2>
+                <p>打牌之前，玩家要先叫牌（bidding）嚟決定合約。叫牌係拍檔之間溝通嘅方式，話俾對方知自己手牌有幾強，同埋牌點樣分佈。</p>
+
+                <h3>叫牌基本規則</h3>
+                <ul>
+                    <li>叫牌係順時針進行，由莊家開始</li>
+                    <li>每次叫牌都要高過之前嘅叫牌</li>
+                    <li>叫牌包括一個數字（1-7）同一個花色（或者無將）</li>
+                    <li>數字代表你哋要贏幾多墩（6墩以上）</li>
+                    <li>如果唔想叫，可以 Pass（過）</li>
+                </ul>
+
+                <div class="bidding-table">
+                    <h4>叫牌級數</h4>
+                    <table>
+                        <tr>
+                            <th>叫牌</th>
+                            <th>要贏幾多墩</th>
+                            <th>例子</th>
+                        </tr>
+                        <tr>
+                            <td>1♠</td>
+                            <td>7墩（6 + 1）</td>
+                            <td>1 黑桃</td>
+                        </tr>
+                        <tr>
+                            <td>2♥</td>
+                            <td>8墩（6 + 2）</td>
+                            <td>2 紅心</td>
+                        </tr>
+                        <tr>
+                            <td>3NT</td>
+                            <td>9墩（6 + 3）</td>
+                            <td>3 無將</td>
+                        </tr>
+                        <tr>
+                            <td>4♠</td>
+                            <td>10墩（6 + 4）</td>
+                            <td>4 黑桃（成局）</td>
+                        </tr>
+                        <tr>
+                            <td>7NT</td>
+                            <td>13墩（6 + 7）</td>
+                            <td>7 無將（大滿貫）</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h3>大牌點（HCP - High Card Points）</h3>
+                <p>玩家用大牌點嚟評估自己手牌：</p>
+                <ul>
+                    <li><strong>A（Ace）：</strong> 4點</li>
+                    <li><strong>K（King）：</strong> 3點</li>
+                    <li><strong>Q（Queen）：</strong> 2點</li>
+                    <li><strong>J（Jack）：</strong> 1點</li>
+                </ul>
+                <p>通常開叫需要12-14點或以上。</p>
+
+                <div class="highlight">
+                    <strong>開叫指引：</strong>
+                    <ul>
+                        <li><strong>1♣ 或 1♦：</strong> 12-19點，通常有3張或以上</li>
+                        <li><strong>1♥ 或 1♠：</strong> 12-19點，有5張或以上</li>
+                        <li><strong>1NT：</strong> 15-17點，平均牌型（無單張或缺門）</li>
+                        <li><strong>2NT：</strong> 20-21點，平均牌型</li>
+                    </ul>
+                </div>
+
+                <h3>成局同滿貫</h3>
+                <ul>
+                    <li><strong>成局：</strong> 3NT、4♥、4♠、5♣ 或 5♦（通常需要25點以上）</li>
+                    <li><strong>小滿貫：</strong> 任何花色或無將嘅6（需要33點以上）</li>
+                    <li><strong>大滿貫：</strong> 任何花色或無將嘅7（需要37點以上）</li>
+                </ul>
+            </section>
+
+            <section id="step4">
+                <h2><span class="step-number">4</span>打牌階段</h2>
+                <p>叫牌完咗之後，就開始打牌。莊家左邊嘅玩家出第一張牌。</p>
+
+                <h3>重要角色</h3>
+                <ul>
+                    <li><strong>莊家（Declarer）：</strong> 第一個叫最後合約花色嘅玩家</li>
+                    <li><strong>夢家（Dummy）：</strong> 莊家嘅拍檔，開牌之後要將手牌攤開</li>
+                    <li><strong>防家（Defenders）：</strong> 對家嘅拍檔組合</li>
+                </ul>
+
+                <h3>打牌規則</h3>
+                <ol>
+                    <li>如果可以跟，一定要跟返同一花色</li>
+                    <li>如果跟唔到，可以出將牌（有將合約）或者墊牌</li>
+                    <li>有將合約入面，將牌可以贏過所有非將牌</li>
+                    <li>同一花色最大嘅牌贏，除非有人出將牌</li>
+                    <li>贏咗一墩嘅玩家出下一墩嘅第一張牌</li>
+                </ol>
+
+                <div class="card">
+                    <h4>策略小貼士</h4>
+                    <ul>
+                        <li>數下自己有幾多贏張同輸張</li>
+                        <li>出第一張牌之前先計劃好點打</li>
+                        <li>透過出牌同拍檔溝通</li>
+                        <li>試下建立長套</li>
+                        <li>留意拍檔俾你嘅信號</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="step5">
+                <h2><span class="step-number">5</span>計分</h2>
+                <p>橋牌計分有啲複雜，不過基本係咁樣：</p>
+
+                <h3>合約計分</h3>
+                <table>
+                    <tr>
+                        <th>合約</th>
+                        <th>超墩數</th>
+                        <th>每墩分數</th>
+                    </tr>
+                    <tr>
+                        <td>♣ 或 ♦（低花）</td>
+                        <td>1-6</td>
+                        <td>20分</td>
+                    </tr>
+                    <tr>
+                        <td>♥ 或 ♠（高花）</td>
+                        <td>1-6</td>
+                        <td>30分</td>
+                    </tr>
+                    <tr>
+                        <td>無將</td>
+                        <td>1</td>
+                        <td>40分</td>
+                    </tr>
+                    <tr>
+                        <td>無將</td>
+                        <td>2+</td>
+                        <td>30分</td>
+                    </tr>
+                </table>
+
+                <h3>獎分</h3>
+                <ul>
+                    <li><strong>成局獎：</strong> 300分（無局）或 500分（有局）</li>
+                    <li><strong>小滿貫：</strong> 500分（無局）或 750分（有局）</li>
+                    <li><strong>大滿貫：</strong> 1000分（無局）或 1500分（有局）</li>
+                    <li><strong>超墩：</strong> 超過合約嘅墩有額外分數</li>
+                </ul>
+
+                <h3>罰分</h3>
+                <p>如果莊家做唔到合約，防家會根據欠幾多墩（欠墩）得到罰分。</p>
+
+                <div class="example">
+                    <h4>記住</h4>
+                    <p>計分雖然複雜，但係初學可以先用簡單方法：做得到合約就有分，做唔到就扣分。熟咗之後再慢慢學詳細計分方法。</p>
+                </div>
+            </section>
+
+            <section id="step6">
+                <h2><span class="step-number">6</span>小貼士同進階學習</h2>
+
+                <div class="card">
+                    <h4>學習策略</h4>
+                    <ol>
+                        <li><strong>由基本開始：</strong> 先掌握打牌技巧，再學複雜叫牌</li>
+                        <li><strong>多啲練習：</strong> 上網玩或者同朋友玩</li>
+                        <li><strong>學叫牌制：</strong> 慢慢學標準叫牌系統</li>
+                        <li><strong>覆盤：</strong> 每局之後分析下自己點打</li>
+                        <li><strong>加入橋會：</strong> 搵下香港本地嘅橋牌會</li>
+                    </ol>
+                </div>
+
+                <div class="highlight">
+                    <h4>常見錯誤要避免</h4>
+                    <ul>
+                        <li>點數唔夠就亂叫</li>
+                        <li>打牌時唔數牌</li>
+                        <li>可以跟花色但係唔跟</li>
+                        <li>打牌前無計劃</li>
+                        <li>同拍檔溝通唔好</li>
+                    </ul>
+                </div>
+
+                <h3>進一步學習資源</h3>
+                <ul>
+                    <li>世界橋牌聯合會（WBF）- 官方規則同資源</li>
+                    <li>香港橋牌協會 - 本地比賽同活動</li>
+                    <li>網上平台：Bridge Base Online、FunBridge</li>
+                    <li>橋牌書籍同教學</li>
+                    <li>用橋牌軟件同App練習</li>
+                </ul>
+
+                <div class="example">
+                    <h4>記住</h4>
+                    <p>橋牌係一個講拍檔合作嘅遊戲。同拍檔有良好溝通、互相信任同理解係成功嘅關鍵。做錯嘢唔緊要，每個高手都係由新手開始㗎！</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>祝你學得開心！🃏 加油，享受你嘅橋牌之旅！</p>
+    </div>
+
+    <script>
+        // Smooth scrolling for navbar links
+        document.querySelectorAll('.nav-links a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight current section in navbar
+        window.addEventListener('scroll', () => {
+            let current = '';
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.style.color = '#333';
+                if (link.getAttribute('href') === '#' + current) {
+                    link.style.color = '#667eea';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
