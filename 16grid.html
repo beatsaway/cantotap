@@ -471,7 +471,7 @@
                 const env = new Tone.AmplitudeEnvelope({
                     attack: 0.3,
                     decay: 0.2,
-                    sustain: 0.7,
+                    sustain: 0.4,  // Reduced from 0.7 to match area 1/2 loudness
                     release: 0.8
                 });
                 
@@ -537,14 +537,14 @@
                 const env = new Tone.AmplitudeEnvelope({
                     attack: 0.05,
                     decay: 0.1,
-                    sustain: 0.85,
+                    sustain: 0.4,  // Reduced from 0.85 to match area 1/2 loudness
                     release: 0.2
                 });
                 
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.05,
                     decay: 0.1,
-                    sustain: 0.7,
+                    sustain: 0.3,  // Reduced from 0.7 to better match other areas
                     release: 0.2
                 });
                 
