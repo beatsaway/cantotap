@@ -904,24 +904,46 @@
             cell.style.background = `linear-gradient(135deg, ${color}, ${darkerColor})`;
         });
 
-        // Create a touch dot with area-specific color
-        function createTouchDot(touchId, x, y, areaColor) {
+        // Create a touch dot with area-specific color and size based on X position
+        function createTouchDot(touchId, x, y, areaColor, normalizedX) {
             const dot = document.createElement('div');
             dot.className = 'touch-dot';
             dot.style.left = x + 'px';
             dot.style.top = y + 'px';
             dot.style.backgroundColor = areaColor;
+            
+            // Size based on X position: left (0) = 20px, right (1) = 40px
+            const minSize = 20;
+            const maxSize = 40;
+            const size = minSize + (normalizedX * (maxSize - minSize));
+            dot.style.width = size + 'px';
+            dot.style.height = size + 'px';
+            
             document.body.appendChild(dot);
             return dot;
         }
 
-        // Update touch dot position
-        function updateTouchDot(touchId, x, y) {
+        // Update touch dot position and size based on X position within cell
+        function updateTouchDot(touchId, x, y, cell) {
             const touchData = activeTouches.get(touchId);
             if (touchData && touchData.dot) {
-                // Use transform for better performance and to avoid layout issues
+                // Update position
                 touchData.dot.style.left = x + 'px';
                 touchData.dot.style.top = y + 'px';
+                
+                // Update size based on X position within the cell
+                if (cell) {
+                    const rect = cell.getBoundingClientRect();
+                    const relativeX = x - rect.left;
+                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                    
+                    // Size based on X position: left (0) = 20px, right (1) = 40px
+                    const minSize = 20;
+                    const maxSize = 40;
+                    const size = minSize + (normalizedX * (maxSize - minSize));
+                    touchData.dot.style.width = size + 'px';
+                    touchData.dot.style.height = size + 'px';
+                }
             }
         }
 
@@ -1220,12 +1242,17 @@
                         }
                     }
                     
+                    // Calculate normalized X position within the cell (0 = left, 1 = right)
+                    const rect = cell.getBoundingClientRect();
+                    const relativeX = touch.clientX - rect.left;
+                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                    
                     // Get the cell number to determine color
                     const cellNum = parseInt(cell.dataset.cell);
                     const areaColor = areaColors[cellNum - 1] || '#ffffff'; // Default to white if cell number is invalid
                     
-                    // Create dot for this touch with area color
-                    const dot = createTouchDot(touchId, touch.clientX, touch.clientY, areaColor);
+                    // Create dot for this touch with area color and size based on X position
+                    const dot = createTouchDot(touchId, touch.clientX, touch.clientY, areaColor, normalizedX);
                     activeTouches.set(touchId, { dot, cell });
                     
                     // Handle the touch start for this cell
@@ -1259,16 +1286,19 @@
                 const touchData = activeTouches.get(touchId);
                 if (!touchData) continue;
                 
-                // Update dot position for all active touches
-                updateTouchDot(touchId, touch.clientX, touch.clientY);
-                
                 // Find which cell this touch is in using coordinates (more reliable)
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
                 // Update the cell if it changed
                 if (cell) {
                     touchData.cell = cell;
-                    // Handle the touch move for this cell
+                }
+                
+                // Update dot position and size for all active touches
+                updateTouchDot(touchId, touch.clientX, touch.clientY, touchData.cell);
+                
+                // Handle the touch move for this cell
+                if (cell) {
                     handleMove({ touches: [touch], clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} }, cell);
                 }
             }
