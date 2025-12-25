@@ -1381,7 +1381,20 @@
             const allDots = document.querySelectorAll('.touch-dot');
             const allDebugInfos = document.querySelectorAll('.dot-debug-info');
             
+            // CRITICAL: First, find mixers whose dots are missing from DOM - these need cleanup!
+            // This ensures sounds are released when dots are removed
+            dotMixers.forEach((mixer, touchId) => {
+                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
+                    // Dot was removed from DOM but mixer still exists - cleanup sounds immediately
+                    console.warn('Found mixer with missing dot - cleaning up sounds', touchId);
+                    mixer.cleanupCompletely();
+                    dotMixers.delete(touchId);
+                }
+            });
+            
             // Find orphaned dots (dots in DOM but not in dotMixers)
+            // These are truly orphaned - we can't clean up their sounds since we don't have the mixer
+            // But we should still remove them from DOM
             allDots.forEach(dot => {
                 let found = false;
                 dotMixers.forEach((mixer) => {
@@ -1390,7 +1403,7 @@
                     }
                 });
                 if (!found && dot.parentNode) {
-                    // Orphaned dot - remove it
+                    // Orphaned dot - remove it (sounds should have been cleaned up when mixer was removed)
                     dot.parentNode.removeChild(dot);
                 }
             });
