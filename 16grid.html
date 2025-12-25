@@ -127,7 +127,6 @@
             pointer-events: none !important;
             z-index: 1000;
             transform: translate(-50%, -50%);
-            transition: opacity 0.5s ease-out;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             will-change: transform;
             opacity: 1;
@@ -177,7 +176,9 @@
     <script>
        
         class WaterSynthTone {
-            constructor() {
+            constructor(releaseTime = 0.5) {
+                // Store release time to match dot fade duration
+                this.releaseTime = releaseTime;
                 // Create reverb with very wet signal (like original: 1.0 reverb, 0.3 dry)
                 this.reverb = new Tone.Reverb({
                     roomSize: 0.9,
@@ -267,28 +268,28 @@
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.35,
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.25,
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const env3 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.15,
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const env4 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
                     sustain: 0.1,
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const harmonicGain2 = new Tone.Gain(0.3);
@@ -305,7 +306,7 @@
                     attack: 0.01,
                     decay: 0.07,
                     sustain: 0,
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
 
                 const noiseGain = new Tone.Gain();
@@ -402,7 +403,7 @@
                     attack: 0.01,
                     decay: 2.0,
                     sustain: 0.35,  // Increased from 0.1 to match area 1's sustain level
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const osc2 = new Tone.Oscillator({
@@ -414,7 +415,7 @@
                     attack: 0.01,
                     decay: 1.5,
                     sustain: 0.25,  // Increased from 0.05 to better match other areas
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
@@ -472,7 +473,7 @@
                     attack: 0.3,
                     decay: 0.2,
                     sustain: 0.4,  // Reduced from 0.7 to match area 1/2 loudness
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const filter = new Tone.Filter({
@@ -538,14 +539,14 @@
                     attack: 0.05,
                     decay: 0.1,
                     sustain: 0.4,  // Reduced from 0.85 to match area 1/2 loudness
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.05,
                     decay: 0.1,
                     sustain: 0.3,  // Reduced from 0.7 to better match other areas
-                    release: 0.2
+                    release: this.releaseTime  // Match dot fade duration
                 });
                 
                 const filter = new Tone.Filter({
@@ -1105,14 +1106,17 @@
                     });
                 });
                 
-                // Start visual fade (faster fade - 0.5s instead of 2s)
-                this.dot.style.transition = 'opacity 0.5s ease-out';
+                // Get fade duration from synth (matches release time)
+                const fadeDuration = this.synth.releaseTime || 0.5;
+                
+                // Start visual fade - duration matches audio release time
+                this.dot.style.transition = `opacity ${fadeDuration}s ease-out`;
                 this.dot.style.opacity = '0';
                 
-                // Cleanup after fade (reduced to 0.6s to match visual fade)
+                // Cleanup after fade completes (fade duration + small buffer)
                 this.fadeTimeoutId = setTimeout(() => {
                     this.cleanupCompletely();
-                }, 600);
+                }, (fadeDuration * 1000) + 100);
             }
             
             // Complete cleanup - remove dot and all sounds
@@ -1146,6 +1150,9 @@
             }
         }
 
+        // Fade duration constant - used for both visual fade and audio release
+        const DOT_FADE_DURATION = 0.5; // seconds
+
         // Initialize synth
         let synth = null;
 
@@ -1154,7 +1161,7 @@
             if (synth) return;
             
             Tone.start().then(() => {
-                synth = new WaterSynthTone();
+                synth = new WaterSynthTone(DOT_FADE_DURATION);
                 console.log('Audio initialized');
             });
         }
@@ -1245,12 +1252,13 @@
             }
             
             // Remove orphaned dots (touches that are no longer in the active list)
+            const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
             dotMixers.forEach((mixer, touchId) => {
                 if (!activeTouchIds.has(touchId) && !mixer.isFading) {
                     mixer.startFade();
                     setTimeout(() => {
                         dotMixers.delete(touchId);
-                    }, 700);
+                    }, (fadeDuration * 1000) + 100);
                 }
             });
             
@@ -1279,9 +1287,10 @@
                 if (mixer) {
                     mixer.startFade();
                     // Remove from map after fade completes
+                    const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
                     setTimeout(() => {
                         dotMixers.delete(touchId);
-                    }, 700); // Match the 600ms fade + small buffer
+                    }, (fadeDuration * 1000) + 100);
                 }
             }
         }
@@ -1331,9 +1340,10 @@
                 const mixer = dotMixers.get(mouseTouchId);
                 if (mixer) {
                     mixer.startFade();
+                    const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
                     setTimeout(() => {
                         dotMixers.delete(mouseTouchId);
-                    }, 700); // Match the 600ms fade + small buffer
+                    }, (fadeDuration * 1000) + 100);
                 }
                 mouseTouchId = null;
             }
@@ -1345,9 +1355,10 @@
                 const mixer = dotMixers.get(mouseTouchId);
                 if (mixer) {
                     mixer.startFade();
+                    const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
                     setTimeout(() => {
                         dotMixers.delete(mouseTouchId);
-                    }, 700);
+                    }, (fadeDuration * 1000) + 100);
                 }
                 mouseTouchId = null;
             }
@@ -1381,30 +1392,36 @@
             const allDots = document.querySelectorAll('.touch-dot');
             const allDebugInfos = document.querySelectorAll('.dot-debug-info');
             
-            // CRITICAL: First, find mixers whose dots are missing from DOM - these need cleanup!
-            // This ensures sounds are released when dots are removed
-            dotMixers.forEach((mixer, touchId) => {
-                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
-                    // Dot was removed from DOM but mixer still exists - cleanup sounds immediately
-                    console.warn('Found mixer with missing dot - cleaning up sounds', touchId);
-                    mixer.cleanupCompletely();
-                    dotMixers.delete(touchId);
-                }
-            });
-            
             // Find orphaned dots (dots in DOM but not in dotMixers)
-            // These are truly orphaned - we can't clean up their sounds since we don't have the mixer
-            // But we should still remove them from DOM
+            // CRITICAL: If a dot is orphaned, its mixer might still exist but not be in the map
+            // We need to find the mixer and clean up its sounds
             allDots.forEach(dot => {
-                let found = false;
-                dotMixers.forEach((mixer) => {
+                let foundMixer = null;
+                dotMixers.forEach((mixer, touchId) => {
                     if (mixer.dot === dot) {
-                        found = true;
+                        foundMixer = mixer;
                     }
                 });
-                if (!found && dot.parentNode) {
-                    // Orphaned dot - remove it (sounds should have been cleaned up when mixer was removed)
-                    dot.parentNode.removeChild(dot);
+                
+                if (!foundMixer && dot.parentNode) {
+                    // Orphaned dot - try to find its mixer by checking all mixers
+                    // (in case it was removed from map but mixer still exists)
+                    let mixerFound = false;
+                    dotMixers.forEach((mixer) => {
+                        if (mixer.dot === dot) {
+                            mixerFound = true;
+                            // Found mixer - ensure it's fading/cleaned up
+                            if (!mixer.isFading) {
+                                mixer.startFade();
+                            }
+                        }
+                    });
+                    
+                    // If still no mixer found, just remove the visual element
+                    // (sounds should have been cleaned up when mixer was removed)
+                    if (!mixerFound) {
+                        dot.parentNode.removeChild(dot);
+                    }
                 }
             });
             
@@ -1423,15 +1440,33 @@
             });
             
             // Also check if any mixers are fading but haven't been cleaned up
+            // CRITICAL: Ensure all fading mixers eventually get cleaned up
             dotMixers.forEach((mixer, touchId) => {
                 if (mixer.isFading) {
                     // Check if fade timeout has passed (safety check)
                     const now = performance.now();
                     if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
-                        // Fade should have completed - force cleanup
+                        // Fade should have completed - force cleanup to ensure sounds are released
                         mixer.cleanupCompletely();
                         dotMixers.delete(touchId);
                     }
+                }
+            });
+            
+            // CRITICAL: Check for mixers whose dots are missing from DOM
+            // This ensures sounds are always released when dots are removed
+            dotMixers.forEach((mixer, touchId) => {
+                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
+                    // Dot was removed from DOM but mixer still exists - cleanup sounds immediately
+                    if (!mixer.isFading) {
+                        mixer.startFade(); // This will trigger sound release
+                    }
+                    // Force cleanup after fade duration
+                    const fadeDuration = synth?.releaseTime || DOT_FADE_DURATION;
+                    setTimeout(() => {
+                        mixer.cleanupCompletely();
+                        dotMixers.delete(touchId);
+                    }, (fadeDuration * 1000) + 100);
                 }
             });
         }, 1000); // Check every second
