@@ -152,6 +152,28 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             max-width: 150px;
         }
+
+        /* Global debug display for all DotMixer instances */
+        .global-debug-display {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            font-weight: normal;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            line-height: 1.4;
+            pointer-events: none !important;
+            z-index: 2000;
+            white-space: pre;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            max-width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -172,6 +194,11 @@
         <div class="grid-cell" data-cell="14">Area 14</div>
         <div class="grid-cell" data-cell="15">Area 15</div>
         <div class="grid-cell" data-cell="16">Area 16</div>
+    </div>
+
+    <!-- Global debug display for all DotMixer instances -->
+    <div class="global-debug-display" id="global-debug-display">
+        DotMixer Instances: 0
     </div>
 
     <script>
@@ -1359,14 +1386,76 @@
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
+        // Update global debug display showing all DotMixer instances
+        function updateGlobalDebugDisplay() {
+            const debugEl = document.getElementById('global-debug-display');
+            if (!debugEl) return;
+            
+            const allDotsInDOM = new Set(Array.from(document.querySelectorAll('.touch-dot')));
+            
+            let text = `DotMixer Instances: ${dotMixers.size}\n`;
+            text += `WaterSynthTone: ${synth ? 'Active' : 'None'}\n`;
+            text += `Total Voices: ${countTotalActiveVoices()}\n`;
+            text += `━━━━━━━━━━━━━━━━━━━━\n`;
+            
+            if (dotMixers.size === 0) {
+                text += 'No active instances';
+            } else {
+                let index = 1;
+                dotMixers.forEach((mixer, touchId) => {
+                    // Check if dot is visible
+                    const dotVisible = mixer.dot && allDotsInDOM.has(mixer.dot) && 
+                                      mixer.dot.parentNode && 
+                                      parseFloat(mixer.dot.style.opacity || '1') > 0.01;
+                    
+                    // Count active sounds (areas with mix > 0)
+                    let activeSoundsCount = 0;
+                    let activeAreasList = [];
+                    mixer.areaSounds.forEach((soundData, areaNum) => {
+                        const areaType = ((areaNum - 1) % 4) + 1;
+                        const mix = mixer.areaMixRatios[areaType] || 0;
+                        if (mix > 0.1) {
+                            activeSoundsCount++;
+                            activeAreasList.push(areaNum);
+                        }
+                    });
+                    
+                    const status = mixer.isFading ? 'FADING' : 'ACTIVE';
+                    const dotStatus = dotVisible ? 'VISIBLE' : 'HIDDEN';
+                    const soundStatus = activeSoundsCount > 0 ? `${activeSoundsCount} sounds` : 'NO SOUNDS';
+                    
+                    text += `[${index}] ID: ${touchId.substring(0, 8)}\n`;
+                    text += `  Status: ${status}\n`;
+                    text += `  Dot: ${dotStatus}\n`;
+                    text += `  Sounds: ${soundStatus}\n`;
+                    if (activeAreasList.length > 0) {
+                        text += `  Areas: ${activeAreasList.join(', ')}\n`;
+                    }
+                    text += `  Current: Area ${mixer.currentCell || '?'}\n`;
+                    text += `\n`;
+                    index++;
+                });
+            }
+            
+            debugEl.textContent = text;
+        }
+
         // Continuous update loop for mix percentages (optimized with requestAnimationFrame)
         let animationFrameId = null;
+        let lastGlobalDebugUpdate = 0;
         function updateAllDotMixers() {
             dotMixers.forEach((mixer) => {
                 if (!mixer.isFading) {
                     mixer.updateMixPercentages();
                 }
             });
+            
+            // Update global debug display every 200ms (5fps - less frequent for performance)
+            const now = performance.now();
+            if (now - lastGlobalDebugUpdate > 200) {
+                updateGlobalDebugDisplay();
+                lastGlobalDebugUpdate = now;
+            }
             
             // Continue animation loop
             animationFrameId = requestAnimationFrame(updateAllDotMixers);
