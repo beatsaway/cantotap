@@ -123,9 +123,10 @@
             pointer-events: none !important;
             z-index: 1000;
             transform: translate(-50%, -50%);
-            transition: opacity 0.1s;
+            transition: opacity 2s ease-out;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             will-change: transform;
+            opacity: 1;
         }
 
         .touch-dot.touch-0 { background-color: #ff6b6b; }
@@ -960,16 +961,22 @@
             }
         }
 
-        // Remove touch dot
+        // Remove touch dot with fade-out animation
         function removeTouchDot(touchId) {
             const touchData = activeTouches.get(touchId);
             if (touchData && touchData.dot) {
-                // Immediately remove from DOM
-                if (touchData.dot.parentNode) {
-                    touchData.dot.parentNode.removeChild(touchData.dot);
-                }
-                // Remove from map
+                // Remove from map immediately (so it won't be tracked)
                 activeTouches.delete(touchId);
+                
+                // Start fade-out animation
+                touchData.dot.style.opacity = '0';
+                
+                // Remove from DOM after fade completes (2 seconds)
+                setTimeout(() => {
+                    if (touchData.dot && touchData.dot.parentNode) {
+                        touchData.dot.parentNode.removeChild(touchData.dot);
+                    }
+                }, 2000);
             }
         }
 
@@ -1238,6 +1245,16 @@
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
                 if (cell) {
+                    // Limit to maximum 6 dots - remove oldest if at limit
+                    const MAX_DOTS = 6;
+                    if (activeTouches.size >= MAX_DOTS) {
+                        // Remove the oldest touch (first entry in Map)
+                        const oldestTouchId = activeTouches.keys().next().value;
+                        if (oldestTouchId !== undefined) {
+                            removeTouchDot(oldestTouchId);
+                        }
+                    }
+                    
                     // Create dot for this touch
                     const dot = createTouchDot(touchId, touch.clientX, touch.clientY);
                     activeTouches.set(touchId, { dot, cell });
