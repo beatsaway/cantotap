@@ -129,16 +129,7 @@
             opacity: 1;
         }
 
-        .touch-dot.touch-0 { background-color: #ff6b6b; }
-        .touch-dot.touch-1 { background-color: #4ecdc4; }
-        .touch-dot.touch-2 { background-color: #ffe66d; }
-        .touch-dot.touch-3 { background-color: #a8e6cf; }
-        .touch-dot.touch-4 { background-color: #ff8b94; }
-        .touch-dot.touch-5 { background-color: #95e1d3; }
-        .touch-dot.touch-6 { background-color: #f38181; }
-        .touch-dot.touch-7 { background-color: #aa96da; }
-        .touch-dot.touch-8 { background-color: #fcbad3; }
-        .touch-dot.touch-9 { background-color: #a8d8ea; }
+        /* Area colors are now set inline via JavaScript */
     </style>
 </head>
 <body>
@@ -938,16 +929,35 @@
 
         // Multitouch tracking for visualization
         const activeTouches = new Map(); // Map of touchId -> { dot element, cell }
-        let touchCounter = 0;
 
-        // Create a touch dot
-        function createTouchDot(touchId, x, y) {
+        // Color mapping for each area (16 areas total)
+        const areaColors = [
+            '#ff6b6b', // Area 1 - Red
+            '#4ecdc4', // Area 2 - Teal
+            '#ffe66d', // Area 3 - Yellow
+            '#ff8b94', // Area 4 - Pink
+            '#95e1d3', // Area 5 - Mint
+            '#a8e6cf', // Area 6 - Light Green
+            '#f38181', // Area 7 - Coral
+            '#aa96da', // Area 8 - Purple
+            '#fcbad3', // Area 9 - Light Pink
+            '#a8d8ea', // Area 10 - Sky Blue
+            '#ffd3a5', // Area 11 - Peach
+            '#c7ceea', // Area 12 - Lavender
+            '#ffaaa5', // Area 13 - Salmon
+            '#ffd93d', // Area 14 - Gold
+            '#6bcf7f', // Area 15 - Green
+            '#4d9de0'  // Area 16 - Blue
+        ];
+
+        // Create a touch dot with area-specific color
+        function createTouchDot(touchId, x, y, areaColor) {
             const dot = document.createElement('div');
-            dot.className = `touch-dot touch-${touchCounter % 10}`;
+            dot.className = 'touch-dot';
             dot.style.left = x + 'px';
             dot.style.top = y + 'px';
+            dot.style.backgroundColor = areaColor;
             document.body.appendChild(dot);
-            touchCounter++;
             return dot;
         }
 
@@ -965,14 +975,15 @@
         function removeTouchDot(touchId) {
             const touchData = activeTouches.get(touchId);
             if (touchData && touchData.dot) {
-                // Remove from map immediately (so it won't be tracked)
-                activeTouches.delete(touchId);
-                
                 // Start fade-out animation
                 touchData.dot.style.opacity = '0';
                 
-                // Remove from DOM after fade completes (2 seconds)
+                // Remove from map and DOM after fade completes (2 seconds)
                 setTimeout(() => {
+                    // Remove from tracking map
+                    activeTouches.delete(touchId);
+                    
+                    // Remove from DOM
                     if (touchData.dot && touchData.dot.parentNode) {
                         touchData.dot.parentNode.removeChild(touchData.dot);
                     }
@@ -1255,8 +1266,12 @@
                         }
                     }
                     
-                    // Create dot for this touch
-                    const dot = createTouchDot(touchId, touch.clientX, touch.clientY);
+                    // Get the cell number to determine color
+                    const cellNum = parseInt(cell.dataset.cell);
+                    const areaColor = areaColors[cellNum - 1] || '#ffffff'; // Default to white if cell number is invalid
+                    
+                    // Create dot for this touch with area color
+                    const dot = createTouchDot(touchId, touch.clientX, touch.clientY, areaColor);
                     activeTouches.set(touchId, { dot, cell });
                     
                     // Handle the touch start for this cell
