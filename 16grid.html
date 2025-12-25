@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Synth Grid Demo</title>
+    <title>Water Synth Grid Demo 3 - Multi-Touch Enhanced</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         * {
@@ -49,7 +49,73 @@
             background-color: rgba(100, 150, 255, 0.3);
         }
 
-        /* Grid cell colors will be set via JavaScript to match area colors */
+        .grid-cell.dragging-over {
+            border: 2px solid white;
+        }
+
+        .grid-cell:nth-child(1) {
+            background: linear-gradient(135deg, #2a4a6a, #1a2a3a);
+        }
+
+        .grid-cell:nth-child(2) {
+            background: linear-gradient(135deg, #3a5a7a, #2a3a4a);
+        }
+
+        .grid-cell:nth-child(3) {
+            background: linear-gradient(135deg, #4a6a8a, #3a4a5a);
+        }
+
+        .grid-cell:nth-child(4) {
+            background: linear-gradient(135deg, #5a7a9a, #4a5a6a);
+        }
+
+        .grid-cell:nth-child(5) {
+            background: linear-gradient(135deg, #6a8aaa, #5a6a7a);
+        }
+
+        .grid-cell:nth-child(6) {
+            background: linear-gradient(135deg, #7a9aba, #6a7a8a);
+        }
+
+        .grid-cell:nth-child(7) {
+            background: linear-gradient(135deg, #8aaaca, #7a8a9a);
+        }
+
+        .grid-cell:nth-child(8) {
+            background: linear-gradient(135deg, #9abada, #8a9aaa);
+        }
+
+        .grid-cell:nth-child(9) {
+            background: linear-gradient(135deg, #aacaea, #9aba9a);
+        }
+
+        .grid-cell:nth-child(10) {
+            background: linear-gradient(135deg, #badafa, #aacaba);
+        }
+
+        .grid-cell:nth-child(11) {
+            background: linear-gradient(135deg, #caeafa, #badaca);
+        }
+
+        .grid-cell:nth-child(12) {
+            background: linear-gradient(135deg, #dafa0a, #ca0ada);
+        }
+
+        .grid-cell:nth-child(13) {
+            background: linear-gradient(135deg, #ea0a1a, #da0a0a);
+        }
+
+        .grid-cell:nth-child(14) {
+            background: linear-gradient(135deg, #fa1a2a, #ea1a1a);
+        }
+
+        .grid-cell:nth-child(15) {
+            background: linear-gradient(135deg, #0a2a3a, #1a2a3a);
+        }
+
+        .grid-cell:nth-child(16) {
+            background: linear-gradient(135deg, #1a3a4a, #2a3a4a);
+        }
 
         /* Touch dot visualization */
         .touch-dot {
@@ -67,7 +133,25 @@
             opacity: 1;
         }
 
-        /* Area colors are now set inline via JavaScript */
+        /* Debug info for each dot */
+        .dot-debug-info {
+            position: fixed;
+            font-size: 0.65rem;
+            font-weight: normal;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            line-height: 1.2;
+            pointer-events: none !important;
+            z-index: 1001;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+            white-space: pre;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 150px;
+        }
     </style>
 </head>
 <body>
@@ -91,23 +175,7 @@
     </div>
 
     <script>
-        // Water Synth using Tone.js - inspired by watersynth.js
-        // 
-        // KEY ELEMENTS THAT MAKE THE SOUND BETTER:
-        // 1. PITCH ATTACK: Starts at higher frequency (frequency + pitchDrop), then
-        //    exponential ramp down to target frequency. This creates the "plink" or
-        //    "droplet" attack sound that mimics water physics.
-        // 2. EXPONENTIAL RAMP: Uses exponentialRampTo (not linear) for more natural
-        //    pitch drop curve - sounds more organic than linear ramps.
-        // 3. NOISE COMPONENT: Adds texture with shaped noise that decays quickly,
-        //    simulating the initial impact/attack transient.
-        // 4. AMPLITUDE ENVELOPE: Fast attack (0.02s), quick decay to sustain (0.35),
-        //    creates a natural attack-sustain-release pattern.
-        // 5. WET REVERB: Very wet reverb signal (77% wet) creates spacious, ambient
-        //    tail that makes the sound feel more immersive.
-        // 6. NATURAL VARIATIONS: Random variations in pitchDrop, noiseAmount create
-        //    organic, non-mechanical sound.
-        //
+       
         class WaterSynthTone {
             constructor() {
                 // Create reverb with very wet signal (like original: 1.0 reverb, 0.3 dry)
@@ -152,22 +220,6 @@
 
                 // Generate reverb impulse response
                 this.reverb.generate().catch(console.error);
-
-                // Store active voices for chord
-                this.activeVoices = [];
-                
-                // Store active bell voices for chord
-                this.activeBellVoices = [];
-                
-                // Store active pad voices for chord (area 3)
-                this.activePadVoices = [];
-                
-                // Store active brass voices for chord (area 4)
-                this.activeBrassVoices = [];
-                
-                // Store current pitch offset and volume for updates
-                this.currentPitchOffset = 0;
-                this.currentVolumeMultiplier = 1.0;
             }
 
             // Create a water-like sound with pitch drop and noise
@@ -179,111 +231,93 @@
                 const finalNoiseAmount = noiseAmount * (0.8 + Math.random() * 0.4);
 
                 // Apply pitch offset (in semitones, converted to frequency ratio)
-                // Quarter step = 0.5 semitones = 2^(0.5/12) frequency multiplier
                 const pitchMultiplier = Math.pow(2, pitchOffset / 12);
                 const adjustedFrequency = frequency * pitchMultiplier;
 
                 // Main oscillator with pitch drop on attack
-                // KEY: Start higher, then exponential ramp down (creates the "plink" attack)
                 const osc = new Tone.Oscillator({
                     type: 'sine',
                     frequency: adjustedFrequency + finalPitchDrop
                 });
 
-                // Frequency envelope for pitch drop - exponential ramp (more natural than linear)
-                // This is the KEY to the interesting pitch attack!
-                // The exponential curve creates a natural-sounding pitch drop that mimics
-                // the physics of a water droplet hitting a surface
+                // Frequency envelope for pitch drop - exponential ramp
                 osc.frequency.exponentialRampTo(adjustedFrequency, 0.08);
 
-                // Add harmonic oscillators for mid-high frequency content
-                // 2nd harmonic (octave) - adds brightness
+                // Add harmonic oscillators
                 const osc2 = new Tone.Oscillator({
                     type: 'sine',
                     frequency: (adjustedFrequency * 2) + (finalPitchDrop * 2)
                 });
                 osc2.frequency.exponentialRampTo(adjustedFrequency * 2, 0.08);
                 
-                // 3rd harmonic - adds mid-high character
                 const osc3 = new Tone.Oscillator({
                     type: 'sine',
                     frequency: (adjustedFrequency * 3) + (finalPitchDrop * 3)
                 });
                 osc3.frequency.exponentialRampTo(adjustedFrequency * 3, 0.08);
                 
-                // 4th harmonic - adds high frequency sparkle
                 const osc4 = new Tone.Oscillator({
                     type: 'sine',
                     frequency: (adjustedFrequency * 4) + (finalPitchDrop * 4)
                 });
                 osc4.frequency.exponentialRampTo(adjustedFrequency * 4, 0.08);
 
-                // Amplitude envelope - matches original: peak at 0.5, settle to 0.35
+                // Amplitude envelopes
                 const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.02,      // Fast attack (matches original)
-                    decay: 0.01,       // Quick decay to sustain
-                    sustain: 0.35,     // Sustain level (matches original)
-                    release: 0.3       // Release time
+                    attack: 0.02,
+                    decay: 0.01,
+                    sustain: 0.35,
+                    release: 0.3
                 });
                 
-                // Separate envelopes for harmonics (slightly different for natural sound)
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
-                    sustain: 0.25,     // Lower sustain for harmonics
+                    sustain: 0.25,
                     release: 0.3
                 });
                 
                 const env3 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
-                    sustain: 0.15,     // Even lower for higher harmonics
+                    sustain: 0.15,
                     release: 0.3
                 });
                 
                 const env4 = new Tone.AmplitudeEnvelope({
                     attack: 0.02,
                     decay: 0.01,
-                    sustain: 0.1,     // Lowest for highest harmonic
+                    sustain: 0.1,
                     release: 0.3
                 });
                 
-                // Gain controls for harmonic levels (relative to fundamental)
-                const harmonicGain2 = new Tone.Gain(0.3);  // 2nd harmonic at 30% of fundamental
-                const harmonicGain3 = new Tone.Gain(0.2);  // 3rd harmonic at 20%
-                const harmonicGain4 = new Tone.Gain(0.1);  // 4th harmonic at 10%
+                const harmonicGain2 = new Tone.Gain(0.3);
+                const harmonicGain3 = new Tone.Gain(0.2);
+                const harmonicGain4 = new Tone.Gain(0.1);
 
-                // Noise component with shaped envelope (simulates the original's quadratic falloff)
-                // The original uses custom noise buffer with quadratic decay, but we can
-                // approximate it with white noise + fast exponential decay envelope
+                // Noise component
                 const noise = new Tone.Noise({
                     type: 'white',
                     volume: -20
                 });
 
-                // Noise envelope with fast exponential decay (mimics quadratic falloff)
                 const noiseEnv = new Tone.AmplitudeEnvelope({
                     attack: 0.01,
-                    decay: 0.07,       // Noise decays quickly (matches original 0.1s exponential ramp)
+                    decay: 0.07,
                     sustain: 0,
                     release: 0
                 });
 
-                // Set noise volume based on noiseAmount
                 const noiseGain = new Tone.Gain();
-                noiseGain.gain.value = finalNoiseAmount * 0.5;  // Scale noise appropriately
+                noiseGain.gain.value = finalNoiseAmount * 0.5;
 
-                // Panning for stereo width (subtle like original: 0.15 max pan)
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
+                const volumeGain = new Tone.Gain(volumeMultiplier);
 
-                // Volume control based on position - increased to match other areas' perceived loudness
-                const volumeGain = new Tone.Gain(volumeMultiplier * 1.2);
-
-                // Connect: osc -> env -> volumeGain -> pan -> masterGainArea1 (bypasses filter)
+                // Connect oscillators
                 osc.connect(env);
                 env.connect(volumeGain);
                 
-                // Connect harmonics: osc2/3/4 -> env2/3/4 -> harmonicGain -> volumeGain
                 osc2.connect(env2);
                 env2.connect(harmonicGain2);
                 harmonicGain2.connect(volumeGain);
@@ -299,7 +333,6 @@
                 volumeGain.connect(pan);
                 pan.connect(outputNode || this.masterGainArea1);
 
-                // Connect noise: noise -> noiseGain -> noiseEnv -> pan
                 noise.connect(noiseGain);
                 noiseGain.connect(noiseEnv);
                 noiseEnv.connect(pan);
@@ -316,7 +349,6 @@
                 env4.triggerAttack(now);
                 noiseEnv.triggerAttack(now);
 
-                // Stop noise after short time (matches original: 0.15s)
                 noise.stop(now + 0.15);
 
                 return {
@@ -346,70 +378,6 @@
                 };
             }
 
-            // Play a chord (for area 1)
-            playChord(pitchOffset = 0, volumeMultiplier = 1.0) {
-                // Store current values
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // C major chord: C, E, G
-                const chordFrequencies = [
-                    261.63, // C4
-                    329.63, // E4
-                    392.00  // G4
-                ];
-
-                this.activeVoices = chordFrequencies.map(freq => 
-                    this.createWaterVoice(freq, 0.02, 0.03, pitchOffset, volumeMultiplier)
-                );
-            }
-            
-            // Update chord pitch and volume in real-time
-            updateChord(pitchOffset, volumeMultiplier) {
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // Update each voice
-                this.activeVoices.forEach((voice, index) => {
-                    if (voice && voice.oscillator && voice.volumeGain) {
-                        // Base frequencies for the chord
-                        const baseFrequencies = [261.63, 329.63, 392.00];
-                        const baseFreq = baseFrequencies[index];
-                        
-                        // Calculate new frequency with pitch offset
-                        const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                        const newFrequency = baseFreq * pitchMultiplier;
-                        
-                        // Update frequency (smooth transition)
-                        voice.oscillator.frequency.rampTo(newFrequency, 0.05);
-                        
-                        // Update harmonic frequencies
-                        if (voice.oscillator2) {
-                            voice.oscillator2.frequency.rampTo(newFrequency * 2, 0.05);
-                        }
-                        if (voice.oscillator3) {
-                            voice.oscillator3.frequency.rampTo(newFrequency * 3, 0.05);
-                        }
-                        if (voice.oscillator4) {
-                            voice.oscillator4.frequency.rampTo(newFrequency * 4, 0.05);
-                        }
-                        
-                        // Update volume - increased to match other areas' perceived loudness
-                        voice.volumeGain.gain.rampTo(volumeMultiplier * 1.2, 0.05);
-                    }
-                });
-            }
-
-            // Release the chord
-            releaseChord() {
-                this.activeVoices.forEach(voice => {
-                    if (voice && voice.stop) {
-                        voice.stop();
-                    }
-                });
-                this.activeVoices = [];
-            }
-
             // Create area 1 voices connected to a given gain node (for DotMixer)
             createArea1Voices(pitchOffset, volumeMultiplier, outputGain) {
                 const chordFrequencies = [261.63, 329.63, 392.00];
@@ -418,53 +386,25 @@
                 );
             }
 
-            // Create area 2 voices connected to a given gain node (for DotMixer)
-            createArea2Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create area 3 voices connected to a given gain node (for DotMixer)
-            createArea3Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create area 4 voices connected to a given gain node (for DotMixer)
-            createArea4Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createBrassVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create a bell/chime sound (different from water sound)
+            // Create a bell/chime sound
             createBellVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
-                // Apply pitch offset
                 const pitchMultiplier = Math.pow(2, pitchOffset / 12);
                 const adjustedFrequency = frequency * pitchMultiplier;
                 
-                // Bell uses triangle wave with harmonics for richer timbre
                 const osc = new Tone.Oscillator({
                     type: 'triangle',
                     frequency: adjustedFrequency
                 });
                 
-                // Bell envelope: fast attack, long decay, no sustain
                 const env = new Tone.AmplitudeEnvelope({
                     attack: 0.01,
-                    decay: 2.0,      // Long decay for bell-like sustain
-                    sustain: 0.1,     // Low sustain
+                    decay: 2.0,
+                    sustain: 0.1,
                     release: 0.5
                 });
                 
-                // Add a second oscillator an octave higher for bell harmonics
                 const osc2 = new Tone.Oscillator({
                     type: 'sine',
                     frequency: adjustedFrequency * 2
@@ -477,13 +417,9 @@
                     release: 0.3
                 });
                 
-                // Panning for stereo width
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
+                const volumeGain = new Tone.Gain(volumeMultiplier);
                 
-                // Volume control - increased to match other areas' perceived loudness
-                const volumeGain = new Tone.Gain(volumeMultiplier * 1.1);
-                
-                // Connect: osc -> env -> volumeGain -> pan -> masterGain
                 osc.connect(env);
                 env.connect(volumeGain);
                 osc2.connect(env2);
@@ -491,7 +427,6 @@
                 volumeGain.connect(pan);
                 pan.connect(outputNode || this.masterGain);
                 
-                // Start
                 osc.start(now);
                 osc2.start(now);
                 env.triggerAttack(now);
@@ -513,122 +448,51 @@
                 };
             }
 
-            // Play a bell chord (for area 2) - same chord as area 1
-            playBell(pitchOffset = 0, volumeMultiplier = 1.0) {
-                // Store current values
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // C major chord: C, E, G (same as area 1)
-                const chordFrequencies = [
-                    261.63, // C4
-                    329.63, // E4
-                    392.00  // G4
-                ];
-                
-                // Release any existing bell voices
-                if (this.activeBellVoices) {
-                    this.activeBellVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                
-                this.activeBellVoices = chordFrequencies.map(freq => 
-                    this.createBellVoice(freq, pitchOffset, volumeMultiplier)
+            // Create area 2 voices
+            createArea2Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain)
                 );
             }
-            
-            // Update bell chord pitch and volume in real-time
-            updateBell(pitchOffset, volumeMultiplier) {
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // Base frequencies for the chord
-                const baseFrequencies = [261.63, 329.63, 392.00];
-                
-                // Update each voice
-                if (this.activeBellVoices) {
-                    this.activeBellVoices.forEach((voice, index) => {
-                        if (voice && voice.oscillator && voice.volumeGain) {
-                            const baseFreq = baseFrequencies[index];
-                            const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                            const newFrequency = baseFreq * pitchMultiplier;
-                            
-                            // Update frequencies (smooth transition)
-                            voice.oscillator.frequency.rampTo(newFrequency, 0.05);
-                            if (voice.oscillator2) {
-                                voice.oscillator2.frequency.rampTo(newFrequency * 2, 0.05);
-                            }
-                            
-                            // Update volume - increased to match other areas' perceived loudness
-                            voice.volumeGain.gain.rampTo(volumeMultiplier * 1.1, 0.05);
-                        }
-                    });
-                }
-            }
-            
-            // Release the bell chord
-            releaseBell() {
-                if (this.activeBellVoices) {
-                    this.activeBellVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                this.activeBellVoices = [];
-            }
 
-            // Create a pad/string-like sound (for area 3)
+            // Create a pad/string-like sound
             createPadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
-                // Apply pitch offset
                 const pitchMultiplier = Math.pow(2, pitchOffset / 12);
                 const adjustedFrequency = frequency * pitchMultiplier;
                 
-                // Pad uses sawtooth wave for rich harmonic content
                 const osc = new Tone.Oscillator({
                     type: 'sawtooth',
                     frequency: adjustedFrequency
                 });
                 
-                // Pad envelope: slow attack, long sustain, slow release
                 const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.3,      // Slow attack for pad-like feel
+                    attack: 0.3,
                     decay: 0.2,
-                    sustain: 0.7,      // High sustain
-                    release: 0.8      // Slow release
+                    sustain: 0.7,
+                    release: 0.8
                 });
                 
-                // Add lowpass filter for warmth (sweeps during attack)
                 const filter = new Tone.Filter({
                     type: 'lowpass',
-                    frequency: 2000,   // Start low
+                    frequency: 2000,
                     Q: 1.0
                 });
                 
-                // Filter sweep - opens up during attack for brightness
-                // Start at 2000Hz, ramp to 16000Hz during attack
                 filter.frequency.setValueAtTime(2000, now);
                 filter.frequency.exponentialRampTo(16000, now + 0.4);
                 
-                // Panning for stereo width
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
+                const volumeGain = new Tone.Gain(volumeMultiplier);
                 
-                // Volume control - reduced slightly to match other areas' perceived loudness
-                const volumeGain = new Tone.Gain(volumeMultiplier * 0.85);
-                
-                // Connect: osc -> filter -> env -> volumeGain -> pan -> masterGain
                 osc.connect(filter);
                 filter.connect(env);
                 env.connect(volumeGain);
                 volumeGain.connect(pan);
                 pan.connect(outputNode || this.masterGain);
                 
-                // Start
                 osc.start(now);
                 env.triggerAttack(now);
                 
@@ -645,132 +509,62 @@
                 };
             }
 
-            // Play a pad chord (for area 3) - same chord as area 1
-            playPad(pitchOffset = 0, volumeMultiplier = 1.0) {
-                // Store current values
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // C major chord: C, E, G (same as area 1)
-                const chordFrequencies = [
-                    261.63, // C4
-                    329.63, // E4
-                    392.00  // G4
-                ];
-                
-                // Release any existing pad voices
-                if (this.activePadVoices) {
-                    this.activePadVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                
-                this.activePadVoices = chordFrequencies.map(freq => 
-                    this.createPadVoice(freq, pitchOffset, volumeMultiplier)
+            // Create area 3 voices
+            createArea3Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
                 );
             }
-            
-            // Update pad chord pitch and volume in real-time
-            updatePad(pitchOffset, volumeMultiplier) {
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // Base frequencies for the chord
-                const baseFrequencies = [261.63, 329.63, 392.00];
-                
-                // Update each voice
-                if (this.activePadVoices) {
-                    this.activePadVoices.forEach((voice, index) => {
-                        if (voice && voice.oscillator && voice.volumeGain) {
-                            const baseFreq = baseFrequencies[index];
-                            const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                            const newFrequency = baseFreq * pitchMultiplier;
-                            
-                            // Update frequency (smooth transition)
-                            voice.oscillator.frequency.rampTo(newFrequency, 0.05);
-                            
-                            // Update volume - reduced slightly to match other areas' perceived loudness
-                            voice.volumeGain.gain.rampTo(volumeMultiplier * 0.85, 0.05);
-                        }
-                    });
-                }
-            }
-            
-            // Release the pad chord
-            releasePad() {
-                if (this.activePadVoices) {
-                    this.activePadVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                this.activePadVoices = [];
-            }
 
-            // Create a brass/synth lead sound (for area 4) - loud and punchy
-            createBrassVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
+            // Create a brass/synth lead sound
+            createLeadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
                 const now = Tone.now();
                 
-                // Apply pitch offset
                 const pitchMultiplier = Math.pow(2, pitchOffset / 12);
                 const adjustedFrequency = frequency * pitchMultiplier;
                 
-                // Main oscillator - sawtooth for rich harmonics
                 const osc = new Tone.Oscillator({
                     type: 'sawtooth',
                     frequency: adjustedFrequency
                 });
                 
-                // Second oscillator - square wave an octave lower for body
                 const osc2 = new Tone.Oscillator({
                     type: 'square',
                     frequency: adjustedFrequency * 0.5
                 });
                 
-                // Brass-like envelope: medium attack, high sustain
                 const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.05,     // Quick but not instant
+                    attack: 0.05,
                     decay: 0.1,
-                    sustain: 0.85,    // High sustain for loudness
-                    release: 0.2      // Quick release
+                    sustain: 0.85,
+                    release: 0.2
                 });
                 
                 const env2 = new Tone.AmplitudeEnvelope({
                     attack: 0.05,
                     decay: 0.1,
-                    sustain: 0.7,     // Slightly lower for balance
+                    sustain: 0.7,
                     release: 0.2
                 });
                 
-                // Lowpass filter for warmth - opens during attack
                 const filter = new Tone.Filter({
                     type: 'lowpass',
-                    frequency: 3000,   // Start somewhat bright
+                    frequency: 3000,
                     Q: 1.0
                 });
                 
-                // Filter opens up during attack for brightness
                 filter.frequency.setValueAtTime(3000, now);
                 filter.frequency.exponentialRampTo(12000, now + 0.1);
                 
-                // Panning for stereo width
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
+                const volumeGain = new Tone.Gain(volumeMultiplier * 1.5);
+                const osc2Gain = new Tone.Gain(0.4);
                 
-                // Volume control - reduced to match other areas' perceived loudness
-                const volumeGain = new Tone.Gain(volumeMultiplier * 0.7);
-                
-                // Gain for second oscillator
-                const osc2Gain = new Tone.Gain(0.4);  // 40% of main oscillator
-                
-                // Connect: osc -> filter -> env -> volumeGain -> pan -> masterGain
                 osc.connect(filter);
                 filter.connect(env);
                 env.connect(volumeGain);
                 
-                // Connect second oscillator
                 osc2.connect(env2);
                 env2.connect(osc2Gain);
                 osc2Gain.connect(volumeGain);
@@ -778,7 +572,6 @@
                 volumeGain.connect(pan);
                 pan.connect(outputNode || this.masterGain);
                 
-                // Start
                 osc.start(now);
                 osc2.start(now);
                 env.triggerAttack(now);
@@ -801,147 +594,110 @@
                 };
             }
 
-            // Play a brass/synth lead chord (for area 4) - same chord as area 1
-            playBrass(pitchOffset = 0, volumeMultiplier = 1.0) {
-                // Store current values
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // C major chord: C, E, G (same as area 1)
-                const chordFrequencies = [
-                    261.63, // C4
-                    329.63, // E4
-                    392.00  // G4
-                ];
-                
-                // Release any existing brass voices
-                if (this.activeBrassVoices) {
-                    this.activeBrassVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                
-                this.activeBrassVoices = chordFrequencies.map(freq => 
-                    this.createBrassVoice(freq, pitchOffset, volumeMultiplier)
+            // Create area 4 voices
+            createArea4Voices(pitchOffset, volumeMultiplier, outputGain) {
+                const chordFrequencies = [261.63, 329.63, 392.00];
+                return chordFrequencies.map(freq => 
+                    this.createLeadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
                 );
-            }
-            
-            // Update brass/synth lead chord pitch and volume in real-time
-            updateBrass(pitchOffset, volumeMultiplier) {
-                this.currentPitchOffset = pitchOffset;
-                this.currentVolumeMultiplier = volumeMultiplier;
-                
-                // Base frequencies for the chord
-                const baseFrequencies = [261.63, 329.63, 392.00];
-                
-                // Update each voice
-                if (this.activeBrassVoices) {
-                    this.activeBrassVoices.forEach((voice, index) => {
-                        if (voice && voice.oscillator && voice.volumeGain) {
-                            const baseFreq = baseFrequencies[index];
-                            const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                            const newFrequency = baseFreq * pitchMultiplier;
-                            
-                            // Update frequency (smooth transition)
-                            voice.oscillator.frequency.rampTo(newFrequency, 0.05);
-                            
-                            // Update second oscillator (octave below)
-                            if (voice.oscillator2) {
-                                voice.oscillator2.frequency.rampTo(newFrequency * 0.5, 0.05);
-                            }
-                            
-                            // Update filter frequency (keep it open)
-                            if (voice.filter) {
-                                voice.filter.frequency.rampTo(12000, 0.05);
-                            }
-                            
-                            // Update volume - reduced to match other areas' perceived loudness
-                            voice.volumeGain.gain.rampTo(volumeMultiplier * 0.7, 0.05);
-                        }
-                    });
-                }
-            }
-            
-            // Release the brass/synth lead chord
-            releaseBrass() {
-                if (this.activeBrassVoices) {
-                    this.activeBrassVoices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                }
-                this.activeBrassVoices = [];
             }
         }
 
-        // DotMixer class - manages a dot and its sound mixing
+        // DotMixer class - manages a dot and its sound mixing with demoold.html's crossfade mechanism
         class DotMixer {
-            constructor(touchId, x, y, areaColor, normalizedX, initialArea, synth) {
+            constructor(touchId, x, y, initialArea, synth) {
                 this.touchId = touchId;
                 this.synth = synth;
                 
                 // Create visual dot
-                this.dot = this.createVisualDot(x, y, areaColor, normalizedX);
+                this.dot = this.createVisualDot(x, y, initialArea);
                 
-                // Track area sounds: { areaNum: { voices: [...], mixGain: Tone.Gain, mixPercent: number, targetMix: number } }
+                // Track area sounds: { areaNum: { voices: [...], mixGain: Tone.Gain, mixPercent: number } }
                 this.areaSounds = new Map();
                 
                 // Master gain for this dot's mixed output
                 this.masterGain = new Tone.Gain(1.0);
                 this.masterGain.toDestination();
                 
-                // Mix transition rate - matches demoold.html's 3-second crossfade duration
-                // 100% over 3 seconds = 33.33% per second = ~0.556% per frame at 60fps
-                // Using time-based calculation for frame-rate independence
-                this.mixTransitionRate = 33.33 / 60; // ~0.556% per frame (matches 3s crossfade)
-                this.lastUpdateTime = performance.now();
-                
                 // Current position
                 this.currentX = x;
                 this.currentY = y;
                 this.currentCell = initialArea;
                 
-                // Start sound for initial area
-                this.addAreaSound(initialArea, 1.0);
+                // Crossfade constants (matching demoold.html)
+                this.CROSSFADE_DURATION = 3.0; // seconds
+                this.MIXRATIO_RATE = 100.0 / this.CROSSFADE_DURATION; // 33.33% per second
+                this.lastUpdateTime = performance.now();
                 
-                // Track if fading (for cleanup)
+                // Track active areas and mix ratios (per dot)
+                // Note: Mix ratios are tracked by area TYPE (1-4), not area number (1-16)
+                // This allows crossfading between sound types when moving between areas
+                this.areaMixRatios = { 1: 0, 2: 0, 3: 0, 4: 0 };
+                this.areaMixDirections = { 1: 'none', 2: 'none', 3: 'none', 4: 'none' };
+                this.activeAreas = new Set(); // Tracks area numbers (1-16) that have sounds
+                
+                // Start sound for initial area
+                this.addAreaSound(initialArea);
+                
+                // Track if fading
                 this.isFading = false;
             }
             
-            createVisualDot(x, y, areaColor, normalizedX) {
+            createVisualDot(x, y, areaNum) {
                 const dot = document.createElement('div');
                 dot.className = 'touch-dot';
+                
+                // Color based on area (matching demoold.html's gradient colors)
+                const colors = {
+                    1: '#2a4a6a', 2: '#3a5a7a', 3: '#4a6a8a', 4: '#5a7a9a',
+                    5: '#6a8aaa', 6: '#7a9aba', 7: '#8aaaca', 8: '#9abada',
+                    9: '#aacaea', 10: '#badafa', 11: '#caeafa', 12: '#dafa0a',
+                    13: '#ea0a1a', 14: '#fa1a2a', 15: '#0a2a3a', 16: '#1a3a4a'
+                };
+                dot.style.backgroundColor = colors[areaNum] || '#ffffff';
+                
                 dot.style.left = x + 'px';
                 dot.style.top = y + 'px';
-                dot.style.backgroundColor = areaColor;
                 
-                // Size based on X position: left (0) = 20px, right (1) = 40px
-                const minSize = 20;
-                const maxSize = 40;
-                const size = minSize + (normalizedX * (maxSize - minSize));
-                dot.style.width = size + 'px';
-                dot.style.height = size + 'px';
+                // Size based on X position
+                const cell = cells[areaNum - 1];
+                if (cell) {
+                    const rect = cell.getBoundingClientRect();
+                    const relativeX = x - rect.left;
+                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                    const minSize = 20;
+                    const maxSize = 40;
+                    const size = minSize + (normalizedX * (maxSize - minSize));
+                    dot.style.width = size + 'px';
+                    dot.style.height = size + 'px';
+                }
+                
+                // Create debug info element
+                const debugInfo = document.createElement('div');
+                debugInfo.className = 'dot-debug-info';
+                debugInfo.id = `dot-debug-${this.touchId}`;
+                debugInfo.textContent = 'Vol: 0%\nMix: 0%';
+                debugInfo.style.left = x + 'px';
+                debugInfo.style.top = y + 'px';
                 
                 document.body.appendChild(dot);
+                document.body.appendChild(debugInfo);
+                
+                this.debugInfo = debugInfo;
                 return dot;
             }
             
             // Add or update area sound
-            addAreaSound(areaNum, targetMix) {
+            addAreaSound(areaNum) {
                 if (this.areaSounds.has(areaNum)) {
-                    // Update target mix
-                    this.areaSounds.get(areaNum).targetMix = targetMix;
-                    return;
+                    return; // Already exists
                 }
                 
-                // Create new area sound
-                const mixGain = new Tone.Gain(0); // Start at 0, will transition to targetMix
+                // Create mix gain for this area
+                const mixGain = new Tone.Gain(0); // Start at 0, will transition
                 mixGain.connect(this.masterGain);
                 
-                // Get pitch and volume from position (same logic as before)
+                // Get pitch and volume from position
                 const cell = cells[areaNum - 1];
                 if (!cell) return;
                 
@@ -956,34 +712,43 @@
                 
                 // Create voices based on area type
                 let voices = [];
-                if (areaNum === 1) {
+                const areaType = ((areaNum - 1) % 4) + 1;
+                if (areaType === 1) {
                     voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
-                } else if (areaNum === 2) {
+                } else if (areaType === 2) {
                     voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
-                } else if (areaNum === 3) {
+                } else if (areaType === 3) {
                     voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
-                } else if (areaNum === 4) {
-                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
                 } else {
-                    // For areas 5-16, cycle through area types
-                    const areaType = ((areaNum - 1) % 4) + 1;
-                    if (areaType === 1) {
-                        voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
-                    } else if (areaType === 2) {
-                        voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
-                    } else if (areaType === 3) {
-                        voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
-                    } else {
-                        voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
-                    }
+                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
                 }
                 
                 this.areaSounds.set(areaNum, {
                     voices: voices,
                     mixGain: mixGain,
                     mixPercent: 0,
-                    targetMix: targetMix
+                    pitchOffset: pitchOffset,
+                    volumeMultiplier: volumeMultiplier
                 });
+                
+                // If this is the current cell, set mix to 100% for this area type
+                if (areaNum === this.currentCell) {
+                    const areaType = ((areaNum - 1) % 4) + 1;
+                    this.areaMixRatios[areaType] = 100;
+                    this.areaMixDirections[areaType] = 'none';
+                    this.activeAreas.add(areaNum);
+                    mixGain.gain.rampTo(1.0, 0.05);
+                    
+                    // Update debug display with initial values
+                    const initialVol = volumeMultiplier * 100;
+                    this.updateDebugDisplay([{
+                        areaNum: areaNum,
+                        areaType: areaType,
+                        vol: initialVol,
+                        mix: 100,
+                        isCurrent: true
+                    }], areaNum);
+                }
             }
             
             // Update position and handle area transitions
@@ -991,15 +756,23 @@
                 this.currentX = x;
                 this.currentY = y;
                 
-                // Update dot visual position and size
+                // Update dot visual position
                 this.dot.style.left = x + 'px';
                 this.dot.style.top = y + 'px';
+                
+                // Update debug info position
+                if (this.debugInfo) {
+                    this.debugInfo.style.left = x + 'px';
+                    this.debugInfo.style.top = y + 'px';
+                }
                 
                 if (cell) {
                     const cellNum = parseInt(cell.dataset.cell);
                     const rect = cell.getBoundingClientRect();
                     const relativeX = x - rect.left;
+                    const relativeY = y - rect.top;
                     const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
+                    const normalizedY = Math.max(0, Math.min(1, relativeY / rect.height));
                     
                     // Update size
                     const minSize = 20;
@@ -1008,108 +781,267 @@
                     this.dot.style.width = size + 'px';
                     this.dot.style.height = size + 'px';
                     
+                    // Update pitch and volume for current area
+                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
+                    const pitchOffset = 0.5 - (normalizedY * 1.0);
+                    
                     // Check if we're in a new area
                     if (cellNum !== this.currentCell) {
+                        const oldCell = this.currentCell;
                         this.currentCell = cellNum;
                         
-                        // If this area already has a sound, increase its mix
-                        if (this.areaSounds.has(cellNum)) {
-                            this.areaSounds.get(cellNum).targetMix = 1.0;
+                        // Add new area sound if needed
+                        if (!this.areaSounds.has(cellNum)) {
+                            this.addAreaSound(cellNum);
+                        }
+                        
+                        // Update mix directions for crossfade (by area type, not area number)
+                        const oldAreaType = oldCell ? ((oldCell - 1) % 4) + 1 : 0;
+                        const newAreaType = ((cellNum - 1) % 4) + 1;
+                        
+                        if (oldAreaType > 0 && oldAreaType !== newAreaType) {
+                            this.areaMixDirections[oldAreaType] = 'down';
+                        }
+                        this.areaMixDirections[newAreaType] = 'up';
+                        this.activeAreas.add(cellNum);
+                    }
+                    
+                    // Update pitch and volume for current area's voices
+                    const currentSound = this.areaSounds.get(cellNum);
+                    if (currentSound) {
+                        currentSound.pitchOffset = pitchOffset;
+                        currentSound.volumeMultiplier = volumeMultiplier;
+                        
+                        // Update each voice
+                        currentSound.voices.forEach((voice, index) => {
+                            if (voice && voice.oscillator && voice.volumeGain) {
+                                const baseFrequencies = [261.63, 329.63, 392.00];
+                                const baseFreq = baseFrequencies[index];
+                                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
+                                const newFrequency = baseFreq * pitchMultiplier;
+                                
+                                voice.oscillator.frequency.rampTo(newFrequency, 0.05);
+                                
+                                if (voice.oscillator2) {
+                                    voice.oscillator2.frequency.rampTo(newFrequency * 2, 0.05);
+                                }
+                                if (voice.oscillator3) {
+                                    voice.oscillator3.frequency.rampTo(newFrequency * 3, 0.05);
+                                }
+                                if (voice.oscillator4) {
+                                    voice.oscillator4.frequency.rampTo(newFrequency * 4, 0.05);
+                                }
+                                
+                                // Update volume (account for area 4's 1.5x boost)
+                                const vol = (cellNum % 4 === 0) ? volumeMultiplier * 1.5 : volumeMultiplier;
+                                voice.volumeGain.gain.rampTo(vol, 0.05);
+                            }
+                        });
+                    }
+                }
+                
+                // Update mix percentages
+                this.updateMixPercentages();
+            }
+            
+            // Update mix percentages towards targets (matching demoold.html's mechanism)
+            updateMixPercentages() {
+                const currentTime = performance.now();
+                const deltaTime = (currentTime - this.lastUpdateTime) / 1000;
+                this.lastUpdateTime = currentTime;
+                
+                const clampedDeltaTime = Math.max(0.001, Math.min(deltaTime, 0.1));
+                const changePerFrame = this.MIXRATIO_RATE * clampedDeltaTime;
+                
+                // Get current area type (1-4)
+                const currentAreaType = this.currentCell ? ((this.currentCell - 1) % 4) + 1 : 0;
+                
+                // Update directions based on current area type
+                for (let areaType = 1; areaType <= 4; areaType++) {
+                    // Check if any area with this type has sound
+                    let hasSoundOfType = false;
+                    this.areaSounds.forEach((soundData, areaNum) => {
+                        const areaTypeForArea = ((areaNum - 1) % 4) + 1;
+                        if (areaTypeForArea === areaType) {
+                            hasSoundOfType = true;
+                        }
+                    });
+                    
+                    const isCurrentType = (areaType === currentAreaType);
+                    
+                    if (isCurrentType && hasSoundOfType) {
+                        if (this.areaMixRatios[areaType] < 100) {
+                            this.areaMixDirections[areaType] = 'up';
                         } else {
-                            // Add new area sound at 100%
-                            this.addAreaSound(cellNum, 1.0);
+                            this.areaMixDirections[areaType] = 'none';
+                        }
+                    } else if (hasSoundOfType) {
+                        if (this.areaMixRatios[areaType] > 0) {
+                            this.areaMixDirections[areaType] = 'down';
+                        } else {
+                            this.areaMixDirections[areaType] = 'none';
                         }
                     }
                 }
                 
-                // Update all area sounds' mix percentages
-                this.updateMixPercentages();
-            }
-            
-            // Update mix percentages towards targets (time-based like demoold.html)
-            updateMixPercentages() {
-                const currentTime = performance.now();
-                const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
-                this.lastUpdateTime = currentTime;
-                
-                // Clamp deltaTime to prevent large jumps (e.g., if tab was inactive)
-                const clampedDeltaTime = Math.max(0.001, Math.min(deltaTime, 0.1)); // Between 1ms and 100ms
-                
-                // Calculate change per frame (33.33% per second * delta time)
-                // This matches demoold.html's MIXRATIO_RATE of 33.33%/s for 3-second crossfade
-                const changePerFrame = (33.33 / 100) * clampedDeltaTime; // Convert % to 0-1 range
-                
-                this.areaSounds.forEach((soundData, areaNum) => {
-                    const currentMix = soundData.mixPercent;
+                // Update mix ratios by area type (1-4)
+                for (let areaType = 1; areaType <= 4; areaType++) {
+                    const direction = this.areaMixDirections[areaType] || 'none';
+                    let newMix = this.areaMixRatios[areaType];
                     
-                    // If in this area, target is 100%, otherwise 0%
-                    const isInArea = (areaNum === this.currentCell);
-                    const targetMix = isInArea ? 1.0 : 0.0;
-                    
-                    // Transition towards target
-                    let newMix;
-                    if (currentMix < targetMix) {
-                        // Increasing
-                        newMix = Math.min(1.0, currentMix + changePerFrame);
-                    } else if (currentMix > targetMix) {
-                        // Decreasing
-                        newMix = Math.max(0.0, currentMix - changePerFrame);
-                    } else {
-                        newMix = currentMix;
+                    if (direction === 'up') {
+                        newMix = Math.min(100, newMix + changePerFrame);
+                    } else if (direction === 'down') {
+                        newMix = Math.max(0, newMix - changePerFrame);
                     }
                     
-                    soundData.mixPercent = newMix;
-                    soundData.mixGain.gain.rampTo(newMix, 0.05); // Smooth ramp
+                    this.areaMixRatios[areaType] = newMix;
                     
-                    // If mix reaches 0 and we're not in this area, we could clean up
-                    // But we'll keep it until dot fades to allow re-entry
+                    // Apply this mix ratio to all areas of this type
+                    this.areaSounds.forEach((soundData, areaNum) => {
+                        const areaTypeForArea = ((areaNum - 1) % 4) + 1;
+                        if (areaTypeForArea === areaType) {
+                            soundData.mixPercent = newMix;
+                            // Update gain (convert percentage to 0-1 range)
+                            soundData.mixGain.gain.rampTo(newMix / 100, 0.05);
+                        }
+                    });
+                }
+                
+                // Collect all active areas with their volumes and mix percentages
+                const activeAreaInfo = [];
+                
+                this.areaSounds.forEach((soundData, areaNum) => {
+                    const areaType = ((areaNum - 1) % 4) + 1;
+                    const mix = this.areaMixRatios[areaType];
+                    
+                    // Calculate volume for this area (only if mix > 0)
+                    if (mix > 0.1) {
+                        let maxVolume = 0;
+                        soundData.voices.forEach(voice => {
+                            if (voice && voice.volumeGain) {
+                                try {
+                                    const voiceVol = voice.volumeGain.gain.value;
+                                    const mixVol = soundData.mixGain.gain.value;
+                                    const totalVol = voiceVol * mixVol; // Combined volume
+                                    maxVolume = Math.max(maxVolume, totalVol);
+                                } catch (e) {
+                                    // Fallback
+                                    const baseVol = soundData.volumeMultiplier || 0;
+                                    const mixVol = mix / 100;
+                                    maxVolume = Math.max(maxVolume, baseVol * mixVol);
+                                }
+                            }
+                        });
+                        
+                        const isCurrentArea = (areaNum === this.currentCell);
+                        activeAreaInfo.push({
+                            areaNum: areaNum,
+                            areaType: areaType,
+                            vol: maxVolume * 100, // Convert to percentage
+                            mix: mix,
+                            isCurrent: isCurrentArea
+                        });
+                    }
+                    
+                    // Cleanup if mix reaches 0
+                    if (mix <= 0.1 && !this.activeAreas.has(areaNum)) {
+                        this.cleanupAreaSound(areaNum);
+                    }
                 });
+                
+                // Sort by area number for consistent display
+                activeAreaInfo.sort((a, b) => a.areaNum - b.areaNum);
+                
+                // Update debug display with all active areas
+                this.updateDebugDisplay(activeAreaInfo, this.currentCell);
             }
             
-            // Start fade and release sounds immediately
+            // Update debug display for this dot - show all active areas
+            updateDebugDisplay(activeAreaInfo, currentCell) {
+                if (!this.debugInfo) return;
+                
+                if (activeAreaInfo.length === 0) {
+                    this.debugInfo.textContent = `Area: ${currentCell || '?'}\nNo active sounds`;
+                    return;
+                }
+                
+                // Build display text
+                let text = `Area: ${currentCell || '?'}\n`;
+                
+                activeAreaInfo.forEach((info, index) => {
+                    const marker = info.isCurrent ? '→' : ' ';
+                    text += `${marker}A${info.areaNum}: Vol${info.vol.toFixed(0)}% Mix${info.mix.toFixed(0)}%\n`;
+                });
+                
+                // Remove trailing newline
+                text = text.trim();
+                
+                this.debugInfo.textContent = text;
+            }
+            
+            cleanupAreaSound(areaNum) {
+                const soundData = this.areaSounds.get(areaNum);
+                if (!soundData) return;
+                
+                // Release all voices
+                soundData.voices.forEach(voice => {
+                    if (voice && voice.stop) {
+                        voice.stop();
+                    }
+                });
+                
+                // Dispose gain
+                soundData.mixGain.disconnect();
+                soundData.mixGain.dispose();
+                
+                this.areaSounds.delete(areaNum);
+                // Note: Don't reset areaMixRatios here - they're shared by area type
+                // They'll be reset naturally when all areas of that type are cleaned up
+            }
+            
+            // Start fade and release sounds
             startFade() {
                 if (this.isFading) return;
                 this.isFading = true;
                 
-                // Release all sounds immediately when fade starts
-                this.releaseAllSounds();
+                // Release all sounds using ADSR release (matching demoold.html)
+                this.areaSounds.forEach((soundData, areaNum) => {
+                    soundData.voices.forEach(voice => {
+                        if (voice) {
+                            if (voice.envelope) voice.envelope.triggerRelease();
+                            if (voice.envelope2) voice.envelope2.triggerRelease();
+                            if (voice.envelope3) voice.envelope3.triggerRelease();
+                            if (voice.envelope4) voice.envelope4.triggerRelease();
+                            if (voice.noiseEnv) voice.noiseEnv.triggerRelease();
+                        }
+                    });
+                });
                 
                 // Start visual fade
                 this.dot.style.opacity = '0';
                 
-                // Remove dot from DOM after fade completes
+                // Cleanup after fade
                 setTimeout(() => {
+                    this.areaSounds.forEach((soundData, areaNum) => {
+                        this.cleanupAreaSound(areaNum);
+                    });
                     if (this.dot && this.dot.parentNode) {
                         this.dot.parentNode.removeChild(this.dot);
                     }
+                    if (this.debugInfo && this.debugInfo.parentNode) {
+                        this.debugInfo.parentNode.removeChild(this.debugInfo);
+                    }
+                    this.masterGain.disconnect();
+                    this.masterGain.dispose();
                 }, 2000);
-            }
-            
-            // Release all sounds and clean up
-            releaseAllSounds() {
-                this.areaSounds.forEach((soundData, areaNum) => {
-                    // Release all voices
-                    soundData.voices.forEach(voice => {
-                        if (voice && voice.stop) {
-                            voice.stop();
-                        }
-                    });
-                    
-                    // Disconnect and dispose
-                    soundData.mixGain.disconnect();
-                    soundData.mixGain.dispose();
-                });
-                
-                this.areaSounds.clear();
-                this.masterGain.disconnect();
-                this.masterGain.dispose();
             }
         }
 
         // Initialize synth
         let synth = null;
 
-        // Initialize on user interaction (required for audio context)
+        // Initialize on user interaction
         function initAudio() {
             if (synth) return;
             
@@ -1122,287 +1054,10 @@
         // Get all grid cells
         const cells = document.querySelectorAll('.grid-cell');
 
-        // Multitouch tracking - now using DotMixer instances
+        // Multitouch tracking - using DotMixer instances
         const dotMixers = new Map(); // Map of touchId -> DotMixer instance
 
-        // Color mapping for each area (16 areas total) - carefully chosen for maximum distinguishability
-        const areaColors = [
-            '#ff6b6b', // Area 1 - Red
-            '#4ecdc4', // Area 2 - Teal/Cyan
-            '#ffe66d', // Area 3 - Yellow
-            '#ff8b94', // Area 4 - Pink
-            '#6bcf7f', // Area 5 - Green
-            '#aa96da', // Area 6 - Purple
-            '#ffa07a', // Area 7 - Light Salmon
-            '#20b2aa', // Area 8 - Light Sea Green
-            '#ffd700', // Area 9 - Gold
-            '#87ceeb', // Area 10 - Sky Blue
-            '#ff69b4', // Area 11 - Hot Pink
-            '#32cd32', // Area 12 - Lime Green
-            '#ff6347', // Area 13 - Tomato
-            '#9370db', // Area 14 - Medium Purple
-            '#00ced1', // Area 15 - Dark Turquoise
-            '#ff1493'  // Area 16 - Deep Pink
-        ];
-
-        // Helper function to darken a color for gradient
-        function darkenColor(color, amount) {
-            const num = parseInt(color.replace("#", ""), 16);
-            const r = Math.max(0, Math.min(255, (num >> 16) - amount));
-            const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) - amount));
-            const b = Math.max(0, Math.min(255, (num & 0x0000FF) - amount));
-            return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-        }
-
-        // Apply colors to grid cells
-        cells.forEach((cell, index) => {
-            const color = areaColors[index];
-            const darkerColor = darkenColor(color, 40);
-            cell.style.background = `linear-gradient(135deg, ${color}, ${darkerColor})`;
-        });
-
-        // Clean up all dot mixers (for edge cases like page visibility change)
-        function cleanupAllDotMixers() {
-            dotMixers.forEach((mixer, touchId) => {
-                mixer.startFade();
-            });
-        }
-        
-        // Continuous update loop for mix percentages
-        function updateAllDotMixers() {
-            dotMixers.forEach((mixer) => {
-                if (!mixer.isFading) {
-                    mixer.updateMixPercentages();
-                }
-            });
-        }
-        
-        // Start update loop (60fps)
-        setInterval(updateAllDotMixers, 1000 / 60);
-
-        // OLD HANDLERS REMOVED - Now using DotMixer system
-        // Handle touch and mouse events (DEPRECATED - kept for reference)
-        function handleStart_OLD(e, cell) {
-            e.preventDefault();
-            initAudio();
-            
-            if (!synth) return;
-
-            const cellNum = parseInt(cell.dataset.cell);
-            
-            if (cellNum === 1) {
-                // Area 1: Play chord on hold with position-based pitch and volume
-                if (!isPlaying) {
-                    // Get position relative to the cell
-                    const rect = cell.getBoundingClientRect();
-                    let x, y;
-                    
-                    if (e.touches && e.touches.length > 0) {
-                        // Touch event
-                        x = e.touches[0].clientX - rect.left;
-                        y = e.touches[0].clientY - rect.top;
-                    } else {
-                        // Mouse event
-                        x = e.clientX - rect.left;
-                        y = e.clientY - rect.top;
-                    }
-                    
-                    // Normalize to 0-1 (0 = left/top, 1 = right/bottom)
-                    const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-                    const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-                    
-                    // X position: 0 (left) = quieter (0.2), 1 (right) = louder (1.0)
-                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                    
-                    // Y position: 0 (top) = +0.5 semitones, 1 (bottom) = -0.5 semitones
-                    // Map from [0, 1] to [0.5, -0.5]
-                    const pitchOffset = 0.5 - (normalizedY * 1.0);
-                    
-                    synth.playChord(pitchOffset, volumeMultiplier);
-                    isPlaying = true;
-                    cell.classList.add('active');
-                }
-            } else if (cellNum === 2) {
-                // Area 2: Play bell on hold with position-based pitch and volume
-                if (!isPlayingArea2) {
-                    // Get position relative to the cell
-                    const rect = cell.getBoundingClientRect();
-                    let x, y;
-                    
-                    if (e.touches && e.touches.length > 0) {
-                        // Touch event
-                        x = e.touches[0].clientX - rect.left;
-                        y = e.touches[0].clientY - rect.top;
-                    } else {
-                        // Mouse event
-                        x = e.clientX - rect.left;
-                        y = e.clientY - rect.top;
-                    }
-                    
-                    // Normalize to 0-1 (0 = left/top, 1 = right/bottom)
-                    const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-                    const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-                    
-                    // X position: 0 (left) = quieter (0.2), 1 (right) = louder (1.0)
-                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                    
-                    // Y position: 0 (top) = +0.5 semitones, 1 (bottom) = -0.5 semitones
-                    // Map from [0, 1] to [0.5, -0.5]
-                    const pitchOffset = 0.5 - (normalizedY * 1.0);
-                    
-                    synth.playBell(pitchOffset, volumeMultiplier);
-                    isPlayingArea2 = true;
-                    cell.classList.add('active');
-                }
-            } else if (cellNum === 3) {
-                // Area 3: Play pad on hold with position-based pitch and volume
-                if (!isPlayingArea3) {
-                    // Get position relative to the cell
-                    const rect = cell.getBoundingClientRect();
-                    let x, y;
-                    
-                    if (e.touches && e.touches.length > 0) {
-                        // Touch event
-                        x = e.touches[0].clientX - rect.left;
-                        y = e.touches[0].clientY - rect.top;
-                    } else {
-                        // Mouse event
-                        x = e.clientX - rect.left;
-                        y = e.clientY - rect.top;
-                    }
-                    
-                    // Normalize to 0-1 (0 = left/top, 1 = right/bottom)
-                    const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-                    const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-                    
-                    // X position: 0 (left) = quieter (0.2), 1 (right) = louder (1.0)
-                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                    
-                    // Y position: 0 (top) = +0.5 semitones, 1 (bottom) = -0.5 semitones
-                    // Map from [0, 1] to [0.5, -0.5]
-                    const pitchOffset = 0.5 - (normalizedY * 1.0);
-                    
-                    synth.playPad(pitchOffset, volumeMultiplier);
-                    isPlayingArea3 = true;
-                    cell.classList.add('active');
-                }
-            } else if (cellNum === 4) {
-                // Area 4: Play brass/synth lead on hold with position-based pitch and volume
-                if (!isPlayingArea4) {
-                    // Get position relative to the cell
-                    const rect = cell.getBoundingClientRect();
-                    let x, y;
-                    
-                    if (e.touches && e.touches.length > 0) {
-                        // Touch event
-                        x = e.touches[0].clientX - rect.left;
-                        y = e.touches[0].clientY - rect.top;
-                    } else {
-                        // Mouse event
-                        x = e.clientX - rect.left;
-                        y = e.clientY - rect.top;
-                    }
-                    
-                    // Normalize to 0-1 (0 = left/top, 1 = right/bottom)
-                    const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-                    const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-                    
-                    // X position: 0 (left) = quieter (0.2), 1 (right) = louder (1.0)
-                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                    
-                    // Y position: 0 (top) = +0.5 semitones, 1 (bottom) = -0.5 semitones
-                    // Map from [0, 1] to [0.5, -0.5]
-                    const pitchOffset = 0.5 - (normalizedY * 1.0);
-                    
-                    synth.playBrass(pitchOffset, volumeMultiplier);
-                    isPlayingArea4 = true;
-                    cell.classList.add('active');
-                }
-            }
-        }
-
-        function handleMove(e, cell) {
-            e.preventDefault();
-            
-            if (!synth) return;
-
-            const cellNum = parseInt(cell.dataset.cell);
-            
-            // Get position relative to the cell
-            const rect = cell.getBoundingClientRect();
-            let x, y;
-            
-            if (e.touches && e.touches.length > 0) {
-                // Touch event
-                x = e.touches[0].clientX - rect.left;
-                y = e.touches[0].clientY - rect.top;
-            } else {
-                // Mouse event
-                x = e.clientX - rect.left;
-                y = e.clientY - rect.top;
-            }
-            
-            // Normalize to 0-1 (0 = left/top, 1 = right/bottom)
-            const normalizedX = Math.max(0, Math.min(1, x / rect.width));
-            const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-            
-            // X position: 0 (left) = quieter (0.2), 1 (right) = louder (1.0)
-            const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-            
-            // Y position: 0 (top) = +0.5 semitones, 1 (bottom) = -0.5 semitones
-            // Map from [0, 1] to [0.5, -0.5]
-            const pitchOffset = 0.5 - (normalizedY * 1.0);
-            
-            if (cellNum === 1 && isPlaying) {
-                synth.updateChord(pitchOffset, volumeMultiplier);
-            } else if (cellNum === 2 && isPlayingArea2) {
-                synth.updateBell(pitchOffset, volumeMultiplier);
-            } else if (cellNum === 3 && isPlayingArea3) {
-                synth.updatePad(pitchOffset, volumeMultiplier);
-            } else if (cellNum === 4 && isPlayingArea4) {
-                synth.updateBrass(pitchOffset, volumeMultiplier);
-            }
-        }
-
-        function handleEnd(e, cell) {
-            e.preventDefault();
-            
-            if (!synth) return;
-
-            const cellNum = parseInt(cell.dataset.cell);
-            
-            if (cellNum === 1) {
-                // Area 1: Release chord
-                if (isPlaying) {
-                    synth.releaseChord();
-                    isPlaying = false;
-                    cell.classList.remove('active');
-                }
-            } else if (cellNum === 2) {
-                // Area 2: Release bell
-                if (isPlayingArea2) {
-                    synth.releaseBell();
-                    isPlayingArea2 = false;
-                    cell.classList.remove('active');
-                }
-            } else if (cellNum === 3) {
-                // Area 3: Release pad
-                if (isPlayingArea3) {
-                    synth.releasePad();
-                    isPlayingArea3 = false;
-                    cell.classList.remove('active');
-                }
-            } else if (cellNum === 4) {
-                // Area 4: Release brass/synth lead
-                if (isPlayingArea4) {
-                    synth.releaseBrass();
-                    isPlayingArea4 = false;
-                    cell.classList.remove('active');
-                }
-            }
-        }
-
-        // Helper function to find cell from coordinates (more reliable than elementFromPoint)
+        // Helper function to find cell from coordinates
         function findCellFromCoordinates(x, y) {
             const gridContainer = document.querySelector('.grid-container');
             if (!gridContainer) return null;
@@ -1411,14 +1066,12 @@
             const relativeX = x - rect.left;
             const relativeY = y - rect.top;
             
-            // Grid is 4x4
             const cellWidth = rect.width / 4;
             const cellHeight = rect.height / 4;
             
             const col = Math.floor(relativeX / cellWidth);
             const row = Math.floor(relativeY / cellHeight);
             
-            // Validate bounds
             if (col < 0 || col >= 4 || row < 0 || row >= 4) return null;
             
             const cellIndex = row * 4 + col;
@@ -1432,19 +1085,17 @@
             
             if (!synth) return;
             
-            // Process all touches in the event
+            // Process all touches
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
                 
-                // Find which cell this touch is in using coordinates
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
                 if (cell) {
-                    // Limit to maximum 6 dots - remove oldest if at limit
+                    // Limit to maximum 6 dots
                     const MAX_DOTS = 6;
                     if (dotMixers.size >= MAX_DOTS) {
-                        // Remove the oldest dot mixer (first entry in Map)
                         const oldestTouchId = dotMixers.keys().next().value;
                         if (oldestTouchId !== undefined) {
                             const oldestMixer = dotMixers.get(oldestTouchId);
@@ -1455,17 +1106,8 @@
                         }
                     }
                     
-                    // Calculate normalized X position within the cell (0 = left, 1 = right)
-                    const rect = cell.getBoundingClientRect();
-                    const relativeX = touch.clientX - rect.left;
-                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                    
-                    // Get the cell number to determine color
                     const cellNum = parseInt(cell.dataset.cell);
-                    const areaColor = areaColors[cellNum - 1] || '#ffffff';
-                    
-                    // Create DotMixer for this touch
-                    const mixer = new DotMixer(touchId, touch.clientX, touch.clientY, areaColor, normalizedX, cellNum, synth);
+                    const mixer = new DotMixer(touchId, touch.clientX, touch.clientY, cellNum, synth);
                     dotMixers.set(touchId, mixer);
                 }
             }
@@ -1474,22 +1116,21 @@
         function handleTouchMove(e) {
             e.preventDefault();
             
-            // First, check for touches that are no longer active (orphaned dots)
+            // Check for orphaned touches
             const activeTouchIds = new Set();
             for (let i = 0; i < e.touches.length; i++) {
                 activeTouchIds.add(e.touches[i].identifier);
             }
             
-            // Remove dot mixers for touches that are no longer in the active list
+            // Remove orphaned dots
             dotMixers.forEach((mixer, touchId) => {
                 if (!activeTouchIds.has(touchId)) {
-                    // This touch is no longer active, start fade
                     mixer.startFade();
                     dotMixers.delete(touchId);
                 }
             });
             
-            // Process all active touches (not just changed ones) to update all dots
+            // Update all active touches
             for (let i = 0; i < e.touches.length; i++) {
                 const touch = e.touches[i];
                 const touchId = touch.identifier;
@@ -1497,10 +1138,7 @@
                 const mixer = dotMixers.get(touchId);
                 if (!mixer || mixer.isFading) continue;
                 
-                // Find which cell this touch is in using coordinates
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
-                
-                // Update dot mixer position
                 mixer.updatePosition(touch.clientX, touch.clientY, cell);
             }
         }
@@ -1508,127 +1146,108 @@
         function handleTouchEnd(e) {
             e.preventDefault();
             
-            // Process all touches in the event
+            // Process all touches
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
                 
                 const mixer = dotMixers.get(touchId);
                 if (mixer) {
-                    // Start fade (sounds will be released after fade completes)
                     mixer.startFade();
-                    // Remove from map after fade starts (cleanup happens in startFade)
                     setTimeout(() => {
                         dotMixers.delete(touchId);
-                    }, 2100); // Slightly after fade completes
+                    }, 2100);
                 }
             }
         }
 
-        // Mouse events for desktop (using touch simulation)
-        cells.forEach(cell => {
-            let mouseTouchId = null;
+        // Mouse events for desktop (simulating touch)
+        let mouseTouchId = null;
+        
+        document.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            initAudio();
+            if (!synth) return;
             
-            cell.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                initAudio();
-                if (!synth) return;
-                
-                // Create a fake touch ID for mouse
-                mouseTouchId = 'mouse_' + Date.now();
-                
-                const cellNum = parseInt(cell.dataset.cell);
-                const rect = cell.getBoundingClientRect();
-                const relativeX = e.clientX - rect.left;
-                const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                const areaColor = areaColors[cellNum - 1] || '#ffffff';
-                
-                // Limit to maximum 6 dots
-                const MAX_DOTS = 6;
-                if (dotMixers.size >= MAX_DOTS) {
-                    const oldestTouchId = dotMixers.keys().next().value;
-                    if (oldestTouchId !== undefined) {
-                        const oldestMixer = dotMixers.get(oldestTouchId);
-                        if (oldestMixer) {
-                            oldestMixer.startFade();
-                        }
-                        dotMixers.delete(oldestTouchId);
-                    }
-                }
-                
-                const mixer = new DotMixer(mouseTouchId, e.clientX, e.clientY, areaColor, normalizedX, cellNum, synth);
-                dotMixers.set(mouseTouchId, mixer);
-            });
+            const cell = findCellFromCoordinates(e.clientX, e.clientY);
+            if (!cell) return;
             
-            cell.addEventListener('mousemove', (e) => {
-                if (e.buttons === 1 && mouseTouchId) {
-                    const mixer = dotMixers.get(mouseTouchId);
-                    if (mixer && !mixer.isFading) {
-                        const cell = findCellFromCoordinates(e.clientX, e.clientY);
-                        mixer.updatePosition(e.clientX, e.clientY, cell);
+            // Limit to maximum 6 dots
+            const MAX_DOTS = 6;
+            if (dotMixers.size >= MAX_DOTS) {
+                const oldestTouchId = dotMixers.keys().next().value;
+                if (oldestTouchId !== undefined) {
+                    const oldestMixer = dotMixers.get(oldestTouchId);
+                    if (oldestMixer) {
+                        oldestMixer.startFade();
                     }
+                    dotMixers.delete(oldestTouchId);
                 }
-            });
+            }
             
-            cell.addEventListener('mouseup', (e) => {
-                if (mouseTouchId) {
-                    const mixer = dotMixers.get(mouseTouchId);
-                    if (mixer) {
-                        mixer.startFade();
-                        setTimeout(() => {
-                            dotMixers.delete(mouseTouchId);
-                        }, 2100);
-                    }
-                    mouseTouchId = null;
+            mouseTouchId = 'mouse_' + Date.now();
+            const cellNum = parseInt(cell.dataset.cell);
+            const mixer = new DotMixer(mouseTouchId, e.clientX, e.clientY, cellNum, synth);
+            dotMixers.set(mouseTouchId, mixer);
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (e.buttons === 1 && mouseTouchId) {
+                const mixer = dotMixers.get(mouseTouchId);
+                if (mixer && !mixer.isFading) {
+                    const cell = findCellFromCoordinates(e.clientX, e.clientY);
+                    mixer.updatePosition(e.clientX, e.clientY, cell);
                 }
-            });
-            
-            cell.addEventListener('mouseleave', (e) => {
-                if (mouseTouchId) {
-                    const mixer = dotMixers.get(mouseTouchId);
-                    if (mixer) {
-                        mixer.startFade();
-                        setTimeout(() => {
-                            dotMixers.delete(mouseTouchId);
-                        }, 2100);
-                    }
-                    mouseTouchId = null;
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (mouseTouchId) {
+                const mixer = dotMixers.get(mouseTouchId);
+                if (mixer) {
+                    mixer.startFade();
+                    setTimeout(() => {
+                        dotMixers.delete(mouseTouchId);
+                    }, 2100);
                 }
-            });
+                mouseTouchId = null;
+            }
         });
 
-        // Add global touch event listeners for multitouch support
+        // Add global touch event listeners
         document.addEventListener('touchstart', handleTouchStart, { passive: false });
         document.addEventListener('touchmove', handleTouchMove, { passive: false });
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        // Cleanup on visibility change (when user switches tabs, etc.)
+        // Continuous update loop for mix percentages (60fps)
+        function updateAllDotMixers() {
+            dotMixers.forEach((mixer) => {
+                if (!mixer.isFading) {
+                    mixer.updateMixPercentages();
+                }
+            });
+        }
+        
+        setInterval(updateAllDotMixers, 1000 / 60);
+
+        // Cleanup on visibility change
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                cleanupAllDotMixers();
+                dotMixers.forEach((mixer) => {
+                    mixer.startFade();
+                });
+                dotMixers.clear();
             }
         });
 
         // Cleanup on page unload
-        window.addEventListener('beforeunload', cleanupAllDotMixers);
-
-        // Periodic cleanup check (safety net - removes any orphaned dots)
-        setInterval(() => {
-            // Check if any dots are still in the DOM but not in our map
-            const allDots = document.querySelectorAll('.touch-dot');
-            allDots.forEach(dot => {
-                let found = false;
-                dotMixers.forEach((mixer) => {
-                    if (mixer.dot === dot) {
-                        found = true;
-                    }
-                });
-                if (!found && dot.parentNode) {
-                    dot.parentNode.removeChild(dot);
-                }
+        window.addEventListener('beforeunload', () => {
+            dotMixers.forEach((mixer) => {
+                mixer.startFade();
             });
-        }, 1000);
+        });
     </script>
 </body>
 </html>
+
