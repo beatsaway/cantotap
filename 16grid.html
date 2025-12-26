@@ -22,9 +22,9 @@
         .volume-cycle-select { padding: 4px 6px; font-size: 11px; background: #333; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 3px; cursor: pointer; }
         .chord-edit-button { padding: 6px 12px; font-size: 11px; border: 2px solid #4ecdc4; border-radius: 6px; background: rgba(78, 205, 196, 0.2); color: #4ecdc4; cursor: pointer; transition: all 0.2s; font-weight: 600; }
         .canvas { width: 100vw; height: 100vh; position: relative; padding-top: 50px; padding-bottom: 60vh; cursor: crosshair; }
-        .bottom-panels { position: fixed; bottom: 0; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
-        .top-panels { position: fixed; bottom: 30vh; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
-        .bottom-panel, .top-panel { width: calc(100vw / 4); height: 30vh; box-sizing: border-box; }
+        .bottom-panels { position: fixed; bottom: 0; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; pointer-events: none; }
+        .top-panels { position: fixed; bottom: 30vh; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; pointer-events: none; }
+        .bottom-panel, .top-panel { width: calc(100vw / 4); height: 30vh; box-sizing: border-box; pointer-events: auto; }
         .bottom-panel:nth-child(1) { background: #2a4a6a; } /* Panel 0: Water sound - Blue */
         .bottom-panel:nth-child(2) { background: #3a5a7a; } /* Panel 1: Bell sound - Light Blue */
         .bottom-panel:nth-child(3) { background: #4a6a8a; } /* Panel 2: Pad sound - Lighter Blue */
@@ -123,7 +123,7 @@
             margin-top: 20px;
         }
         
-        .chord-edit-button {
+        .chord-edit-button, .settings-button {
             padding: 6px 12px;
             font-size: 11px;
             border: 2px solid #4ecdc4;
@@ -133,6 +133,120 @@
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
+        }
+        
+        .settings-button {
+            border-color: #f9ca24;
+            background: rgba(249, 202, 36, 0.2);
+            color: #f9ca24;
+        }
+        
+        .settings-button:hover {
+            background: rgba(249, 202, 36, 0.4);
+        }
+        
+        /* Settings Popup */
+        .settings-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #4ecdc4;
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 2000;
+            min-width: 300px;
+            max-width: 90vw;
+            display: none;
+        }
+        
+        .settings-popup.visible {
+            display: block;
+        }
+        
+        .settings-popup h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #4ecdc4;
+        }
+        
+        .settings-popup .setting-item {
+            margin-bottom: 15px;
+        }
+        
+        .settings-popup label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .settings-popup .volume-slider {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .settings-popup .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .settings-popup .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .settings-popup .volume-value {
+            text-align: center;
+            font-size: 14px;
+            color: #4ecdc4;
+            margin-top: 5px;
+        }
+        
+        .settings-popup .close-button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            font-size: 12px;
+            border: 2px solid #4ecdc4;
+            border-radius: 6px;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .settings-popup .close-button:hover {
+            background: rgba(78, 205, 196, 0.4);
+        }
+        
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
+        
+        .settings-overlay.visible {
+            display: block;
         }
         
         /* Mobile optimizations */
@@ -224,7 +338,20 @@
                 <option value="triangle">Triangle</option>
             </select>
         </div>
-        <button class="chord-edit-button" id="chordEditToggle" style="margin-left: 20px;">Edit Chords</button>
+        <button class="chord-edit-button" id="chordEditToggle" style="margin-left: 8px;">Edit Chords</button>
+        <button class="settings-button" id="settingsToggle" style="margin-left: 8px;">⚙ Settings</button>
+    </div>
+    
+    <!-- Settings Popup -->
+    <div class="settings-overlay" id="settingsOverlay"></div>
+    <div class="settings-popup" id="settingsPopup">
+        <h2>Settings</h2>
+        <div class="setting-item">
+            <label for="masterVolumeSlider">Master Volume</label>
+            <input type="range" class="volume-slider" id="masterVolumeSlider" min="0" max="100" value="100">
+            <div class="volume-value" id="masterVolumeValue">100%</div>
+        </div>
+        <button class="close-button" id="closeSettings">Close</button>
     </div>
     
     <!-- Chord Editing Interface -->
@@ -355,7 +482,15 @@
                     if (Tone.context.state !== 'running') {
                         Tone.start();
                     }
-                    this.limiter = new Tone.Limiter(-0.1).toDestination();
+                    this.limiter = new Tone.Limiter(-0.1);
+                    
+                    // Connect limiter to master volume if available, otherwise to destination
+                    if (window.masterVolumeGain) {
+                        this.limiter.connect(window.masterVolumeGain);
+                    } else {
+                        this.limiter.toDestination();
+                    }
+                    
                     this.audioInitialized = true;
                     // Initialize synths after limiter is created
                     this.updateSynths(); // Initialize with default notes
@@ -1036,6 +1171,34 @@
         // ========== CHORD SEQUENCE STATE ==========
         let parsedChords = [];
         let currentChordIndex = 0;
+        
+        // ========== MASTER VOLUME CONTROL ==========
+        let masterVolumeGain = null;
+        let masterVolume = 1.0; // 0.0 to 1.0
+        
+        function initMasterVolume() {
+            if (!window.Tone) return;
+            
+            try {
+                // Create master volume gain node
+                masterVolumeGain = new Tone.Gain(masterVolume);
+                masterVolumeGain.toDestination();
+                window.masterVolumeGain = masterVolumeGain;
+            } catch (error) {
+                console.error('Error initializing master volume:', error);
+            }
+        }
+        
+        function setMasterVolume(value) {
+            masterVolume = value / 100; // Convert 0-100 to 0.0-1.0
+            if (masterVolumeGain) {
+                masterVolumeGain.gain.value = masterVolume;
+            }
+            // Also update Tone destination volume as fallback
+            if (window.Tone) {
+                Tone.getDestination().volume.value = -18 + (masterVolume * 18); // -18dB to 0dB
+            }
+        }
 
         // ========== CHORD SEQUENCE MANAGEMENT ==========
         function updateChordDisplay() {
@@ -1171,17 +1334,25 @@
                         sustain: 0.6,  // Higher sustain for hold
                         release: 0.5   // Release time
                     },
-                    volume: -8  // Louder for purple panels
+                    volume: -30  // Match blue panel volume
                 });
 
-                // Create a simple gain node instead of reverb (reverb needs async generation)
-                const gain = new Tone.Gain(0.8).toDestination();
-                synth.connect(gain);
+                // Use similar gain structure as blue panels (0.15 gain)
+                const volumeGain = new Tone.Gain(0.15);
+                
+                // Connect to master volume if available, otherwise to destination
+                if (window.masterVolumeGain) {
+                    synth.connect(volumeGain);
+                    volumeGain.connect(window.masterVolumeGain);
+                } else {
+                    synth.connect(volumeGain);
+                    volumeGain.toDestination();
+                }
 
                 // Store synth and gain for this panel
                 activePurpleSynths[panelIndex] = {
                     synth: synth,
-                    gain: gain,
+                    gain: volumeGain,
                     notes: notes
                 };
 
@@ -1248,6 +1419,41 @@
                 // Current chord (panels 1 and 2)
                 return parsedChords[currentChordIndex];
             }
+        }
+
+        // ========== SETUP SETTINGS POPUP ==========
+        function setupSettings() {
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPopup = document.getElementById('settingsPopup');
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            const closeSettings = document.getElementById('closeSettings');
+            const masterVolumeSlider = document.getElementById('masterVolumeSlider');
+            const masterVolumeValue = document.getElementById('masterVolumeValue');
+            
+            function openSettings() {
+                settingsPopup.classList.add('visible');
+                settingsOverlay.classList.add('visible');
+            }
+            
+            function closeSettingsPopup() {
+                settingsPopup.classList.remove('visible');
+                settingsOverlay.classList.remove('visible');
+            }
+            
+            settingsToggle.addEventListener('click', openSettings);
+            closeSettings.addEventListener('click', closeSettingsPopup);
+            settingsOverlay.addEventListener('click', closeSettingsPopup);
+            
+            // Volume slider
+            masterVolumeSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                masterVolumeValue.textContent = value + '%';
+                setMasterVolume(value);
+            });
+            
+            // Initialize volume display
+            masterVolumeSlider.value = 100;
+            masterVolumeValue.textContent = '100%';
         }
 
         // ========== SETUP CHORD EDITING UI ==========
@@ -1596,7 +1802,21 @@
         window.addEventListener('load', () => {
             window.dottieApp = new DottieApp();
             setupChordEditing();
+            setupSettings();
             updatePurplePanelLabels(); // Initialize with dashes
+            
+            // Initialize master volume when Tone.js is available
+            if (window.Tone) {
+                initMasterVolume();
+            } else {
+                // Wait for Tone.js to load
+                const checkTone = setInterval(() => {
+                    if (window.Tone) {
+                        initMasterVolume();
+                        clearInterval(checkTone);
+                    }
+                }, 100);
+            }
         });
     </script>
 </body>
