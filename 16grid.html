@@ -1424,6 +1424,7 @@
                 
                 if (!foundMixer && dot.parentNode) {
                     // Truly orphaned dot - no mixer found at all
+                    // This means the mixer was removed but dot wasn't cleaned up
                     // Remove it from DOM (sounds should have been cleaned up when mixer was removed)
                     dot.parentNode.removeChild(dot);
                     
@@ -1441,24 +1442,8 @@
                             debugInfo.parentNode.removeChild(debugInfo);
                         }
                     });
-                } else if (foundMixer && !foundMixer.isFading) {
-                    // Found mixer but it's not fading - trigger fade to ensure cleanup
-                    // This handles cases where mixer exists but wasn't properly cleaned up
-                    foundMixer.startFade();
-                    if (foundTouchId) {
-                        setTimeout(() => {
-                            if (dotMixers.has(foundTouchId)) {
-                                foundMixer.cleanupCompletely();
-                                dotMixers.delete(foundTouchId);
-                            }
-                        }, 700);
-                    } else {
-                        // Mixer found but not in dotMixers - clean it up directly
-                        setTimeout(() => {
-                            foundMixer.cleanupCompletely();
-                        }, 700);
-                    }
                 }
+                // If foundMixer exists, it's properly tracked - don't interfere with active dragging
             });
             
             // Find orphaned debug infos
@@ -1477,23 +1462,11 @@
             
             // Also check if any mixers have dots that are missing from DOM
             // This catches cases where dots were removed but mixer still exists
+            // Only check mixers that are already fading (don't interfere with active dragging)
             dotMixers.forEach((mixer, touchId) => {
-                // Check if mixer's dot is missing from DOM
-                if (mixer.dot && (!mixer.dot.parentNode || !document.body.contains(mixer.dot))) {
-                    // Dot is missing - trigger fade to clean up sounds
-                    if (!mixer.isFading) {
-                        mixer.startFade();
-                        setTimeout(() => {
-                            if (dotMixers.has(touchId)) {
-                                mixer.cleanupCompletely();
-                                dotMixers.delete(touchId);
-                            }
-                        }, 700);
-                    }
-                }
-                
-                // Check if mixer is fading but hasn't been cleaned up
+                // Only check mixers that are already fading - don't trigger new fades
                 if (mixer.isFading) {
+                    // Check if fade timeout has passed (safety check)
                     const now = performance.now();
                     if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
                         // Fade should have completed - force cleanup
@@ -1501,6 +1474,7 @@
                         dotMixers.delete(touchId);
                     }
                 }
+                // Don't check for missing dots on active mixers - let normal touch/mouse events handle cleanup
             });
         }, 1000); // Check every second
 
