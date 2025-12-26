@@ -7,20 +7,21 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { width: 100vw; height: 100vh; overflow: hidden; font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; }
-        .header { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; gap: 30px; padding: 0 30px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .bpm-control { display: flex; align-items: center; gap: 15px; }
-        .bpm-label { font-size: 18px; font-weight: bold; min-width: 80px; }
-        .bpm-toggle { position: relative; width: 60px; height: 30px; background: #333; border-radius: 15px; cursor: pointer; transition: background 0.3s; }
+        .header { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 8px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; }
+        .bpm-control { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+        .bpm-label { font-size: 11px; font-weight: bold; min-width: 35px; }
+        .bpm-toggle { position: relative; width: 40px; height: 20px; background: #333; border-radius: 10px; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
         .bpm-toggle.active { background: #4CAF50; }
-        .bpm-toggle::after { content: ''; position: absolute; width: 26px; height: 26px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; }
-        .bpm-toggle.active::after { transform: translateX(30px); }
-        .bpm-slider-container { display: flex; align-items: center; gap: 10px; }
-        .bpm-slider { width: 200px; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none; appearance: none; }
-        .bpm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #4CAF50; border-radius: 50%; cursor: pointer; }
-        .bpm-slider::-moz-range-thumb { width: 18px; height: 18px; background: #4CAF50; border-radius: 50%; cursor: pointer; border: none; }
-        .bpm-value { font-size: 18px; font-weight: bold; min-width: 50px; text-align: center; }
-        .volume-cycle-select { padding: 8px 12px; font-size: 16px; background: #333; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; cursor: pointer; }
-        .canvas { width: 100vw; height: 100vh; position: relative; padding-top: 80px; padding-bottom: 60vh; cursor: crosshair; }
+        .bpm-toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; }
+        .bpm-toggle.active::after { transform: translateX(20px); }
+        .bpm-slider-container { display: flex; align-items: center; gap: 5px; }
+        .bpm-slider { width: 100px; height: 4px; background: #333; border-radius: 2px; outline: none; -webkit-appearance: none; appearance: none; }
+        .bpm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #4CAF50; border-radius: 50%; cursor: pointer; }
+        .bpm-slider::-moz-range-thumb { width: 14px; height: 14px; background: #4CAF50; border-radius: 50%; cursor: pointer; border: none; }
+        .bpm-value { font-size: 11px; font-weight: bold; min-width: 30px; text-align: center; }
+        .volume-cycle-select { padding: 4px 6px; font-size: 11px; background: #333; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 3px; cursor: pointer; }
+        .chord-edit-button { padding: 6px 12px; font-size: 11px; border: 2px solid #4ecdc4; border-radius: 6px; background: rgba(78, 205, 196, 0.2); color: #4ecdc4; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+        .canvas { width: 100vw; height: 100vh; position: relative; padding-top: 50px; padding-bottom: 60vh; cursor: crosshair; }
         .bottom-panels { position: fixed; bottom: 0; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
         .top-panels { position: fixed; bottom: 30vh; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
         .bottom-panel, .top-panel { width: calc(100vw / 4); height: 30vh; box-sizing: border-box; }
@@ -123,15 +124,50 @@
         }
         
         .chord-edit-button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 6px 12px;
+            font-size: 11px;
             border: 2px solid #4ecdc4;
-            border-radius: 8px;
+            border-radius: 6px;
             background: rgba(78, 205, 196, 0.2);
             color: #4ecdc4;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .header {
+                height: 45px;
+                gap: 4px;
+                padding: 0 4px;
+            }
+            .bpm-control {
+                gap: 3px;
+                font-size: 10px;
+            }
+            .bpm-label {
+                font-size: 10px;
+                min-width: 30px;
+            }
+            .bpm-slider {
+                width: 80px;
+            }
+            .bpm-value {
+                font-size: 10px;
+                min-width: 25px;
+            }
+            .volume-cycle-select {
+                padding: 3px 4px;
+                font-size: 10px;
+            }
+            .chord-edit-button {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            .canvas {
+                padding-top: 45px;
+            }
         }
         
         .chord-edit-button:hover {
@@ -618,7 +654,7 @@
                 this.element.appendChild(this.label);
                 
                 // Place dots in a row below the header
-                const headerHeight = 80;
+                const headerHeight = 50;
                 const dotSize = 50;
                 const totalDots = 12; // 2 of each type
                 const spacing = (window.innerWidth - (dotSize * totalDots)) / (totalDots + 1);
@@ -1089,8 +1125,13 @@
         const activePurpleSynths = {};
 
         function startPurplePanelChord(panelIndex, chord) {
+            // Ensure Tone.js is loaded - if not, try to load it
             if (!window.Tone) {
-                console.warn('Tone.js not loaded yet');
+                console.warn('Tone.js not loaded yet, attempting to load...');
+                if (window.dottieApp && window.dottieApp.toneJsLoaded) {
+                    // Wait a bit for Tone to be available
+                    setTimeout(() => startPurplePanelChord(panelIndex, chord), 100);
+                }
                 return;
             }
 
@@ -1130,21 +1171,17 @@
                         sustain: 0.6,  // Higher sustain for hold
                         release: 0.5   // Release time
                     },
-                    volume: -12
+                    volume: -8  // Louder for purple panels
                 });
 
-                // Add a subtle reverb for richness
-                const reverb = new Tone.Reverb({
-                    roomSize: 0.5,
-                    dampening: 3000
-                }).toDestination();
+                // Create a simple gain node instead of reverb (reverb needs async generation)
+                const gain = new Tone.Gain(0.8).toDestination();
+                synth.connect(gain);
 
-                synth.connect(reverb);
-
-                // Store synth and reverb for this panel
+                // Store synth and gain for this panel
                 activePurpleSynths[panelIndex] = {
                     synth: synth,
-                    reverb: reverb,
+                    gain: gain,
                     notes: notes
                 };
 
@@ -1159,15 +1196,19 @@
             if (!activePurpleSynths[panelIndex]) return;
 
             try {
-                const { synth, reverb, notes } = activePurpleSynths[panelIndex];
+                const { synth, gain, notes } = activePurpleSynths[panelIndex];
                 
                 // Trigger release
                 synth.triggerRelease(notes);
                 
                 // Clean up after release
                 setTimeout(() => {
-                    synth.dispose();
-                    reverb.dispose();
+                    try {
+                        synth.dispose();
+                        gain.dispose();
+                    } catch (e) {
+                        // Ignore disposal errors
+                    }
                     delete activePurpleSynths[panelIndex];
                 }, 600); // Wait for release to complete
             } catch (error) {
@@ -1244,9 +1285,24 @@
                 let isActive = false;
                 
                 // Touch events
-                panel.addEventListener('touchstart', (e) => {
+                panel.addEventListener('touchstart', async (e) => {
                     e.preventDefault();
                     if (parsedChords.length === 0) return;
+                    
+                    // Ensure Tone.js is loaded and audio context is started
+                    if (!window.Tone && window.dottieApp) {
+                        try {
+                            await window.dottieApp.loadToneJS();
+                            if (Tone.context.state !== 'running') {
+                                await Tone.start();
+                            }
+                        } catch (err) {
+                            console.error('Failed to load Tone.js:', err);
+                            return;
+                        }
+                    } else if (window.Tone && Tone.context.state !== 'running') {
+                        await Tone.start();
+                    }
                     
                     isActive = true;
                     
@@ -1281,8 +1337,23 @@
                 }, { passive: false });
                 
                 // Mouse events (for desktop)
-                panel.addEventListener('mousedown', (e) => {
+                panel.addEventListener('mousedown', async (e) => {
                     if (parsedChords.length === 0) return;
+                    
+                    // Ensure Tone.js is loaded and audio context is started
+                    if (!window.Tone && window.dottieApp) {
+                        try {
+                            await window.dottieApp.loadToneJS();
+                            if (Tone.context.state !== 'running') {
+                                await Tone.start();
+                            }
+                        } catch (err) {
+                            console.error('Failed to load Tone.js:', err);
+                            return;
+                        }
+                    } else if (window.Tone && Tone.context.state !== 'running') {
+                        await Tone.start();
+                    }
                     
                     isActive = true;
                     
