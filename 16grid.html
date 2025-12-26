@@ -3,1880 +3,1530 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Synth Grid Demo 3 - Multi-Touch Enhanced</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <title>Dottie BPM Synth</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: none;
-        }
-
-        body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background: #1a1a1a;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            width: 100vw;
-            height: 100vh;
-            gap: 0;
-        }
-
-        .grid-cell {
-            border: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            position: relative;
-            transition: background-color 0.1s;
-        }
-
-        .grid-cell:active,
-        .grid-cell.active {
-            background-color: rgba(100, 150, 255, 0.3);
-        }
-
-        .grid-cell.dragging-over {
-            border: 2px solid white;
-        }
-
-        .grid-cell:nth-child(1) {
-            background: linear-gradient(135deg, #2a4a6a, #1a2a3a);
-        }
-
-        .grid-cell:nth-child(2) {
-            background: linear-gradient(135deg, #3a5a7a, #2a3a4a);
-        }
-
-        .grid-cell:nth-child(3) {
-            background: linear-gradient(135deg, #4a6a8a, #3a4a5a);
-        }
-
-        .grid-cell:nth-child(4) {
-            background: linear-gradient(135deg, #5a7a9a, #4a5a6a);
-        }
-
-        .grid-cell:nth-child(5) {
-            background: linear-gradient(135deg, #6a8aaa, #5a6a7a);
-        }
-
-        .grid-cell:nth-child(6) {
-            background: linear-gradient(135deg, #7a9aba, #6a7a8a);
-        }
-
-        .grid-cell:nth-child(7) {
-            background: linear-gradient(135deg, #8aaaca, #7a8a9a);
-        }
-
-        .grid-cell:nth-child(8) {
-            background: linear-gradient(135deg, #9abada, #8a9aaa);
-        }
-
-        .grid-cell:nth-child(9) {
-            background: linear-gradient(135deg, #aacaea, #9aba9a);
-        }
-
-        .grid-cell:nth-child(10) {
-            background: linear-gradient(135deg, #badafa, #aacaba);
-        }
-
-        .grid-cell:nth-child(11) {
-            background: linear-gradient(135deg, #caeafa, #badaca);
-        }
-
-        .grid-cell:nth-child(12) {
-            background: linear-gradient(135deg, #dafa0a, #ca0ada);
-        }
-
-        .grid-cell:nth-child(13) {
-            background: linear-gradient(135deg, #ea0a1a, #da0a0a);
-        }
-
-        .grid-cell:nth-child(14) {
-            background: linear-gradient(135deg, #fa1a2a, #ea1a1a);
-        }
-
-        .grid-cell:nth-child(15) {
-            background: linear-gradient(135deg, #0a2a3a, #1a2a3a);
-        }
-
-        .grid-cell:nth-child(16) {
-            background: linear-gradient(135deg, #1a3a4a, #2a3a4a);
-        }
-
-        /* Touch dot visualization */
-        .touch-dot {
-            position: fixed;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.8);
-            pointer-events: none !important;
-            z-index: 1000;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.5s ease-out;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            will-change: transform;
-            opacity: 1;
-        }
-
-        /* Debug info for each dot */
-        .dot-debug-info {
-            position: fixed;
-            font-size: 0.65rem;
-            font-weight: normal;
-            color: #fff;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            line-height: 1.2;
-            pointer-events: none !important;
-            z-index: 1001;
-            transform: translate(-50%, -100%);
-            margin-top: -10px;
-            white-space: pre;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            max-width: 150px;
-        }
-
-        /* Startup popup overlay */
-        .startup-popup {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { width: 100vw; height: 100vh; overflow: hidden; font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; }
+        .header { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; gap: 30px; padding: 0 30px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .bpm-control { display: flex; align-items: center; gap: 15px; }
+        .bpm-label { font-size: 18px; font-weight: bold; min-width: 80px; }
+        .bpm-toggle { position: relative; width: 60px; height: 30px; background: #333; border-radius: 15px; cursor: pointer; transition: background 0.3s; }
+        .bpm-toggle.active { background: #4CAF50; }
+        .bpm-toggle::after { content: ''; position: absolute; width: 26px; height: 26px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; }
+        .bpm-toggle.active::after { transform: translateX(30px); }
+        .bpm-slider-container { display: flex; align-items: center; gap: 10px; }
+        .bpm-slider { width: 200px; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none; appearance: none; }
+        .bpm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #4CAF50; border-radius: 50%; cursor: pointer; }
+        .bpm-slider::-moz-range-thumb { width: 18px; height: 18px; background: #4CAF50; border-radius: 50%; cursor: pointer; border: none; }
+        .bpm-value { font-size: 18px; font-weight: bold; min-width: 50px; text-align: center; }
+        .volume-cycle-select { padding: 8px 12px; font-size: 16px; background: #333; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; cursor: pointer; }
+        .canvas { width: 100vw; height: 100vh; position: relative; padding-top: 80px; padding-bottom: 60vh; cursor: crosshair; }
+        .bottom-panels { position: fixed; bottom: 0; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
+        .top-panels { position: fixed; bottom: 30vh; left: 0; width: 100vw; height: 30vh; display: flex; z-index: 1000; }
+        .bottom-panel, .top-panel { width: calc(100vw / 4); height: 30vh; box-sizing: border-box; }
+        .bottom-panel:nth-child(1) { background: #2a4a6a; } /* Panel 0: Water sound - Blue */
+        .bottom-panel:nth-child(2) { background: #3a5a7a; } /* Panel 1: Bell sound - Light Blue */
+        .bottom-panel:nth-child(3) { background: #4a6a8a; } /* Panel 2: Pad sound - Lighter Blue */
+        .bottom-panel:nth-child(4) { background: #5a7a9a; } /* Panel 3: Lead sound - Lightest Blue */
+        .top-panel:nth-child(1) { background: #4a2a6a; } /* Top Panel 0 - Purple */
+        .top-panel:nth-child(2) { background: #5a3a7a; } /* Top Panel 1 - Light Purple */
+        .top-panel:nth-child(3) { background: #6a4a8a; } /* Top Panel 2 - Lighter Purple */
+        .top-panel:nth-child(4) { background: #7a5a9a; } /* Top Panel 3 - Lightest Purple */
+        .dottie { position: absolute; width: 50px; height: 50px; border-radius: 50%; cursor: move; user-select: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 2px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; z-index: 1001; }
+        .dottie-label { font-size: 10px; font-weight: bold; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); pointer-events: none; }
+        .dottie.dragging { cursor: grabbing; z-index: 1002; }
+        .dottie-0 { background: #ff6b6b; }
+        .dottie-1 { background: #4ecdc4; }
+        .dottie-2 { background: #ffe66d; }
+        .dottie-3 { background: #a8e6cf; }
+        .dottie-4 { background: #ff8b94; }
+        .dottie-5 { background: #c7ceea; }
+        .dottie-6 { background: #ff6b6b; }
+        .dottie-7 { background: #4ecdc4; }
+        .dottie-8 { background: #ffe66d; }
+        .dottie-9 { background: #a8e6cf; }
+        .dottie-10 { background: #ff8b94; }
+        .dottie-11 { background: #c7ceea; }
+        
+        /* Chord Editing Interface */
+        #chord-editing {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.95);
             backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            padding: 100px 30px 30px;
+            color: white;
+            overflow-y: auto;
         }
-
-        .startup-popup.hidden {
+        
+        #chord-editing.hidden {
             display: none;
         }
-
-        .startup-popup-content {
-            background: linear-gradient(135deg, #2a4a6a, #1a2a3a);
-            padding: 40px 60px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            max-width: 400px;
-        }
-
-        .startup-popup-content h1 {
-            color: #fff;
-            font-size: 2rem;
+        
+        .editing-header {
             margin-bottom: 20px;
-            font-weight: bold;
         }
-
-        .startup-popup-content p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
-            margin-bottom: 30px;
-            line-height: 1.5;
+        
+        .editing-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
-
-        .start-button {
-            background: linear-gradient(135deg, #4ecdc4, #3a9a8a);
-            color: #fff;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 10px;
+        
+        #chordInput {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #4ecdc4;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        #chordsDisplay {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            min-height: 60px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .chord-item {
+            padding: 8px 12px;
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .chord-item.current {
+            background: rgba(249, 202, 36, 0.4);
+            border-color: #f9ca24;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .chord-edit-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #4ecdc4;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            transition: all 0.2s;
+            font-weight: 600;
         }
-
-        .start-button:hover {
+        
+        .chord-edit-button:hover {
+            background: rgba(78, 205, 196, 0.4);
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
         }
-
-        .start-button:active {
-            transform: scale(0.98);
+        
+        .top-panel {
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .top-panel:hover {
+            opacity: 0.8;
+        }
+        
+        .panel-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .panel-chord-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
-    <!-- Startup popup -->
-    <div class="startup-popup" id="startup-popup">
-        <div class="startup-popup-content">
-            <h1>Water Synth Grid</h1>
-            <p>Touch and drag across the grid to create sounds.<br>Multi-touch supported!</p>
-            <button class="start-button" id="start-button">Start Audio</button>
+    <div class="header">
+        <div class="bpm-control">
+            <span class="bpm-label">BPM:</span>
+            <div class="bpm-toggle" id="bpmToggle"></div>
+            <div class="bpm-slider-container">
+                <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="180" value="120">
+                <span class="bpm-value" id="bpmValue">120</span>
+            </div>
+        </div>
+        <div class="bpm-control">
+            <span class="bpm-label">Volume Cycle:</span>
+            <select class="volume-cycle-select" id="volumeCycleSelect">
+                <option value="none">None</option>
+                <option value="ascend">Ascend</option>
+                <option value="descend">Descend</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
+        <button class="chord-edit-button" id="chordEditToggle" style="margin-left: 20px;">Edit Chords</button>
+    </div>
+    
+    <!-- Chord Editing Interface -->
+    <div id="chord-editing" class="hidden">
+        <div class="editing-header">
+            <h1>Chord Sequence Editor</h1>
+            <p>Enter chords separated by commas (e.g., C, Dm, E7, Fmaj7, G, Am, Bdim)</p>
+        </div>
+        <textarea id="chordInput" placeholder="C, Dm, E7, Fmaj7, G, Am, Bdim"></textarea>
+        <div id="chordsDisplay"></div>
+        <div class="button-group">
+            <button class="chord-edit-button" id="closeChordEdit">Close</button>
         </div>
     </div>
-
-    <div class="grid-container">
-        <div class="grid-cell" data-cell="1">Area 1<br>Chord</div>
-        <div class="grid-cell" data-cell="2">Area 2</div>
-        <div class="grid-cell" data-cell="3">Area 3</div>
-        <div class="grid-cell" data-cell="4">Area 4</div>
-        <div class="grid-cell" data-cell="5">Area 5</div>
-        <div class="grid-cell" data-cell="6">Area 6</div>
-        <div class="grid-cell" data-cell="7">Area 7</div>
-        <div class="grid-cell" data-cell="8">Area 8</div>
-        <div class="grid-cell" data-cell="9">Area 9</div>
-        <div class="grid-cell" data-cell="10">Area 10</div>
-        <div class="grid-cell" data-cell="11">Area 11</div>
-        <div class="grid-cell" data-cell="12">Area 12</div>
-        <div class="grid-cell" data-cell="13">Area 13</div>
-        <div class="grid-cell" data-cell="14">Area 14</div>
-        <div class="grid-cell" data-cell="15">Area 15</div>
-        <div class="grid-cell" data-cell="16">Area 16</div>
+    <div class="canvas" id="canvas"></div>
+    <div class="top-panels">
+        <div class="top-panel" id="topPanel0">
+            <div class="panel-label">Previous</div>
+            <div class="panel-chord-name" id="panelChord0">-</div>
+        </div>
+        <div class="top-panel" id="topPanel1">
+            <div class="panel-label">Current</div>
+            <div class="panel-chord-name" id="panelChord1">-</div>
+        </div>
+        <div class="top-panel" id="topPanel2">
+            <div class="panel-label">Current</div>
+            <div class="panel-chord-name" id="panelChord2">-</div>
+        </div>
+        <div class="top-panel" id="topPanel3">
+            <div class="panel-label">Next</div>
+            <div class="panel-chord-name" id="panelChord3">-</div>
+        </div>
     </div>
-
+    <div class="bottom-panels">
+        <div class="bottom-panel"></div>
+        <div class="bottom-panel"></div>
+        <div class="bottom-panel"></div>
+        <div class="bottom-panel"></div>
+    </div>
     <script>
-        /*
-         * ORPHAN PREVENTION STRATEGIES:
-         * 
-         * 1. HEARTBEAT MECHANISM: Each DotMixer tracks last activity time.
-         *    If no activity for 2+ seconds, automatically fades out.
-         * 
-         * 2. GLOBAL TOUCH TRACKER: Maintains a Set of all active touches.
-         *    Compares against browser's touch list to detect orphans.
-         * 
-         * 3. ABORT CONTROLLER: Coordinates cleanup operations to prevent race conditions.
-         * 
-         * 4. AGGRESSIVE CLEANUP: Multiple cleanup strategies run every 500ms.
-         * 
-         * 5. ACTIVITY TRACKING: All position updates mark activity timestamp.
-         * 
-         * RECOMMENDED LIBRARIES (if issues persist):
-         * 
-         * - Hammer.js (https://hammerjs.github.io/): More reliable touch event handling
-         *   Handles edge cases like lost touches, gesture recognition, etc.
-         * 
-         * - Interact.js (https://interactjs.io/): Advanced drag/drop with better cleanup
-         *   Better for complex interactions but might be overkill
-         * 
-         * - Pointer Events Polyfill: For better cross-browser touch support
-         *   Helps with inconsistent touch event behavior across browsers
-         */
-       
-        class WaterSynthTone {
-            constructor() {
-                // Create reverb with very wet signal (like original: 1.0 reverb, 0.3 dry)
-                this.reverb = new Tone.Reverb({
-                    roomSize: 0.9,
-                    dampening: 3000,
-                    wet: 0.77  // Very wet reverb (1.0 / (1.0 + 0.3))
-                }).toDestination();
-
-                // Create compressor/limiter
-                this.compressor = new Tone.Compressor({
-                    threshold: -12,
-                    ratio: 12,
-                    attack: 0.003,
-                    release: 0.1
-                }).connect(this.reverb);
-
-                // Create EQ for natural rolloff (for area 2/bell sounds)
-                this.eq = new Tone.Filter({
-                    type: 'lowpass',
-                    frequency: 15000,
-                    Q: 0.7
-                }).connect(this.compressor);
-
-                // Master gain - split into dry and wet paths
-                this.masterGain = new Tone.Gain(1.0);
-                this.dryGain = new Tone.Gain(0.3).connect(this.eq);  // Less dry signal (for bell/area 2)
-                this.reverbGain = new Tone.Gain(1.0).connect(this.reverb);  // Very loud reverb
-                
-                // Separate path for area 1 (water sounds) - bypasses filter
-                this.area1DryGain = new Tone.Gain(0.3).connect(this.compressor);  // Direct to compressor, no filter
-                this.area1ReverbGain = new Tone.Gain(1.0).connect(this.reverb);  // Reverb path
-                
-                // Connect master to both paths (for bell/area 2)
-                this.masterGain.connect(this.dryGain);
-                this.masterGain.connect(this.reverbGain);
-                
-                // Separate master gain for area 1 (no filter)
-                this.masterGainArea1 = new Tone.Gain(1.0);
-                this.masterGainArea1.connect(this.area1DryGain);
-                this.masterGainArea1.connect(this.area1ReverbGain);
-
-                // Generate reverb impulse response
-                this.reverb.generate().catch(console.error);
+        class GridBox {
+            constructor(index) {
+                this.index = index; // 0, 1, 2, 3 for the 4 panels
+                this.chordIntervals = [0, 3, 7]; // A minor chord intervals (root, minor third, fifth)
+                this.rootNote = 'A3'; // Base note for the chord
             }
 
-            // Create a water-like sound with pitch drop and noise
-            createWaterVoice(frequency, pitchDrop = 0.02, noiseAmount = 0.03, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
-                const now = Tone.now();
-                
-                // Add natural variation (like original)
-                const finalPitchDrop = frequency * (pitchDrop + Math.random() * 0.02);
-                const finalNoiseAmount = noiseAmount * (0.8 + Math.random() * 0.4);
+            getNotes() {
+                // Convert intervals to actual note names
+                const semitonesToNote = (root, semitones) => {
+                    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    const rootNote = root.match(/^([A-G]#?)(\d+)$/);
+                    if (!rootNote) return root;
+                    const rootName = rootNote[1];
+                    const rootOctave = parseInt(rootNote[2]);
+                    const rootIndex = notes.indexOf(rootName);
+                    const targetIndex = (rootIndex + semitones) % 12;
+                    const octaveOffset = Math.floor((rootIndex + semitones) / 12);
+                    return notes[targetIndex] + (rootOctave + octaveOffset);
+                };
 
-                // Apply pitch offset (in semitones, converted to frequency ratio)
-                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                const adjustedFrequency = frequency * pitchMultiplier;
+                const allNotes = this.chordIntervals.map(interval => 
+                    semitonesToNote(this.rootNote, interval)
+                );
 
-                // Main oscillator with pitch drop on attack
-                const osc = new Tone.Oscillator({
-                    type: 'sine',
-                    frequency: adjustedFrequency + finalPitchDrop
-                });
+                // Panel 0: 1st note + same note an octave lower
+                if (this.index === 0) {
+                    const firstNote = allNotes[0];
+                    const lowerOctave = firstNote.replace(/(\d+)$/, (match, octave) => (parseInt(octave) - 1).toString());
+                    return [lowerOctave, firstNote];
+                }
+                // Panel 1: 2nd note + 3rd note
+                else if (this.index === 1) {
+                    return [allNotes[1], allNotes[2]];
+                }
+                // Panel 2: all notes
+                else if (this.index === 2) {
+                    return allNotes;
+                }
+                // Panel 3: highest 2 notes
+                else if (this.index === 3) {
+                    return [allNotes[1], allNotes[2]];
+                }
+                return allNotes;
+            }
+        }
 
-                // Frequency envelope for pitch drop - exponential ramp
-                osc.frequency.exponentialRampTo(adjustedFrequency, 0.08);
+        class Dottie {
+            constructor(canvas, pulseDivisor, index) {
+                this.canvas = canvas;
+                this.pulseDivisor = pulseDivisor;
+                this.index = index;
+                this.element = null;
+                this.label = null;
+                this.x = 0;
+                this.y = 0;
+                this.isDragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.pulseInterval = null;
+                this.currentBPM = 120;
+                this.pulseScale = 1;
+                this.pulseAnimation = null;
+                
+                this.attack = 0.01;
+                this.decay = 0.1;
+                this.sustain = 0.15; // Reduced from 0.3 - lower sustain level = quieter
+                this.release = 0.2;
+                this.chordNotes = ['A3', 'C4', 'E4']; // Default, will be updated based on panel
+                this.currentPanelIndex = -1; // Track which panel we're on for sound type
+                
+                // Don't create audio objects until user interaction
+                this.limiter = null;
+                this.synths = [];
+                this.audioInitialized = false;
+                
+                this.createElement();
+                this.setupEventListeners();
+            }
 
-                // Add harmonic oscillators
-                const osc2 = new Tone.Oscillator({
-                    type: 'sine',
-                    frequency: (adjustedFrequency * 2) + (finalPitchDrop * 2)
-                });
-                osc2.frequency.exponentialRampTo(adjustedFrequency * 2, 0.08);
-                
-                const osc3 = new Tone.Oscillator({
-                    type: 'sine',
-                    frequency: (adjustedFrequency * 3) + (finalPitchDrop * 3)
-                });
-                osc3.frequency.exponentialRampTo(adjustedFrequency * 3, 0.08);
-                
-                const osc4 = new Tone.Oscillator({
-                    type: 'sine',
-                    frequency: (adjustedFrequency * 4) + (finalPitchDrop * 4)
-                });
-                osc4.frequency.exponentialRampTo(adjustedFrequency * 4, 0.08);
+            initializeAudio() {
+                if (this.audioInitialized) return;
+                if (!window.Tone) {
+                    console.error('Tone.js not loaded yet');
+                    return;
+                }
+                try {
+                    // Ensure Tone context is started before creating audio objects
+                    if (Tone.context.state !== 'running') {
+                        Tone.start();
+                    }
+                    this.limiter = new Tone.Limiter(-0.1).toDestination();
+                    this.audioInitialized = true;
+                    // Initialize synths after limiter is created
+                    this.updateSynths(); // Initialize with default notes
+                } catch (error) {
+                    console.error('Error initializing audio:', error);
+                    console.error('Error details:', error.message, error.stack);
+                }
+            }
 
-                // Amplitude envelopes
-                const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.02,
-                    decay: 0.01,
-                    sustain: 0.35,
-                    release: 0.2
-                });
+            createWaterVoice(note, panelIndex, startTime, duration) {
+                // Panel 0: Water sound (from demo3 area 1)
+                const freq = Tone.Frequency(note).toFrequency();
+                const now = startTime || Tone.now();
                 
-                const env2 = new Tone.AmplitudeEnvelope({
-                    attack: 0.02,
-                    decay: 0.01,
-                    sustain: 0.25,
-                    release: 0.2
-                });
+                // Main oscillator with pitch drop
+                const osc = new Tone.Oscillator({ type: 'sine', frequency: freq * 1.02 });
+                osc.frequency.exponentialRampTo(freq, 0.08);
                 
-                const env3 = new Tone.AmplitudeEnvelope({
-                    attack: 0.02,
-                    decay: 0.01,
-                    sustain: 0.15,
-                    release: 0.2
-                });
+                // Harmonic oscillators
+                const osc2 = new Tone.Oscillator({ type: 'sine', frequency: freq * 2 * 1.02 });
+                osc2.frequency.exponentialRampTo(freq * 2, 0.08);
+                const osc3 = new Tone.Oscillator({ type: 'sine', frequency: freq * 3 * 1.02 });
+                osc3.frequency.exponentialRampTo(freq * 3, 0.08);
                 
-                const env4 = new Tone.AmplitudeEnvelope({
-                    attack: 0.02,
-                    decay: 0.01,
-                    sustain: 0.1,
-                    release: 0.2
-                });
-                
-                const harmonicGain2 = new Tone.Gain(0.3);
-                const harmonicGain3 = new Tone.Gain(0.2);
-                const harmonicGain4 = new Tone.Gain(0.1);
-
                 // Noise component
-                const noise = new Tone.Noise({
-                    type: 'white',
-                    volume: -20
+                const noise = new Tone.Noise({ type: 'white', volume: -20 });
+                
+                // Envelopes (sustain levels from demo3.html)
+                const env = new Tone.AmplitudeEnvelope({
+                    attack: this.attack,
+                    decay: this.decay,
+                    sustain: 0.35, // From demo3 - main oscillator
+                    release: this.release
                 });
-
+                const env2 = new Tone.AmplitudeEnvelope({
+                    attack: this.attack,
+                    decay: this.decay,
+                    sustain: 0.25, // From demo3 - harmonic 2
+                    release: this.release
+                });
+                const env3 = new Tone.AmplitudeEnvelope({
+                    attack: this.attack,
+                    decay: this.decay,
+                    sustain: 0.15, // From demo3 - harmonic 3
+                    release: this.release
+                });
                 const noiseEnv = new Tone.AmplitudeEnvelope({
                     attack: 0.01,
                     decay: 0.07,
                     sustain: 0,
-                    release: 0.2
+                    release: this.release
                 });
-
-                const noiseGain = new Tone.Gain();
-                noiseGain.gain.value = finalNoiseAmount * 0.5;
-
+                
+                // Harmonic gains from demo3.html
+                const gain2 = new Tone.Gain(0.3); // From demo3 - harmonic 2
+                const gain3 = new Tone.Gain(0.2); // From demo3 - harmonic 3
+                const noiseGain = new Tone.Gain(0.03); // From demo3 - noise component
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
-                const volumeGain = new Tone.Gain(volumeMultiplier);
-
-                // Connect oscillators
+                // Use multiplier like demo3 (0.2-1.0 range), but scale down for overall quieter
+                const volumeGain = new Tone.Gain(0.15); // Scaled down from demo3's 0.2-1.0 range
+                
                 osc.connect(env);
                 env.connect(volumeGain);
-                
                 osc2.connect(env2);
-                env2.connect(harmonicGain2);
-                harmonicGain2.connect(volumeGain);
-                
+                env2.connect(gain2);
+                gain2.connect(volumeGain);
                 osc3.connect(env3);
-                env3.connect(harmonicGain3);
-                harmonicGain3.connect(volumeGain);
-                
-                osc4.connect(env4);
-                env4.connect(harmonicGain4);
-                harmonicGain4.connect(volumeGain);
-                
-                volumeGain.connect(pan);
-                pan.connect(outputNode || this.masterGainArea1);
-
+                env3.connect(gain3);
+                gain3.connect(volumeGain);
                 noise.connect(noiseGain);
                 noiseGain.connect(noiseEnv);
                 noiseEnv.connect(pan);
-
-                // Start
+                volumeGain.connect(pan);
+                pan.connect(this.limiter);
+                
+                // Start and trigger
                 osc.start(now);
                 osc2.start(now);
                 osc3.start(now);
-                osc4.start(now);
                 noise.start(now);
+                noise.stop(now + Math.min(0.15, duration));
                 env.triggerAttack(now);
                 env2.triggerAttack(now);
                 env3.triggerAttack(now);
-                env4.triggerAttack(now);
                 noiseEnv.triggerAttack(now);
-
-                noise.stop(now + 0.15);
-
-                return {
-                    oscillator: osc,
-                    oscillator2: osc2,
-                    oscillator3: osc3,
-                    oscillator4: osc4,
-                    envelope: env,
-                    envelope2: env2,
-                    envelope3: env3,
-                    envelope4: env4,
-                    noise: noise,
-                    noiseEnv: noiseEnv,
-                    pan: pan,
-                    volumeGain: volumeGain,
-                    stop: () => {
-                        env.triggerRelease();
-                        env2.triggerRelease();
-                        env3.triggerRelease();
-                        env4.triggerRelease();
-                        osc.stop('+0.5');
-                        osc2.stop('+0.5');
-                        osc3.stop('+0.5');
-                        osc4.stop('+0.5');
-                        noise.stop();
-                    }
-                };
+                
+                const releaseTime = now + duration;
+                env.triggerRelease(releaseTime);
+                env2.triggerRelease(releaseTime);
+                env3.triggerRelease(releaseTime);
+                noiseEnv.triggerRelease(releaseTime);
+                
+                const stopTime = releaseTime + this.release;
+                osc.stop(stopTime);
+                osc2.stop(stopTime);
+                osc3.stop(stopTime);
+                
+                return { osc, osc2, osc3, noise, env, env2, env3, noiseEnv, pan, volumeGain };
             }
 
-            // Create area 1 voices connected to a given gain node (for DotMixer)
-            createArea1Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createWaterVoice(freq, 0.02, 0.03, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create a bell/chime sound
-            createBellVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
-                const now = Tone.now();
+            createBellVoice(note, panelIndex, startTime, duration) {
+                // Panel 1: Bell/chime sound (from demo3 area 2)
+                const freq = Tone.Frequency(note).toFrequency();
+                const now = startTime || Tone.now();
                 
-                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                const adjustedFrequency = frequency * pitchMultiplier;
-                
-                const osc = new Tone.Oscillator({
-                    type: 'triangle',
-                    frequency: adjustedFrequency
-                });
+                const osc = new Tone.Oscillator({ type: 'triangle', frequency: freq });
+                const osc2 = new Tone.Oscillator({ type: 'sine', frequency: freq * 2 });
                 
                 const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.01,
-                    decay: 2.0,
-                    sustain: 0.35,  // Increased from 0.1 to match area 1's sustain level
-                    release: 0.2
+                    attack: this.attack,
+                    decay: this.decay * 20, // Longer decay for bell
+                    sustain: 0.35, // From demo3 - main oscillator
+                    release: this.release
                 });
-                
-                const osc2 = new Tone.Oscillator({
-                    type: 'sine',
-                    frequency: adjustedFrequency * 2
-                });
-                
                 const env2 = new Tone.AmplitudeEnvelope({
-                    attack: 0.01,
-                    decay: 1.5,
-                    sustain: 0.25,  // Increased from 0.05 to better match other areas
-                    release: 0.2
+                    attack: this.attack,
+                    decay: this.decay * 15,
+                    sustain: 0.25, // From demo3 - second oscillator
+                    release: this.release
                 });
                 
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
-                const volumeGain = new Tone.Gain(volumeMultiplier);
+                const volumeGain = new Tone.Gain(0.15); // Scaled down from demo3
                 
                 osc.connect(env);
                 env.connect(volumeGain);
                 osc2.connect(env2);
                 env2.connect(volumeGain);
                 volumeGain.connect(pan);
-                pan.connect(outputNode || this.masterGain);
+                pan.connect(this.limiter);
                 
+                // Start and trigger
                 osc.start(now);
                 osc2.start(now);
                 env.triggerAttack(now);
                 env2.triggerAttack(now);
                 
-                return {
-                    oscillator: osc,
-                    oscillator2: osc2,
-                    envelope: env,
-                    envelope2: env2,
-                    pan: pan,
-                    volumeGain: volumeGain,
-                    stop: () => {
-                        env.triggerRelease();
-                        env2.triggerRelease();
-                        osc.stop('+0.5');
-                        osc2.stop('+0.5');
-                    }
-                };
+                const releaseTime = now + duration;
+                env.triggerRelease(releaseTime);
+                env2.triggerRelease(releaseTime);
+                
+                const stopTime = releaseTime + this.release;
+                osc.stop(stopTime);
+                osc2.stop(stopTime);
+                
+                return { osc, osc2, env, env2, pan, volumeGain };
             }
 
-            // Create area 2 voices
-            createArea2Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createBellVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create a pad/string-like sound
-            createPadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
-                const now = Tone.now();
+            createPadVoice(note, panelIndex, startTime, duration) {
+                // Panel 2: Pad/string sound (from demo3 area 3)
+                const freq = Tone.Frequency(note).toFrequency();
+                const now = startTime || Tone.now();
                 
-                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                const adjustedFrequency = frequency * pitchMultiplier;
-                
-                const osc = new Tone.Oscillator({
-                    type: 'sawtooth',
-                    frequency: adjustedFrequency
-                });
-                
-                const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.3,
-                    decay: 0.2,
-                    sustain: 0.4,  // Reduced from 0.7 to match area 1/2 loudness
-                    release: 0.2
-                });
-                
+                const osc = new Tone.Oscillator({ type: 'sawtooth', frequency: freq });
                 const filter = new Tone.Filter({
                     type: 'lowpass',
                     frequency: 2000,
                     Q: 1.0
                 });
-                
                 filter.frequency.setValueAtTime(2000, now);
-                filter.frequency.exponentialRampTo(16000, now + 0.4);
+                filter.frequency.exponentialRampTo(16000, now + Math.min(0.4, duration * 0.8));
+                
+                const env = new Tone.AmplitudeEnvelope({
+                    attack: this.attack * 30, // Longer attack for pad
+                    decay: this.decay * 2,
+                    sustain: 0.4, // From demo3 - pad sustain
+                    release: this.release
+                });
                 
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
-                const volumeGain = new Tone.Gain(volumeMultiplier);
+                const volumeGain = new Tone.Gain(0.15); // Scaled down from demo3
                 
                 osc.connect(filter);
                 filter.connect(env);
                 env.connect(volumeGain);
                 volumeGain.connect(pan);
-                pan.connect(outputNode || this.masterGain);
+                pan.connect(this.limiter);
                 
+                // Start and trigger
                 osc.start(now);
                 env.triggerAttack(now);
                 
-                return {
-                    oscillator: osc,
-                    envelope: env,
-                    filter: filter,
-                    pan: pan,
-                    volumeGain: volumeGain,
-                    stop: () => {
-                        env.triggerRelease();
-                        osc.stop('+1.0');
-                    }
-                };
+                const releaseTime = now + duration;
+                env.triggerRelease(releaseTime);
+                
+                const stopTime = releaseTime + this.release;
+                osc.stop(stopTime);
+                
+                return { osc, filter, env, pan, volumeGain };
             }
 
-            // Create area 3 voices
-            createArea3Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createPadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
-            }
-
-            // Create a brass/synth lead sound
-            createLeadVoice(frequency, pitchOffset = 0, volumeMultiplier = 1.0, outputNode = null) {
-                const now = Tone.now();
+            createLeadVoice(note, panelIndex, startTime, duration) {
+                // Panel 3: Brass/synth lead (from demo3 area 4)
+                const freq = Tone.Frequency(note).toFrequency();
+                const now = startTime || Tone.now();
                 
-                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                const adjustedFrequency = frequency * pitchMultiplier;
-                
-                const osc = new Tone.Oscillator({
-                    type: 'sawtooth',
-                    frequency: adjustedFrequency
-                });
-                
-                const osc2 = new Tone.Oscillator({
-                    type: 'square',
-                    frequency: adjustedFrequency * 0.5
-                });
-                
-                const env = new Tone.AmplitudeEnvelope({
-                    attack: 0.05,
-                    decay: 0.1,
-                    sustain: 0.4,  // Reduced from 0.85 to match area 1/2 loudness
-                    release: 0.2
-                });
-                
-                const env2 = new Tone.AmplitudeEnvelope({
-                    attack: 0.05,
-                    decay: 0.1,
-                    sustain: 0.3,  // Reduced from 0.7 to better match other areas
-                    release: 0.2
-                });
+                const osc = new Tone.Oscillator({ type: 'sawtooth', frequency: freq });
+                const osc2 = new Tone.Oscillator({ type: 'square', frequency: freq * 0.5 });
                 
                 const filter = new Tone.Filter({
                     type: 'lowpass',
                     frequency: 3000,
                     Q: 1.0
                 });
-                
                 filter.frequency.setValueAtTime(3000, now);
-                filter.frequency.exponentialRampTo(12000, now + 0.1);
+                filter.frequency.exponentialRampTo(12000, now + Math.min(0.1, duration * 0.2));
                 
+                const env = new Tone.AmplitudeEnvelope({
+                    attack: this.attack * 5,
+                    decay: this.decay,
+                    sustain: 0.4, // From demo3 - main oscillator
+                    release: this.release
+                });
+                const env2 = new Tone.AmplitudeEnvelope({
+                    attack: this.attack * 5,
+                    decay: this.decay,
+                    sustain: 0.3, // From demo3 - second oscillator
+                    release: this.release
+                });
+                
+                const osc2Gain = new Tone.Gain(0.4); // From demo3
                 const pan = new Tone.Panner((Math.random() - 0.5) * 0.15);
-                const volumeGain = new Tone.Gain(volumeMultiplier * 1.5);
-                const osc2Gain = new Tone.Gain(0.4);
+                // Lead voice uses 1.5x multiplier in demo3, but we scale down
+                const volumeGain = new Tone.Gain(0.15 * 1.5); // 0.225 - scaled from demo3's volumeMultiplier * 1.5
                 
                 osc.connect(filter);
                 filter.connect(env);
                 env.connect(volumeGain);
-                
                 osc2.connect(env2);
                 env2.connect(osc2Gain);
                 osc2Gain.connect(volumeGain);
-                
                 volumeGain.connect(pan);
-                pan.connect(outputNode || this.masterGain);
+                pan.connect(this.limiter);
                 
+                // Start and trigger
                 osc.start(now);
                 osc2.start(now);
                 env.triggerAttack(now);
                 env2.triggerAttack(now);
                 
-                return {
-                    oscillator: osc,
-                    oscillator2: osc2,
-                    envelope: env,
-                    envelope2: env2,
-                    filter: filter,
-                    pan: pan,
-                    volumeGain: volumeGain,
-                    stop: () => {
-                        env.triggerRelease();
-                        env2.triggerRelease();
-                        osc.stop('+0.5');
-                        osc2.stop('+0.5');
-                    }
-                };
+                const releaseTime = now + duration;
+                env.triggerRelease(releaseTime);
+                env2.triggerRelease(releaseTime);
+                
+                const stopTime = releaseTime + this.release;
+                osc.stop(stopTime);
+                osc2.stop(stopTime);
+                
+                return { osc, osc2, filter, env, env2, osc2Gain, pan, volumeGain };
             }
 
-            // Create area 4 voices
-            createArea4Voices(pitchOffset, volumeMultiplier, outputGain) {
-                const chordFrequencies = [261.63, 329.63, 392.00];
-                return chordFrequencies.map(freq => 
-                    this.createLeadVoice(freq, pitchOffset, volumeMultiplier, outputGain)
-                );
+            updateSynths(notes = null, panelIndex = -1) {
+                if (!window.Tone) {
+                    return; // Tone.js not loaded yet
+                }
+                
+                // Ensure limiter is created first
+                if (!this.audioInitialized || !this.limiter) {
+                    this.initializeAudio();
+                    if (!this.limiter) {
+                        return; // Still not initialized, exit
+                    }
+                }
+                
+                // Dispose old synths
+                this.synths.forEach(synth => {
+                    if (synth.osc) synth.osc.stop().dispose();
+                    if (synth.osc2) synth.osc2.stop().dispose();
+                    if (synth.osc3) synth.osc3.stop().dispose();
+                    if (synth.noise) synth.noise.stop().dispose();
+                    if (synth.env) synth.env.dispose();
+                    if (synth.env2) synth.env2.dispose();
+                    if (synth.env3) synth.env3.dispose();
+                    if (synth.noiseEnv) synth.noiseEnv.dispose();
+                    if (synth.filter) synth.filter.dispose();
+                    if (synth.pan) synth.pan.dispose();
+                    if (synth.volumeGain) synth.volumeGain.dispose();
+                    if (synth.osc2Gain) synth.osc2Gain.dispose();
+                });
+                
+                // Use provided notes or default
+                const notesToUse = notes || this.chordNotes;
+                this.chordNotes = notesToUse;
+                this.currentPanelIndex = panelIndex;
+                
+                // Don't create voices here - create them fresh each pulse
+                this.synths = [];
+            }
+
+            createElement() {
+                this.element = document.createElement('div');
+                this.element.className = `dottie dottie-${this.index}`;
+                this.label = document.createElement('div');
+                this.label.className = 'dottie-label';
+                this.label.textContent = `${this.pulseDivisor}/bpm`;
+                this.element.appendChild(this.label);
+                
+                // Place dots in a row below the header
+                const headerHeight = 80;
+                const dotSize = 50;
+                const totalDots = 12; // 2 of each type
+                const spacing = (window.innerWidth - (dotSize * totalDots)) / (totalDots + 1);
+                this.x = spacing + this.index * (dotSize + spacing);
+                this.y = headerHeight + 30; // 30px below header
+                
+                this.updatePosition();
+                this.canvas.appendChild(this.element);
+            }
+
+            updatePosition() {
+                this.element.style.left = `${this.x}px`;
+                this.element.style.top = `${this.y}px`;
+            }
+
+            setupEventListeners() {
+                this.element.addEventListener('mousedown', (e) => this.startDrag(e));
+                document.addEventListener('mousemove', (e) => this.drag(e));
+                document.addEventListener('mouseup', () => this.endDrag());
+                // Use { passive: false } to allow preventDefault() and silence warnings
+                this.element.addEventListener('touchstart', (e) => { e.preventDefault(); this.startDrag(e.touches[0]); }, { passive: false });
+                document.addEventListener('touchmove', (e) => { if (this.isDragging) { e.preventDefault(); this.drag(e.touches[0]); } }, { passive: false });
+                document.addEventListener('touchend', () => this.endDrag());
+            }
+
+            startDrag(e) {
+                this.isDragging = true;
+                this.element.classList.add('dragging');
+                const rect = this.element.getBoundingClientRect();
+                // Calculate offset from click point to bottom-right corner
+                this.dragOffset.x = e.clientX - (rect.left + rect.width);
+                this.dragOffset.y = e.clientY - (rect.top + rect.height);
+            }
+
+            drag(e) {
+                if (!this.isDragging) return;
+                // Position element so bottom-right corner follows the cursor
+                const dotWidth = 50;
+                const dotHeight = 50;
+                this.x = e.clientX - this.dragOffset.x - dotWidth;
+                this.y = e.clientY - this.dragOffset.y - dotHeight;
+                this.x = Math.max(25, Math.min(window.innerWidth - 25, this.x));
+                this.y = Math.max(100, Math.min(window.innerHeight - 25, this.y));
+                this.updatePosition();
+            }
+
+            endDrag() {
+                this.isDragging = false;
+                this.element.classList.remove('dragging');
+            }
+
+            getPanelIndex() {
+                // Panel height is 30vh, convert to pixels
+                const panelHeightPx = window.innerHeight * 0.3; // 30vh
+                const bottomPanelTop = window.innerHeight - panelHeightPx;
+                const dotBottom = this.y + 50; // dot height is 50px
+                
+                // Only check bottom panels (panels 0-3) for now - top panels are for future use
+                if (dotBottom >= bottomPanelTop) {
+                    const panelWidth = window.innerWidth / 4;
+                    const panelIndex = Math.floor(this.x / panelWidth);
+                    return Math.max(0, Math.min(3, panelIndex));
+                }
+                
+                return -1; // Not on any panel
+            }
+
+            calculateSoundDuration() {
+                // Calculate pulse cycle duration
+                const pulseCycleMs = (this.pulseDivisor / this.currentBPM) * 1000;
+                
+                // Get panel info for y position calculation
+                const panelHeightPx = window.innerHeight * 0.3; // 30vh
+                const panelTop = window.innerHeight - panelHeightPx;
+                const dotCenterY = this.y + 25; // center of dot (50px / 2)
+                
+                // Normalize y position within panel (0 = top of panel, 1 = bottom of panel)
+                // Lower y position (closer to bottom) = higher normalized value = longer duration
+                const normalizedY = Math.max(0, Math.min(1, (dotCenterY - panelTop) / panelHeightPx));
+                
+                // Calculate available duration (leave 10% buffer before next pulse)
+                const maxDuration = pulseCycleMs * 0.9;
+                const minDuration = Math.min(50, pulseCycleMs * 0.2); // Minimum 50ms or 20% of cycle, whichever is smaller
+                
+                // Map normalized y position to duration (lower y = longer duration)
+                const duration = minDuration + (maxDuration - minDuration) * normalizedY;
+                
+                return Math.max(minDuration, Math.min(maxDuration, duration));
+            }
+
+            pulse() {
+                // Calculate interval: pulseDivisor/bpm seconds
+                const intervalMs = (this.pulseDivisor / this.currentBPM) * 1000;
+                const duration = Math.min(300, Math.max(16, intervalMs * 0.8));
+                
+                // JavaScript-based pulse animation
+                const startTime = performance.now();
+                const startScale = this.pulseScale;
+                const targetScale = 1.5;
+                const color = getComputedStyle(this.element).backgroundColor;
+                
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    
+                    if (progress < 0.5) {
+                        this.pulseScale = startScale + (targetScale - startScale) * (easeOut * 2);
+                    } else {
+                        this.pulseScale = targetScale - (targetScale - startScale) * ((easeOut - 0.5) * 2);
+                    }
+                    
+                    this.element.style.transform = `scale(${this.pulseScale})`;
+                    const shadowIntensity = progress < 0.5 ? progress * 2 : (1 - progress) * 2;
+                    this.element.style.boxShadow = `0 0 ${30 * shadowIntensity}px ${color}`;
+                    
+                    if (progress < 1) {
+                        this.pulseAnimation = requestAnimationFrame(animate);
+                    } else {
+                        this.pulseScale = 1;
+                        this.element.style.transform = 'scale(1)';
+                        this.element.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                        this.pulseAnimation = null;
+                    }
+                };
+                
+                if (this.pulseAnimation) cancelAnimationFrame(this.pulseAnimation);
+                this.pulseAnimation = requestAnimationFrame(animate);
+
+                // Only play sound if dot is on white panel
+                const panelIndex = this.getPanelIndex();
+                if (panelIndex >= 0 && window.Tone) {
+                    try {
+                        // Ensure audio is initialized
+                        if (!this.audioInitialized) {
+                            this.initializeAudio();
+                        }
+                        
+                        // Update synths based on current panel if needed
+                        if (window.gridBoxes && window.gridBoxes[panelIndex]) {
+                            const panelNotes = window.gridBoxes[panelIndex].getNotes();
+                            // Update if notes changed or panel changed
+                            if (JSON.stringify(panelNotes) !== JSON.stringify(this.chordNotes) || 
+                                this.currentPanelIndex !== panelIndex) {
+                                this.updateSynths(panelNotes, panelIndex);
+                            }
+                        }
+                        
+                        // Calculate sound duration based on pulse rate and y position
+                        const soundDuration = this.calculateSoundDuration();
+                        
+                        // Create and trigger voices based on panel type
+                        const now = Tone.now();
+                        const durationSec = soundDuration / 1000;
+                        
+                        // Clean up old voices
+                        this.synths.forEach(voice => {
+                            try {
+                                if (voice.osc) voice.osc.stop().dispose();
+                                if (voice.osc2) voice.osc2.stop().dispose();
+                                if (voice.osc3) voice.osc3.stop().dispose();
+                                if (voice.noise) voice.noise.stop().dispose();
+                                if (voice.env) voice.env.dispose();
+                                if (voice.env2) voice.env2.dispose();
+                                if (voice.env3) voice.env3.dispose();
+                                if (voice.noiseEnv) voice.noiseEnv.dispose();
+                                if (voice.filter) voice.filter.dispose();
+                                if (voice.pan) voice.pan.dispose();
+                                if (voice.volumeGain) voice.volumeGain.dispose();
+                                if (voice.osc2Gain) voice.osc2Gain.dispose();
+                            } catch (e) {}
+                        });
+                        
+                        // Create fresh voices for this pulse
+                        this.synths = this.chordNotes.map(note => {
+                            if (panelIndex === 0) {
+                                return this.createWaterVoice(note, panelIndex, now, durationSec);
+                            } else if (panelIndex === 1) {
+                                return this.createBellVoice(note, panelIndex, now, durationSec);
+                            } else if (panelIndex === 2) {
+                                return this.createPadVoice(note, panelIndex, now, durationSec);
+                            } else if (panelIndex === 3) {
+                                return this.createLeadVoice(note, panelIndex, now, durationSec);
+                            } else {
+                                // Default: simple sine synth
+                                const synth = new Tone.PolySynth(Tone.Synth, {
+                                oscillator: { type: 'sine' },
+                                envelope: { attack: this.attack, decay: this.decay, sustain: this.sustain, release: this.release },
+                                volume: -30
+                                });
+                                synth.connect(this.limiter);
+                                synth.triggerAttackRelease(note, durationSec);
+                                return synth;
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error playing sound:', error);
+                    }
+                }
+            }
+
+            start(bpm, masterStartTime) {
+                this.stop();
+                if (!bpm || bpm <= 0) return;
+                this.currentBPM = bpm;
+                this.masterStartTime = masterStartTime || performance.now();
+                // pulseDivisor/bpm means: pulse every (pulseDivisor/bpm) seconds
+                // Example: 240/120 = 2 seconds between pulses
+                this.intervalMs = (this.pulseDivisor / bpm) * 1000;
+                
+                // Sync to master timer - calculate when next pulse should occur
+                const elapsed = performance.now() - this.masterStartTime;
+                const cyclesSinceStart = Math.floor(elapsed / this.intervalMs);
+                this.lastPulseTime = this.masterStartTime + (cyclesSinceStart * this.intervalMs);
+                
+                // Start animation loop that syncs to master
+                const animate = (currentTime) => {
+                    if (currentTime - this.lastPulseTime >= this.intervalMs) {
+                        this.pulse();
+                        this.lastPulseTime += this.intervalMs; // Keep in sync with master
+                    }
+                    // Continue animation loop if still active
+                    if (this.pulseInterval) {
+                        this.animationFrame = requestAnimationFrame(animate);
+                    }
+                };
+                // Set pulseInterval before starting animation
+                this.pulseInterval = true;
+                this.animationFrame = requestAnimationFrame(animate);
+            }
+
+            stop() {
+                if (this.pulseInterval) {
+                    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+                    this.pulseInterval = null;
+                    this.animationFrame = null;
+                }
+                if (this.pulseAnimation) {
+                    cancelAnimationFrame(this.pulseAnimation);
+                    this.pulseAnimation = null;
+                }
+                this.pulseScale = 1;
+                this.element.style.transform = 'scale(1)';
+                this.element.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+            }
+
+            updateBPM(bpm, masterStartTime) {
+                if (this.pulseInterval) {
+                    this.start(bpm, masterStartTime);
+                }
+            }
+
+            destroy() {
+                this.stop();
+                if (this.element && this.element.parentNode) {
+                    this.element.parentNode.removeChild(this.element);
+                }
+                if (this.audioInitialized) {
+                    this.synths.forEach(synth => synth.dispose());
+                    if (this.limiter) this.limiter.dispose();
+                }
             }
         }
 
-        // DotMixer class - manages a dot and its sound mixing with demoold.html's crossfade mechanism
-        class DotMixer {
-            constructor(touchId, x, y, initialArea, synth) {
-                this.touchId = touchId;
-                this.synth = synth;
-                
-                // Create visual dot
-                this.dot = this.createVisualDot(x, y, initialArea);
-                
-                // Track area sounds: { areaNum: { voices: [...], mixGain: Tone.Gain, mixPercent: number } }
-                this.areaSounds = new Map();
-                
-                // Master gain for this dot's mixed output
-                this.masterGain = new Tone.Gain(1.0);
-                this.masterGain.toDestination();
-                
-                // Current position
-                this.currentX = x;
-                this.currentY = y;
-                this.currentCell = initialArea;
-                
-                // Crossfade constants (matching demoold.html)
-                this.CROSSFADE_DURATION = 3.0; // seconds
-                this.MIXRATIO_RATE = 100.0 / this.CROSSFADE_DURATION; // 33.33% per second
-                this.lastUpdateTime = performance.now();
-                
-                // Track active areas and mix ratios (per dot)
-                // Note: Mix ratios are tracked by area TYPE (1-4), not area number (1-16)
-                // This allows crossfading between sound types when moving between areas
-                this.areaMixRatios = { 1: 0, 2: 0, 3: 0, 4: 0 };
-                this.areaMixDirections = { 1: 'none', 2: 'none', 3: 'none', 4: 'none' };
-                this.activeAreas = new Set(); // Tracks area numbers (1-16) that have sounds
-                
-                // Performance: Limit active areas per dot to prevent too many voices
-                this.MAX_AREAS_PER_DOT = 3; // Only keep 3 most recent areas active
-                this.areaHistory = []; // Track order of areas added
-                this.lastDebugUpdate = 0; // Track last debug display update for throttling
-                
-                // Start sound for initial area
-                this.addAreaSound(initialArea);
-                
-                // Track if fading
-                this.isFading = false;
-                
-                // HEARTBEAT MECHANISM: Track last activity to detect stale touches
-                this.lastActivityTime = performance.now();
-                this.heartbeatInterval = null;
-                
-                // ABORT CONTROLLER: For coordinated cleanup
-                this.abortController = new AbortController();
-                
-                // Setup heartbeat check (detects stale touches that never got touchend)
-                this.setupHeartbeat();
-            }
+        // ========== CHORD PARSER ==========
+        const ChordParser = {
+            NOTE_TO_INDEX: {
+                'C': 0, 'C#': 1, 'Db': 1,
+                'D': 2, 'D#': 3, 'Eb': 3,
+                'E': 4,
+                'F': 5, 'F#': 6, 'Gb': 6,
+                'G': 7, 'G#': 8, 'Ab': 8,
+                'A': 9, 'A#': 10, 'Bb': 10,
+                'B': 11
+            },
             
-            // Setup heartbeat to detect stale touches
-            setupHeartbeat() {
-                // Check every 500ms if touch is stale (no activity for 2 seconds)
-                this.heartbeatInterval = setInterval(() => {
-                    const now = performance.now();
-                    const timeSinceActivity = now - this.lastActivityTime;
-                    
-                    // If no activity for 2 seconds and not already fading, consider it stale
-                    if (timeSinceActivity > 2000 && !this.isFading) {
-                        console.warn(`Stale touch detected: ${this.touchId} (${timeSinceActivity.toFixed(0)}ms inactive)`);
-                        this.startFade();
-                    }
-                }, 500);
-            }
+            CHORD_INTERVALS: {
+                'major-triad': [0, 4, 7],
+                'minor-triad': [0, 3, 7],
+                'dominant-7th': [0, 4, 7, 10],
+                'minor-7th': [0, 3, 7, 10],
+                'major-7th': [0, 4, 7, 11],
+                'diminished-triad': [0, 3, 6],
+                'diminished-7th': [0, 3, 6, 9],
+                'augmented-triad': [0, 4, 8],
+                'major-6th': [0, 4, 7, 9],
+                'minor-6th': [0, 3, 7, 9],
+                'dominant-9th': [0, 4, 7, 10, 14],
+                'major-9th': [0, 4, 7, 11, 14],
+                'minor-9th': [0, 3, 7, 10, 14],
+                'add9': [0, 4, 7, 14],
+                'add11': [0, 4, 7, 17],
+                'add13': [0, 4, 7, 21],
+                '7sharp11': [0, 4, 7, 10, 18],
+                '9sharp11': [0, 4, 7, 10, 14, 18],
+                'sus2': [0, 2, 7],
+                'sus4': [0, 5, 7]
+            },
             
-            // Update activity timestamp
-            markActivity() {
-                this.lastActivityTime = performance.now();
-            }
-            
-            createVisualDot(x, y, areaNum) {
-                const dot = document.createElement('div');
-                dot.className = 'touch-dot';
+            parseChord(input) {
+                const trimmed = input.trim();
+                if (!trimmed) return null;
+
+                const match = trimmed.match(/^([A-Ga-g])([#b]?)(.*)$/i);
+                if (!match) return null;
+
+                const rootLetter = match[1].toUpperCase();
+                const accidental = match[2] || '';
+                const suffix = match[3].toLowerCase();
+                const noteName = rootLetter + accidental;
+
+                if (!this.NOTE_TO_INDEX.hasOwnProperty(noteName)) return null;
+
+                let chordType = 'major-triad';
+                let processedSuffix = suffix;
                 
-                // Color based on area (matching demoold.html's gradient colors)
-                const colors = {
-                    1: '#2a4a6a', 2: '#3a5a7a', 3: '#4a6a8a', 4: '#5a7a9a',
-                    5: '#6a8aaa', 6: '#7a9aba', 7: '#8aaaca', 8: '#9abada',
-                    9: '#aacaea', 10: '#badafa', 11: '#caeafa', 12: '#dafa0a',
-                    13: '#ea0a1a', 14: '#fa1a2a', 15: '#0a2a3a', 16: '#1a3a4a'
+                const slashIndex = suffix.indexOf('/');
+                if (slashIndex !== -1) {
+                    processedSuffix = suffix.substring(0, slashIndex);
+                }
+
+                if (processedSuffix === 'm' || processedSuffix === 'min' || processedSuffix === '-') {
+                    chordType = 'minor-triad';
+                } else if (processedSuffix === '7' || processedSuffix === 'dom' || processedSuffix === 'dom7') {
+                    chordType = 'dominant-7th';
+                } else if (processedSuffix === 'm7' || processedSuffix === 'min7') {
+                    chordType = 'minor-7th';
+                } else if (processedSuffix.includes('dim')) {
+                    chordType = processedSuffix.includes('7') ? 'diminished-7th' : 'diminished-triad';
+                } else if (processedSuffix.includes('aug') || processedSuffix === '+') {
+                    chordType = 'augmented-triad';
+                } else if (processedSuffix === 'maj9' || processedSuffix === 'major9' || processedSuffix === 'M9') {
+                    chordType = 'major-9th';
+                } else if (processedSuffix === 'm9' || processedSuffix === 'min9' || processedSuffix === '-9') {
+                    chordType = 'minor-9th';
+                } else if (processedSuffix === '9') {
+                    chordType = 'dominant-9th';
+                } else if (processedSuffix === 'maj7' || processedSuffix === 'major7' || processedSuffix === 'M7' || processedSuffix === 'ma7') {
+                    chordType = 'major-7th';
+                } else if (processedSuffix === '6') {
+                    chordType = 'major-6th';
+                } else if (processedSuffix === 'm6' || processedSuffix === 'min6' || processedSuffix === '-6') {
+                    chordType = 'minor-6th';
+                } else if (processedSuffix.includes('add9')) {
+                    chordType = 'add9';
+                } else if (processedSuffix.includes('add11')) {
+                    chordType = 'add11';
+                } else if (processedSuffix.includes('add13')) {
+                    chordType = 'add13';
+                } else if (processedSuffix.includes('7#11') || processedSuffix.includes('7(#11)') || processedSuffix.includes('7+11')) {
+                    chordType = '7sharp11';
+                } else if (processedSuffix.includes('9#11') || processedSuffix.includes('9(#11)') || processedSuffix.includes('9+11')) {
+                    chordType = '9sharp11';
+                } else if (processedSuffix.includes('sus2') || processedSuffix === 'sus2') {
+                    chordType = 'sus2';
+                } else if (processedSuffix.includes('sus4') || processedSuffix === 'sus' || processedSuffix === 'sus4') {
+                    chordType = 'sus4';
+                }
+
+                return { rootNote: noteName, chordType };
+            },
+
+            parseChords(input) {
+                return input.split(',').map(s => s.trim()).filter(s => s)
+                    .map(str => this.parseChord(str)).filter(c => c !== null);
+            },
+
+            getChordIntervals(rootNote, chordType) {
+                const rootIndex = this.NOTE_TO_INDEX[rootNote];
+                if (rootIndex === undefined) return [0, 3, 7]; // Default to minor triad
+
+                const intervals = this.CHORD_INTERVALS[chordType];
+                if (!intervals) return [0, 3, 7]; // Default to minor triad
+
+                return intervals;
+            }
+        };
+
+        // ========== CHORD SEQUENCE STATE ==========
+        let parsedChords = [];
+        let currentChordIndex = 0;
+
+        // ========== CHORD SEQUENCE MANAGEMENT ==========
+        function updateChordDisplay() {
+            const display = document.getElementById('chordsDisplay');
+            display.innerHTML = '';
+            
+            parsedChords.forEach((chord, index) => {
+                const span = document.createElement('span');
+                span.className = 'chord-item';
+                if (index === currentChordIndex) {
+                    span.classList.add('current');
+                }
+                span.textContent = `${chord.rootNote}${getChordSuffix(chord.chordType)}`;
+                display.appendChild(span);
+            });
+        }
+
+        function getChordSuffix(chordType) {
+            const map = {
+                'minor-triad': 'm',
+                'dominant-7th': '7',
+                'minor-7th': 'm7',
+                'major-7th': 'maj7',
+                'diminished-triad': 'dim',
+                'diminished-7th': 'dim7',
+                'augmented-triad': 'aug',
+                'major-6th': '6',
+                'minor-6th': 'm6',
+                'major-9th': 'maj9',
+                'dominant-9th': '9',
+                'minor-9th': 'm9',
+                'add9': 'add9',
+                'add11': 'add11',
+                'add13': 'add13',
+                '7sharp11': '7#11',
+                '9sharp11': '9#11',
+                'sus2': 'sus2',
+                'sus4': 'sus4'
+            };
+            return map[chordType] || '';
+        }
+
+        function updateGridBoxesWithCurrentChord() {
+            if (parsedChords.length === 0) return;
+            
+            const currentChord = parsedChords[currentChordIndex];
+            const intervals = ChordParser.getChordIntervals(currentChord.rootNote, currentChord.chordType);
+            
+            // Update all GridBox instances
+            if (window.gridBoxes) {
+                window.gridBoxes.forEach(gridBox => {
+                    gridBox.chordIntervals = intervals;
+                    gridBox.rootNote = currentChord.rootNote + '3'; // Use octave 3 as base
+                });
+            }
+        }
+
+        function updatePurplePanelLabels() {
+            if (parsedChords.length === 0) {
+                // No chords - show dashes
+                document.getElementById('panelChord0').textContent = '-';
+                document.getElementById('panelChord1').textContent = '-';
+                document.getElementById('panelChord2').textContent = '-';
+                document.getElementById('panelChord3').textContent = '-';
+                return;
+            }
+
+            // Previous chord (panel 0)
+            const prevIndex = (currentChordIndex - 1 + parsedChords.length) % parsedChords.length;
+            const prevChord = parsedChords[prevIndex];
+            document.getElementById('panelChord0').textContent = `${prevChord.rootNote}${getChordSuffix(prevChord.chordType)}`;
+
+            // Current chord (panels 1 and 2)
+            const currentChord = parsedChords[currentChordIndex];
+            const currentChordName = `${currentChord.rootNote}${getChordSuffix(currentChord.chordType)}`;
+            document.getElementById('panelChord1').textContent = currentChordName;
+            document.getElementById('panelChord2').textContent = currentChordName;
+
+            // Next chord (panel 3)
+            const nextIndex = (currentChordIndex + 1) % parsedChords.length;
+            const nextChord = parsedChords[nextIndex];
+            document.getElementById('panelChord3').textContent = `${nextChord.rootNote}${getChordSuffix(nextChord.chordType)}`;
+        }
+
+        // ========== PURPLE PANEL CHORD SOUND ==========
+        // Store active synths per panel for sustain/release
+        const activePurpleSynths = {};
+
+        function startPurplePanelChord(panelIndex, chord) {
+            if (!window.Tone) {
+                console.warn('Tone.js not loaded yet');
+                return;
+            }
+
+            try {
+                // Ensure Tone context is started
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+
+                // Release any existing sound on this panel
+                if (activePurpleSynths[panelIndex]) {
+                    releasePurplePanelChord(panelIndex);
+                }
+
+                // Get chord intervals and convert to note names
+                const intervals = ChordParser.getChordIntervals(chord.rootNote, chord.chordType);
+                const baseFreq = {
+                    'C': 261.63, 'C#': 277.18, 'Db': 277.18, 'D': 293.66, 'D#': 311.13, 'Eb': 311.13,
+                    'E': 329.63, 'F': 349.23, 'F#': 369.99, 'Gb': 369.99, 'G': 392.00,
+                    'G#': 415.30, 'Ab': 415.30, 'A': 440.00, 'A#': 466.16, 'Bb': 466.16, 'B': 493.88
                 };
-                dot.style.backgroundColor = colors[areaNum] || '#ffffff';
-                
-                dot.style.left = x + 'px';
-                dot.style.top = y + 'px';
-                
-                // Size based on X position
-                const cell = cells[areaNum - 1];
-                if (cell) {
-                    const rect = cell.getBoundingClientRect();
-                    const relativeX = x - rect.left;
-                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                    const minSize = 20;
-                    const maxSize = 40;
-                    const size = minSize + (normalizedX * (maxSize - minSize));
-                    dot.style.width = size + 'px';
-                    dot.style.height = size + 'px';
-                }
-                
-                // Create debug info element
-                const debugInfo = document.createElement('div');
-                debugInfo.className = 'dot-debug-info';
-                debugInfo.id = `dot-debug-${this.touchId}`;
-                debugInfo.textContent = 'Vol: 0%\nMix: 0%';
-                debugInfo.style.left = x + 'px';
-                debugInfo.style.top = y + 'px';
-                
-                document.body.appendChild(dot);
-                document.body.appendChild(debugInfo);
-                
-                // Store reverse lookup: dot -> mixer (for finding mixers from orphaned dots)
-                dotToMixerMap.set(dot, this);
-                dotToMixerMap.set(debugInfo, this);
-                
-                this.debugInfo = debugInfo;
-                return dot;
+
+                const rootFreq = baseFreq[chord.rootNote] || 440;
+                const notes = intervals.map(interval => {
+                    const freq = rootFreq * Math.pow(2, interval / 12);
+                    return Tone.Frequency(freq).toNote();
+                });
+
+                // Use PolySynth with sustain-friendly envelope
+                const synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: {
+                        type: 'triangle'
+                    },
+                    envelope: {
+                        attack: 0.01,
+                        decay: 0.2,
+                        sustain: 0.6,  // Higher sustain for hold
+                        release: 0.5   // Release time
+                    },
+                    volume: -12
+                });
+
+                // Add a subtle reverb for richness
+                const reverb = new Tone.Reverb({
+                    roomSize: 0.5,
+                    dampening: 3000
+                }).toDestination();
+
+                synth.connect(reverb);
+
+                // Store synth and reverb for this panel
+                activePurpleSynths[panelIndex] = {
+                    synth: synth,
+                    reverb: reverb,
+                    notes: notes
+                };
+
+                // Trigger attack (sustain will hold while touch is down)
+                synth.triggerAttack(notes);
+            } catch (error) {
+                console.error('Error starting purple panel chord:', error);
             }
+        }
+
+        function releasePurplePanelChord(panelIndex) {
+            if (!activePurpleSynths[panelIndex]) return;
+
+            try {
+                const { synth, reverb, notes } = activePurpleSynths[panelIndex];
+                
+                // Trigger release
+                synth.triggerRelease(notes);
+                
+                // Clean up after release
+                setTimeout(() => {
+                    synth.dispose();
+                    reverb.dispose();
+                    delete activePurpleSynths[panelIndex];
+                }, 600); // Wait for release to complete
+            } catch (error) {
+                console.error('Error releasing purple panel chord:', error);
+                delete activePurpleSynths[panelIndex];
+            }
+        }
+
+        function navigateToPreviousChord() {
+            if (parsedChords.length === 0) return;
+            currentChordIndex = (currentChordIndex - 1 + parsedChords.length) % parsedChords.length;
+            updateChordDisplay();
+            updateGridBoxesWithCurrentChord();
+            updatePurplePanelLabels();
+        }
+
+        function navigateToNextChord() {
+            if (parsedChords.length === 0) return;
+            currentChordIndex = (currentChordIndex + 1) % parsedChords.length;
+            updateChordDisplay();
+            updateGridBoxesWithCurrentChord();
+            updatePurplePanelLabels();
+        }
+
+        function getChordForPanel(panelIndex) {
+            if (parsedChords.length === 0) return null;
             
-            // Add or update area sound
-            addAreaSound(areaNum) {
-                if (this.areaSounds.has(areaNum)) {
-                    return; // Already exists
-                }
-                
-                // Performance: Check global voice limit before creating new voices
-                const currentTotalVoices = countTotalActiveVoices();
-                const voicesPerArea = 3; // Each area has 3 voices (chord)
-                
-                // If we're at the limit, clean up oldest inactive areas first
-                if (currentTotalVoices + voicesPerArea > MAX_TOTAL_VOICES) {
-                    // Clean up areas with mix < 5% that aren't current
-                    const areasToClean = [];
-                    this.areaSounds.forEach((soundData, num) => {
-                        const areaType = ((num - 1) % 4) + 1;
-                        const mix = this.areaMixRatios[areaType];
-                        if (mix < 5 && num !== this.currentCell) {
-                            areasToClean.push(num);
-                        }
-                    });
-                    // Clean up oldest first
-                    areasToClean.sort((a, b) => {
-                        const idxA = this.areaHistory.indexOf(a);
-                        const idxB = this.areaHistory.indexOf(b);
-                        return idxA - idxB;
-                    });
-                    areasToClean.slice(0, 2).forEach(num => {
-                        this.cleanupAreaSound(num);
-                    });
-                }
-                
-                // Performance: Limit areas per dot - remove oldest if at limit
-                if (this.areaSounds.size >= this.MAX_AREAS_PER_DOT) {
-                    // Find oldest area that's not current
-                    const oldestArea = this.areaHistory.find(num => 
-                        num !== this.currentCell && this.areaSounds.has(num)
-                    );
-                    if (oldestArea) {
-                        this.cleanupAreaSound(oldestArea);
-                    }
-                }
-                
-                // Create mix gain for this area
-                const mixGain = new Tone.Gain(0); // Start at 0, will transition
-                mixGain.connect(this.masterGain);
-                
-                // Get pitch and volume from position
-                const cell = cells[areaNum - 1];
-                if (!cell) return;
-                
-                const rect = cell.getBoundingClientRect();
-                const relativeX = this.currentX - rect.left;
-                const relativeY = this.currentY - rect.top;
-                const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                const normalizedY = Math.max(0, Math.min(1, relativeY / rect.height));
-                
-                const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                const pitchOffset = 0.5 - (normalizedY * 1.0);
-                
-                // Create voices based on area type
-                let voices = [];
-                const areaType = ((areaNum - 1) % 4) + 1;
-                if (areaType === 1) {
-                    voices = this.synth.createArea1Voices(pitchOffset, volumeMultiplier, mixGain);
-                } else if (areaType === 2) {
-                    voices = this.synth.createArea2Voices(pitchOffset, volumeMultiplier, mixGain);
-                } else if (areaType === 3) {
-                    voices = this.synth.createArea3Voices(pitchOffset, volumeMultiplier, mixGain);
+            if (panelIndex === 0) {
+                // Previous chord
+                const prevIndex = (currentChordIndex - 1 + parsedChords.length) % parsedChords.length;
+                return parsedChords[prevIndex];
+            } else if (panelIndex === 3) {
+                // Next chord
+                const nextIndex = (currentChordIndex + 1) % parsedChords.length;
+                return parsedChords[nextIndex];
+            } else {
+                // Current chord (panels 1 and 2)
+                return parsedChords[currentChordIndex];
+            }
+        }
+
+        // ========== SETUP CHORD EDITING UI ==========
+        function setupChordEditing() {
+            const toggleBtn = document.getElementById('chordEditToggle');
+            const closeBtn = document.getElementById('closeChordEdit');
+            const chordEditing = document.getElementById('chord-editing');
+            const chordInput = document.getElementById('chordInput');
+
+            toggleBtn.addEventListener('click', () => {
+                chordEditing.classList.toggle('hidden');
+            });
+
+            closeBtn.addEventListener('click', () => {
+                chordEditing.classList.add('hidden');
+            });
+
+            chordInput.addEventListener('input', () => {
+                const input = chordInput.value;
+                parsedChords = ChordParser.parseChords(input);
+                if (parsedChords.length > 0) {
+                    currentChordIndex = 0;
+                    updateChordDisplay();
+                    updateGridBoxesWithCurrentChord();
+                    updatePurplePanelLabels();
                 } else {
-                    voices = this.synth.createArea4Voices(pitchOffset, volumeMultiplier, mixGain);
+                    updateChordDisplay();
+                    updatePurplePanelLabels();
                 }
+            });
+
+            // Setup purple panel touch/mouse handlers for sustain/release
+            const topPanels = document.querySelectorAll('.top-panel');
+            topPanels.forEach((panel, index) => {
+                let isActive = false;
                 
-                this.areaSounds.set(areaNum, {
-                    voices: voices,
-                    mixGain: mixGain,
-                    mixPercent: 0,
-                    pitchOffset: pitchOffset,
-                    volumeMultiplier: volumeMultiplier
-                });
-                
-                // Track in history
-                this.areaHistory.push(areaNum);
-                // Keep history limited
-                if (this.areaHistory.length > 10) {
-                    this.areaHistory.shift();
-                }
-                
-                // If this is the current cell, set mix to 100% for this area type
-                if (areaNum === this.currentCell) {
-                    const areaType = ((areaNum - 1) % 4) + 1;
-                    this.areaMixRatios[areaType] = 100;
-                    this.areaMixDirections[areaType] = 'none';
-                    this.activeAreas.add(areaNum);
-                    mixGain.gain.rampTo(1.0, 0.05);
+                // Touch events
+                panel.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (parsedChords.length === 0) return;
                     
-                    // Update debug display with initial values
-                    const initialVol = volumeMultiplier * 100;
-                    this.updateDebugDisplay([{
-                        areaNum: areaNum,
-                        areaType: areaType,
-                        vol: initialVol,
-                        mix: 100,
-                        isCurrent: true
-                    }], areaNum);
-                }
-            }
-            
-            // Update position and handle area transitions
-            updatePosition(x, y, cell) {
-                // Mark activity for heartbeat
-                this.markActivity();
-                
-                this.currentX = x;
-                this.currentY = y;
-                
-                // Update dot visual position
-                this.dot.style.left = x + 'px';
-                this.dot.style.top = y + 'px';
-                
-                // Update debug info position
-                if (this.debugInfo) {
-                    this.debugInfo.style.left = x + 'px';
-                    this.debugInfo.style.top = y + 'px';
-                }
-                
-                if (cell) {
-                    const cellNum = parseInt(cell.dataset.cell);
-                    const rect = cell.getBoundingClientRect();
-                    const relativeX = x - rect.left;
-                    const relativeY = y - rect.top;
-                    const normalizedX = Math.max(0, Math.min(1, relativeX / rect.width));
-                    const normalizedY = Math.max(0, Math.min(1, relativeY / rect.height));
+                    isActive = true;
                     
-                    // Update size
-                    const minSize = 20;
-                    const maxSize = 40;
-                    const size = minSize + (normalizedX * (maxSize - minSize));
-                    this.dot.style.width = size + 'px';
-                    this.dot.style.height = size + 'px';
-                    
-                    // Update pitch and volume for current area
-                    const volumeMultiplier = 0.2 + (normalizedX * 0.8);
-                    const pitchOffset = 0.5 - (normalizedY * 1.0);
-                    
-                    // Check if we're in a new area
-                    if (cellNum !== this.currentCell) {
-                        const oldCell = this.currentCell;
-                        this.currentCell = cellNum;
-                        
-                        // Add new area sound if needed
-                        if (!this.areaSounds.has(cellNum)) {
-                            this.addAreaSound(cellNum);
-                        }
-                        
-                        // Update mix directions for crossfade (by area type, not area number)
-                        const oldAreaType = oldCell ? ((oldCell - 1) % 4) + 1 : 0;
-                        const newAreaType = ((cellNum - 1) % 4) + 1;
-                        
-                        if (oldAreaType > 0 && oldAreaType !== newAreaType) {
-                            this.areaMixDirections[oldAreaType] = 'down';
-                        }
-                        this.areaMixDirections[newAreaType] = 'up';
-                        this.activeAreas.add(cellNum);
+                    // Navigate if needed
+                    if (index === 0) {
+                        navigateToPreviousChord();
+                    } else if (index === 3) {
+                        navigateToNextChord();
                     }
                     
-                    // Update pitch and volume for current area's voices
-                    const currentSound = this.areaSounds.get(cellNum);
-                    if (currentSound) {
-                        currentSound.pitchOffset = pitchOffset;
-                        currentSound.volumeMultiplier = volumeMultiplier;
-                        
-                        // Update each voice
-                        currentSound.voices.forEach((voice, index) => {
-                            if (voice && voice.oscillator && voice.volumeGain) {
-                                const baseFrequencies = [261.63, 329.63, 392.00];
-                                const baseFreq = baseFrequencies[index];
-                                const pitchMultiplier = Math.pow(2, pitchOffset / 12);
-                                const newFrequency = baseFreq * pitchMultiplier;
-                                
-                                voice.oscillator.frequency.rampTo(newFrequency, 0.05);
-                                
-                                if (voice.oscillator2) {
-                                    voice.oscillator2.frequency.rampTo(newFrequency * 2, 0.05);
-                                }
-                                if (voice.oscillator3) {
-                                    voice.oscillator3.frequency.rampTo(newFrequency * 3, 0.05);
-                                }
-                                if (voice.oscillator4) {
-                                    voice.oscillator4.frequency.rampTo(newFrequency * 4, 0.05);
-                                }
-                                
-                                // Update volume (account for area 4's 1.5x boost)
-                                const vol = (cellNum % 4 === 0) ? volumeMultiplier * 1.5 : volumeMultiplier;
-                                voice.volumeGain.gain.rampTo(vol, 0.05);
+                    // Start sound
+                    const chord = getChordForPanel(index);
+                    if (chord) {
+                        startPurplePanelChord(index, chord);
+                    }
+                }, { passive: false });
+                
+                panel.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (isActive) {
+                        releasePurplePanelChord(index);
+                        isActive = false;
+                    }
+                }, { passive: false });
+                
+                panel.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    if (isActive) {
+                        releasePurplePanelChord(index);
+                        isActive = false;
+                    }
+                }, { passive: false });
+                
+                // Mouse events (for desktop)
+                panel.addEventListener('mousedown', (e) => {
+                    if (parsedChords.length === 0) return;
+                    
+                    isActive = true;
+                    
+                    // Navigate if needed
+                    if (index === 0) {
+                        navigateToPreviousChord();
+                    } else if (index === 3) {
+                        navigateToNextChord();
+                    }
+                    
+                    // Start sound
+                    const chord = getChordForPanel(index);
+                    if (chord) {
+                        startPurplePanelChord(index, chord);
+                    }
+                });
+                
+                panel.addEventListener('mouseup', () => {
+                    if (isActive) {
+                        releasePurplePanelChord(index);
+                        isActive = false;
+                    }
+                });
+                
+                panel.addEventListener('mouseleave', () => {
+                    if (isActive) {
+                        releasePurplePanelChord(index);
+                        isActive = false;
+                    }
+                });
+            });
+        }
+
+        class DottieApp {
+            constructor() {
+                this.bpm = 120;
+                this.isPlaying = false;
+                this.dotties = [];
+                this.canvas = document.getElementById('canvas');
+                this.pulseDivisors = [240, 120, 60, 40, 20, 15];
+                this.audioContextStarted = false;
+                this.toneJsLoaded = false;
+                this.masterStartTime = null; // Universal start time for all dots
+                this.volumeCycleMode = 'none'; // 'none', 'ascend', 'descend', 'triangle'
+                this.volumeCycleInterval = null; // Interval ID for volume cycling
+                this.init();
+            }
+
+            loadToneJS() {
+                return new Promise((resolve, reject) => {
+                    if (window.Tone) {
+                        this.toneJsLoaded = true;
+                        resolve();
+                        return;
+                    }
+                    if (this.toneJsLoaded) {
+                        resolve();
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js';
+                    script.onload = () => {
+                        this.toneJsLoaded = true;
+                        resolve();
+                    };
+                    script.onerror = () => {
+                        reject(new Error('Failed to load Tone.js'));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+
+            init() {
+                this.setupControls();
+                this.createGridBoxes();
+                this.createDotties();
+                // Don't access Tone objects here - wait for user to toggle BPM on
+            }
+
+            createGridBoxes() {
+                // Create GridBox instances for the 4 panels
+                window.gridBoxes = [];
+                for (let i = 0; i < 4; i++) {
+                    window.gridBoxes.push(new GridBox(i));
+                }
+            }
+
+            setupControls() {
+                const toggle = document.getElementById('bpmToggle');
+                const slider = document.getElementById('bpmSlider');
+                const valueDisplay = document.getElementById('bpmValue');
+
+                toggle.addEventListener('click', async () => {
+                    this.isPlaying = !this.isPlaying;
+                    toggle.classList.toggle('active', this.isPlaying);
+                    if (this.isPlaying) {
+                        // Load Tone.js and start audio context only on first toggle on
+                        if (!this.audioContextStarted) {
+                            try {
+                                await this.loadToneJS();
+                                Tone.start();
+                                Tone.getDestination().volume.value = -18;
+                                this.audioContextStarted = true;
+                            } catch (error) {
+                                console.error('Failed to load Tone.js:', error);
+                                this.isPlaying = false;
+                                toggle.classList.remove('active');
+                                return;
                             }
-                        });
-                    }
-                }
-                
-                // Update mix percentages
-                this.updateMixPercentages();
-            }
-            
-            // Update mix percentages towards targets (matching demoold.html's mechanism)
-            updateMixPercentages() {
-                const currentTime = performance.now();
-                const deltaTime = (currentTime - this.lastUpdateTime) / 1000;
-                this.lastUpdateTime = currentTime;
-                
-                const clampedDeltaTime = Math.max(0.001, Math.min(deltaTime, 0.1));
-                const changePerFrame = this.MIXRATIO_RATE * clampedDeltaTime;
-                
-                // Get current area type (1-4)
-                const currentAreaType = this.currentCell ? ((this.currentCell - 1) % 4) + 1 : 0;
-                
-                // Update directions based on current area type
-                for (let areaType = 1; areaType <= 4; areaType++) {
-                    // Check if any area with this type has sound
-                    let hasSoundOfType = false;
-                    this.areaSounds.forEach((soundData, areaNum) => {
-                        const areaTypeForArea = ((areaNum - 1) % 4) + 1;
-                        if (areaTypeForArea === areaType) {
-                            hasSoundOfType = true;
                         }
-                    });
-                    
-                    const isCurrentType = (areaType === currentAreaType);
-                    
-                    if (isCurrentType && hasSoundOfType) {
-                        if (this.areaMixRatios[areaType] < 100) {
-                            this.areaMixDirections[areaType] = 'up';
-                        } else {
-                            this.areaMixDirections[areaType] = 'none';
-                        }
-                    } else if (hasSoundOfType) {
-                        if (this.areaMixRatios[areaType] > 0) {
-                            this.areaMixDirections[areaType] = 'down';
-                        } else {
-                            this.areaMixDirections[areaType] = 'none';
-                        }
-                    }
-                }
-                
-                // Update mix ratios by area type (1-4)
-                for (let areaType = 1; areaType <= 4; areaType++) {
-                    const direction = this.areaMixDirections[areaType] || 'none';
-                    let newMix = this.areaMixRatios[areaType];
-                    
-                    if (direction === 'up') {
-                        newMix = Math.min(100, newMix + changePerFrame);
-                    } else if (direction === 'down') {
-                        newMix = Math.max(0, newMix - changePerFrame);
-                    }
-                    
-                    this.areaMixRatios[areaType] = newMix;
-                    
-                    // Apply this mix ratio to all areas of this type
-                    this.areaSounds.forEach((soundData, areaNum) => {
-                        const areaTypeForArea = ((areaNum - 1) % 4) + 1;
-                        if (areaTypeForArea === areaType) {
-                            soundData.mixPercent = newMix;
-                            // Update gain (convert percentage to 0-1 range)
-                            soundData.mixGain.gain.rampTo(newMix / 100, 0.05);
-                        }
-                    });
-                }
-                
-                // Collect all active areas with their volumes and mix percentages
-                const activeAreaInfo = [];
-                
-                this.areaSounds.forEach((soundData, areaNum) => {
-                    const areaType = ((areaNum - 1) % 4) + 1;
-                    const mix = this.areaMixRatios[areaType];
-                    
-                    // Calculate volume for this area (only if mix > 0)
-                    if (mix > 0.1) {
-                        // Performance: Simplified volume calculation (cache mixGain value)
-                        const mixVol = mix / 100;
-                        const baseVol = soundData.volumeMultiplier || 0;
-                        const maxVolume = baseVol * mixVol; // Simplified calculation
-                        
-                        const isCurrentArea = (areaNum === this.currentCell);
-                        activeAreaInfo.push({
-                            areaNum: areaNum,
-                            areaType: areaType,
-                            vol: maxVolume * 100, // Convert to percentage
-                            mix: mix,
-                            isCurrent: isCurrentArea
-                        });
-                    }
-                    
-                    // Cleanup if mix reaches 0 (more aggressive cleanup for performance)
-                    if (mix <= 0.1 && !this.activeAreas.has(areaNum)) {
-                        // Immediate cleanup - don't wait
-                        this.cleanupAreaSound(areaNum);
-                    } else if (mix < 5 && !this.activeAreas.has(areaNum) && countTotalActiveVoices() > MAX_TOTAL_VOICES * 0.8) {
-                        // Aggressive cleanup when approaching voice limit
-                        this.cleanupAreaSound(areaNum);
+                        this.start();
+                    } else {
+                        this.stop();
                     }
                 });
-                
-                // Sort by area number for consistent display
-                activeAreaInfo.sort((a, b) => a.areaNum - b.areaNum);
-                
-                // Update debug display with all active areas (throttled for performance)
-                if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 100) {
-                    // Only update debug display every 100ms
-                    this.updateDebugDisplay(activeAreaInfo, this.currentCell);
-                    this.lastDebugUpdate = currentTime;
+
+                slider.addEventListener('input', (e) => {
+                    this.bpm = parseInt(e.target.value);
+                    valueDisplay.textContent = this.bpm;
+                    if (this.isPlaying) this.updateBPM();
+                });
+
+                const volumeCycleSelect = document.getElementById('volumeCycleSelect');
+                if (volumeCycleSelect) {
+                    volumeCycleSelect.addEventListener('change', (e) => {
+                        this.volumeCycleMode = e.target.value;
+                        if (this.isPlaying) {
+                            this.startVolumeCycle();
+                        }
+                    });
                 }
+
+                toggle.classList.toggle('active', this.isPlaying);
+                valueDisplay.textContent = this.bpm;
+            }
+
+            createDotties() {
+                // Create 2 of each dot type (12 dots total)
+                this.pulseDivisors.forEach((divisor, index) => {
+                    // First instance
+                    const dottie1 = new Dottie(this.canvas, divisor, index);
+                    this.dotties.push(dottie1);
+                    // Second instance
+                    const dottie2 = new Dottie(this.canvas, divisor, index + 6);
+                    this.dotties.push(dottie2);
+                });
+            }
+
+            start() {
+                // Set master start time for synchronization
+                this.masterStartTime = performance.now();
+                
+                // Initialize audio for all dotties when starting
+                this.dotties.forEach(dottie => {
+                    if (window.Tone) {
+                        dottie.initializeAudio();
+                    }
+                    dottie.start(this.bpm, this.masterStartTime);
+                });
+                
+                // Start volume cycling update loop
+                this.startVolumeCycle();
             }
             
-            // Update debug display for this dot - show all active areas
-            updateDebugDisplay(activeAreaInfo, currentCell) {
-                if (!this.debugInfo) return;
+            startVolumeCycle() {
+                if (this.volumeCycleInterval) {
+                    clearInterval(this.volumeCycleInterval);
+                }
                 
-                if (activeAreaInfo.length === 0) {
-                    this.debugInfo.textContent = `Area: ${currentCell || '?'}\nNo active sounds`;
+                if (this.volumeCycleMode === 'none') {
+                    // Reset to base volume
+                    if (window.Tone) {
+                        Tone.getDestination().volume.value = -18;
+                    }
                     return;
                 }
                 
-                // Build display text
-                let text = `Area: ${currentCell || '?'}\n`;
-                
-                activeAreaInfo.forEach((info, index) => {
-                    const marker = info.isCurrent ? '→' : ' ';
-                    text += `${marker}A${info.areaNum}: Vol${info.vol.toFixed(0)}% Mix${info.mix.toFixed(0)}%\n`;
-                });
-                
-                // Remove trailing newline
-                text = text.trim();
-                
-                this.debugInfo.textContent = text;
-            }
-            
-            cleanupAreaSound(areaNum) {
-                const soundData = this.areaSounds.get(areaNum);
-                if (!soundData) return;
-                
-                // Immediately stop and dispose all voices (more aggressive cleanup)
-                soundData.voices.forEach(voice => {
-                    if (voice) {
-                        // Stop oscillators immediately
-                        try {
-                            if (voice.oscillator) voice.oscillator.stop();
-                            if (voice.oscillator2) voice.oscillator2.stop();
-                            if (voice.oscillator3) voice.oscillator3.stop();
-                            if (voice.oscillator4) voice.oscillator4.stop();
-                            if (voice.noise) voice.noise.stop();
-                        } catch (e) {
-                            // Ignore errors if already stopped
-                        }
-                        // Dispose nodes immediately
-                        try {
-                            if (voice.oscillator) voice.oscillator.dispose();
-                            if (voice.oscillator2) voice.oscillator2.dispose();
-                            if (voice.oscillator3) voice.oscillator3.dispose();
-                            if (voice.oscillator4) voice.oscillator4.dispose();
-                            if (voice.envelope) voice.envelope.dispose();
-                            if (voice.envelope2) voice.envelope2.dispose();
-                            if (voice.envelope3) voice.envelope3.dispose();
-                            if (voice.envelope4) voice.envelope4.dispose();
-                            if (voice.noise) voice.noise.dispose();
-                            if (voice.noiseEnv) voice.noiseEnv.dispose();
-                            if (voice.pan) voice.pan.dispose();
-                            if (voice.volumeGain) voice.volumeGain.dispose();
-                            if (voice.filter) voice.filter.dispose();
-                        } catch (e) {
-                            // Ignore disposal errors
-                        }
-                    }
-                });
-                
-                // Dispose gain immediately
-                try {
-                    soundData.mixGain.disconnect();
-                    soundData.mixGain.dispose();
-                } catch (e) {
-                    // Ignore disposal errors
-                }
-                
-                this.areaSounds.delete(areaNum);
-                // Remove from history
-                const historyIdx = this.areaHistory.indexOf(areaNum);
-                if (historyIdx >= 0) {
-                    this.areaHistory.splice(historyIdx, 1);
-                }
-                // Note: Don't reset areaMixRatios here - they're shared by area type
-                // They'll be reset naturally when all areas of that type are cleaned up
-            }
-            
-            // Start fade and release sounds
-            startFade() {
-                if (this.isFading) return;
-                this.isFading = true;
-                
-                // Abort any pending operations
-                this.abortController.abort();
-                
-                // Clear heartbeat interval
-                if (this.heartbeatInterval) {
-                    clearInterval(this.heartbeatInterval);
-                    this.heartbeatInterval = null;
-                }
-                
-                // Track fade start time for safety cleanup
-                this.fadeStartTime = performance.now();
-                
-                // Store timeout ID for cleanup
-                this.fadeTimeoutId = null;
-                
-                // Release all sounds using ADSR release (matching demoold.html)
-                this.areaSounds.forEach((soundData, areaNum) => {
-                    soundData.voices.forEach(voice => {
-                        if (voice) {
-                            if (voice.envelope) voice.envelope.triggerRelease();
-                            if (voice.envelope2) voice.envelope2.triggerRelease();
-                            if (voice.envelope3) voice.envelope3.triggerRelease();
-                            if (voice.envelope4) voice.envelope4.triggerRelease();
-                            if (voice.noiseEnv) voice.noiseEnv.triggerRelease();
-                        }
-                    });
-                });
-                
-                // Start visual fade (faster fade - 0.5s instead of 2s)
-                this.dot.style.transition = 'opacity 0.5s ease-out';
-                this.dot.style.opacity = '0';
-                
-                // Cleanup after fade (reduced to 0.6s to match visual fade)
-                this.fadeTimeoutId = setTimeout(() => {
-                    this.cleanupCompletely();
-                }, 600);
-            }
-            
-            // Complete cleanup - remove dot and all sounds
-            cleanupCompletely() {
-                // Abort any pending operations
-                this.abortController.abort();
-                
-                // Clear timeout if it exists
-                if (this.fadeTimeoutId) {
-                    clearTimeout(this.fadeTimeoutId);
-                    this.fadeTimeoutId = null;
-                }
-                
-                // Clear heartbeat interval
-                if (this.heartbeatInterval) {
-                    clearInterval(this.heartbeatInterval);
-                    this.heartbeatInterval = null;
-                }
-                
-                // CRITICAL: Cleanup all area sounds FIRST (before removing visual elements)
-                // This ensures sounds are always stopped when dots are removed
-                this.areaSounds.forEach((soundData, areaNum) => {
-                    this.cleanupAreaSound(areaNum);
-                });
-                
-                // Remove reverse lookup mappings
-                if (this.dot) {
-                    dotToMixerMap.delete(this.dot);
-                }
-                if (this.debugInfo) {
-                    dotToMixerMap.delete(this.debugInfo);
-                }
-                
-                // Remove visual elements immediately
-                if (this.dot && this.dot.parentNode) {
-                    this.dot.parentNode.removeChild(this.dot);
-                }
-                if (this.debugInfo && this.debugInfo.parentNode) {
-                    this.debugInfo.parentNode.removeChild(this.debugInfo);
-                }
-                
-                // Dispose master gain
-                try {
-                    this.masterGain.disconnect();
-                    this.masterGain.dispose();
-                } catch (e) {
-                    // Ignore disposal errors
-                }
-            }
-        }
-
-        // Initialize synth
-        let synth = null;
-        let audioInitialized = false;
-
-        // Initialize audio context - only called from start button
-        // Mobile-friendly: Plays silent sound to unlock audio context
-        async function initAudio() {
-            if (audioInitialized) return;
-            
-            try {
-                // Start Tone.js audio context
-                await Tone.start();
-                
-                // MOBILE FIX: Check if context is suspended and resume if needed
-                const context = Tone.context;
-                if (context.state === 'suspended') {
-                    console.log('Audio context suspended, attempting to resume...');
-                    await context.resume();
-                }
-                
-                // MOBILE FIX: Play a silent sound immediately to "unlock" audio context
-                // This is required on iOS and some Android browsers
-                const unlockTone = new Tone.Oscillator(0, 'sine').toDestination();
-                unlockTone.volume.value = -Infinity; // Completely silent
-                unlockTone.start();
-                unlockTone.stop('+0.01'); // Stop after 10ms
-                
-                // Small delay to ensure unlock sound completes
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Verify context is running
-                if (context.state !== 'running') {
-                    throw new Error('Audio context failed to start. State: ' + context.state);
-                }
-                
-                // Create synth
-                synth = new WaterSynthTone();
-                audioInitialized = true;
-                console.log('Audio initialized successfully. Context state:', context.state);
-                
-                // Hide the startup popup
-                const popup = document.getElementById('startup-popup');
-                if (popup) {
-                    popup.classList.add('hidden');
-                }
-                
-                // Update button text to show success
-                const startButton = document.getElementById('start-button');
-                if (startButton) {
-                    startButton.textContent = 'Audio Ready!';
-                    startButton.style.background = 'linear-gradient(135deg, #4ecdc4, #3a9a8a)';
-                    setTimeout(() => {
-                        startButton.textContent = 'Start Audio';
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('Failed to initialize audio:', error);
-                console.error('Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack,
-                    userAgent: navigator.userAgent,
-                    contextState: Tone.context?.state
-                });
-                
-                // More helpful error message for mobile
-                const isMobile = /mobile|android|iphone|ipad/i.test(navigator.userAgent);
-                let errorMsg = 'Failed to initialize audio.';
-                
-                if (isMobile) {
-                    errorMsg = 'Audio failed to start on mobile.\n\nPlease try:\n1. Check device volume\n2. Turn off silent mode\n3. Tap the button again\n4. Check browser permissions';
-                } else {
-                    errorMsg = 'Failed to initialize audio. Please try again.';
-                }
-                
-                alert(errorMsg);
-                
-                // Show button error state
-                const startButton = document.getElementById('start-button');
-                if (startButton) {
-                    const originalText = startButton.textContent;
-                    startButton.textContent = 'Click to Retry';
-                    startButton.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
-                    setTimeout(() => {
-                        startButton.textContent = originalText;
-                        startButton.style.background = 'linear-gradient(135deg, #4ecdc4, #3a9a8a)';
-                    }, 3000);
-                }
-                
-                // Reset flag so user can retry
-                audioInitialized = false;
-            }
-        }
-
-        // Setup start button - use both click and touchstart for mobile compatibility
-        const startButton = document.getElementById('start-button');
-        if (startButton) {
-            // Use touchstart for mobile (fires before click, more reliable)
-            startButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                initAudio();
-            }, { passive: false });
-            
-            // Use click for desktop
-            startButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                initAudio();
-            });
-        }
-
-        // Get all grid cells
-        const cells = document.querySelectorAll('.grid-cell');
-
-        // Multitouch tracking - using DotMixer instances
-        const dotMixers = new Map(); // Map of touchId -> DotMixer instance
-        const dotToMixerMap = new WeakMap(); // Map of dot element -> DotMixer (for finding mixers from orphaned dots)
-        
-        // GLOBAL TOUCH TRACKER: Track all active touches from browser
-        // This helps detect when browser loses track of touches
-        const globalActiveTouches = new Set(); // Set of touch identifiers currently active
-        
-        // Performance optimization: Limit total active voices globally
-        const MAX_TOTAL_VOICES = 150; // Limit total voices across all dots (6 dots * ~25 voices each)
-        
-        // Track total active voices
-        function countTotalActiveVoices() {
-            let total = 0;
-            dotMixers.forEach((mixer) => {
-                mixer.areaSounds.forEach((soundData) => {
-                    total += soundData.voices.length;
-                });
-            });
-            return total;
-        }
-        
-        // GLOBAL CLEANUP: Force cleanup all orphaned mixers
-        function forceCleanupOrphanedMixers() {
-            // Get all currently active touches from browser
-            const browserActiveTouches = new Set();
-            
-            // We'll update this in touchmove/touchend handlers
-            // For now, check against our global tracker
-            
-            // Cleanup any mixers whose touches are no longer in browser's active list
-            dotMixers.forEach((mixer, touchId) => {
-                // If touch is not in global tracker and not fading, it's orphaned
-                if (!globalActiveTouches.has(touchId) && !mixer.isFading) {
-                    console.warn(`Force cleaning orphaned mixer: ${touchId}`);
-                    mixer.startFade();
-                    setTimeout(() => {
-                        dotMixers.delete(touchId);
-                    }, 700);
-                }
-            });
-        }
-
-        // Helper function to find cell from coordinates
-        function findCellFromCoordinates(x, y) {
-            const gridContainer = document.querySelector('.grid-container');
-            if (!gridContainer) return null;
-            
-            const rect = gridContainer.getBoundingClientRect();
-            const relativeX = x - rect.left;
-            const relativeY = y - rect.top;
-            
-            const cellWidth = rect.width / 4;
-            const cellHeight = rect.height / 4;
-            
-            const col = Math.floor(relativeX / cellWidth);
-            const row = Math.floor(relativeY / cellHeight);
-            
-            if (col < 0 || col >= 4 || row < 0 || row >= 4) return null;
-            
-            const cellIndex = row * 4 + col;
-            return cells[cellIndex] || null;
-        }
-
-        // Multitouch-aware touch handlers
-        function handleTouchStart(e) {
-            e.preventDefault();
-            
-            // MOBILE FIX: If audio not initialized, try to initialize on first touch
-            if (!audioInitialized) {
-                initAudio().catch(err => {
-                    console.error('Failed to initialize audio on touch:', err);
-                });
-                return; // Wait for audio to initialize
-            }
-            
-            // MOBILE FIX: Resume audio context if suspended (can happen on mobile)
-            if (Tone.context.state === 'suspended') {
-                Tone.context.resume().then(() => {
-                    console.log('Audio context resumed on touch');
-                }).catch(err => {
-                    console.error('Failed to resume audio context:', err);
-                });
-            }
-            
-            if (!synth) return;
-            
-            // Process all touches
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const touchId = touch.identifier;
-                
-                // Add to global tracker
-                globalActiveTouches.add(touchId);
-                
-                const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
-                
-                if (cell) {
-                    // Limit to maximum 6 dots
-                    const MAX_DOTS = 6;
-                    if (dotMixers.size >= MAX_DOTS) {
-                        const oldestTouchId = dotMixers.keys().next().value;
-                        if (oldestTouchId !== undefined) {
-                            const oldestMixer = dotMixers.get(oldestTouchId);
-                            if (oldestMixer) {
-                                oldestMixer.startFade();
-                            }
-                            dotMixers.delete(oldestTouchId);
-                            globalActiveTouches.delete(oldestTouchId);
+                // Update master volume based on cycle position
+                const updateVolume = () => {
+                    if (!window.Tone || !this.masterStartTime) return;
+                    
+                    // Calculate position in 240/bpm cycle (0 to 1)
+                    const cycle240Ms = (240 / this.bpm) * 1000;
+                    const timeSinceStart = performance.now() - this.masterStartTime;
+                    const cyclePosition = (timeSinceStart % cycle240Ms) / cycle240Ms;
+                    
+                    let volumeMultiplier = 1.0;
+                    if (this.volumeCycleMode === 'ascend') {
+                        // Gradually get louder: 0.3 to 1.0
+                        volumeMultiplier = 0.3 + (cyclePosition * 0.7);
+                    } else if (this.volumeCycleMode === 'descend') {
+                        // Gradually get quieter: 1.0 to 0.3
+                        volumeMultiplier = 1.0 - (cyclePosition * 0.7);
+                    } else if (this.volumeCycleMode === 'triangle') {
+                        // Loudest in middle: 0.3 -> 1.0 -> 0.3
+                        if (cyclePosition < 0.5) {
+                            volumeMultiplier = 0.3 + (cyclePosition * 2 * 0.7);
+                        } else {
+                            volumeMultiplier = 1.0 - ((cyclePosition - 0.5) * 2 * 0.7);
                         }
                     }
                     
-                    const cellNum = parseInt(cell.dataset.cell);
-                    const mixer = new DotMixer(touchId, touch.clientX, touch.clientY, cellNum, synth);
-                    dotMixers.set(touchId, mixer);
+                    // Convert multiplier to dB (base -18dB, range -18 to -6.5dB approximately)
+                    // volumeMultiplier 0.3 = -10.5dB, 1.0 = 0dB relative to base
+                    const baseVolume = -18;
+                    const volumeRange = 11.5; // From -18 to -6.5
+                    const targetVolume = baseVolume + (volumeRange * (volumeMultiplier - 0.3) / 0.7);
+                    Tone.getDestination().volume.value = targetVolume;
+                };
+                
+                // Update every 16ms (60fps) for smooth transitions
+                this.volumeCycleInterval = setInterval(updateVolume, 16);
+                updateVolume(); // Initial update
+            }
+
+            stop() {
+                this.masterStartTime = null;
+                this.dotties.forEach(dottie => dottie.stop());
+                
+                // Stop volume cycling
+                if (this.volumeCycleInterval) {
+                    clearInterval(this.volumeCycleInterval);
+                    this.volumeCycleInterval = null;
                 }
+                
+                // Reset to base volume
+                if (window.Tone) {
+                    Tone.getDestination().volume.value = -18;
+                }
+            }
+
+            updateBPM() {
+                // Keep the same master start time when updating BPM to maintain sync
+                const masterStartTime = this.masterStartTime || performance.now();
+                this.dotties.forEach(dottie => dottie.updateBPM(this.bpm, masterStartTime));
             }
         }
 
-        function handleTouchMove(e) {
-            e.preventDefault();
-            
-            // Update global tracker with current browser touches
-            const activeTouchIds = new Set();
-            for (let i = 0; i < e.touches.length; i++) {
-                const touchId = e.touches[i].identifier;
-                activeTouchIds.add(touchId);
-                globalActiveTouches.add(touchId); // Keep in global tracker
-            }
-            
-            // Remove touches from global tracker if they're not in browser's list
-            globalActiveTouches.forEach(touchId => {
-                if (!activeTouchIds.has(touchId)) {
-                    globalActiveTouches.delete(touchId);
-                }
-            });
-            
-            // Remove orphaned dots (touches that are no longer in the active list)
-            dotMixers.forEach((mixer, touchId) => {
-                if (!activeTouchIds.has(touchId) && !mixer.isFading) {
-                    console.warn(`Orphaned touch detected in touchmove: ${touchId}`);
-                    mixer.startFade();
-                    setTimeout(() => {
-                        dotMixers.delete(touchId);
-                        globalActiveTouches.delete(touchId);
-                    }, 700);
-                }
-            });
-            
-            // Update all active touches
-            for (let i = 0; i < e.touches.length; i++) {
-                const touch = e.touches[i];
-                const touchId = touch.identifier;
-                
-                const mixer = dotMixers.get(touchId);
-                if (!mixer || mixer.isFading) continue;
-                
-                const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
-                mixer.updatePosition(touch.clientX, touch.clientY, cell);
-            }
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            
-            // Process all touches
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const touchId = touch.identifier;
-                
-                // Remove from global tracker
-                globalActiveTouches.delete(touchId);
-                
-                const mixer = dotMixers.get(touchId);
-                if (mixer) {
-                    mixer.startFade();
-                    // Remove from map after fade completes
-                    setTimeout(() => {
-                        dotMixers.delete(touchId);
-                    }, 700); // Match the 600ms fade + small buffer
-                }
-            }
-        }
-
-        // Mouse events for desktop (simulating touch)
-        let mouseTouchId = null;
-        
-        document.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            if (!audioInitialized || !synth) return;
-            
-            const cell = findCellFromCoordinates(e.clientX, e.clientY);
-            if (!cell) return;
-            
-            // Limit to maximum 6 dots
-            const MAX_DOTS = 6;
-            if (dotMixers.size >= MAX_DOTS) {
-                const oldestTouchId = dotMixers.keys().next().value;
-                if (oldestTouchId !== undefined) {
-                    const oldestMixer = dotMixers.get(oldestTouchId);
-                    if (oldestMixer) {
-                        oldestMixer.startFade();
-                    }
-                    dotMixers.delete(oldestTouchId);
-                }
-            }
-            
-            mouseTouchId = 'mouse_' + Date.now();
-            const cellNum = parseInt(cell.dataset.cell);
-            const mixer = new DotMixer(mouseTouchId, e.clientX, e.clientY, cellNum, synth);
-            dotMixers.set(mouseTouchId, mixer);
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (e.buttons === 1 && mouseTouchId) {
-                const mixer = dotMixers.get(mouseTouchId);
-                if (mixer && !mixer.isFading) {
-                    const cell = findCellFromCoordinates(e.clientX, e.clientY);
-                    mixer.updatePosition(e.clientX, e.clientY, cell);
-                }
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            if (mouseTouchId) {
-                const mixer = dotMixers.get(mouseTouchId);
-                if (mixer) {
-                    mixer.startFade();
-                    setTimeout(() => {
-                        dotMixers.delete(mouseTouchId);
-                    }, 700); // Match the 600ms fade + small buffer
-                }
-                mouseTouchId = null;
-            }
-        });
-        
-        // Also handle mouseleave to catch cases where mouse leaves window
-        document.addEventListener('mouseleave', () => {
-            if (mouseTouchId) {
-                const mixer = dotMixers.get(mouseTouchId);
-                if (mixer) {
-                    mixer.startFade();
-                    setTimeout(() => {
-                        dotMixers.delete(mouseTouchId);
-                    }, 700);
-                }
-                mouseTouchId = null;
-            }
-        });
-
-        // Add global touch event listeners
-        document.addEventListener('touchstart', handleTouchStart, { passive: false });
-        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        document.addEventListener('touchend', handleTouchEnd, { passive: false });
-        document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-
-        // Continuous update loop for mix percentages (optimized with requestAnimationFrame)
-        let animationFrameId = null;
-        function updateAllDotMixers() {
-            dotMixers.forEach((mixer) => {
-                if (!mixer.isFading) {
-                    mixer.updateMixPercentages();
-                }
-            });
-            
-            // Continue animation loop
-            animationFrameId = requestAnimationFrame(updateAllDotMixers);
-        }
-        
-        // Start animation loop
-        animationFrameId = requestAnimationFrame(updateAllDotMixers);
-        
-        // Periodic cleanup check - ensures all dots are properly tracked and removed
-        // More aggressive cleanup with multiple strategies
-        // OPTIMIZED: Cache DOM queries and skip expensive checks when possible
-        let lastDotCount = 0;
-        let lastDebugInfoCount = 0;
-        
-        setInterval(() => {
-            // Strategy 1: Force cleanup orphaned mixers (lightweight - just Map iteration)
-            forceCleanupOrphanedMixers();
-            
-            // Strategy 2: Original orphan detection
-            // Check for any dots in DOM that aren't in our map
-            // OPTIMIZATION: Only query DOM if we suspect orphans (count mismatch)
-            const allDots = document.querySelectorAll('.touch-dot');
-            const allDebugInfos = document.querySelectorAll('.dot-debug-info');
-            
-            // Quick check: if counts match expected, skip expensive iteration
-            const currentDotCount = allDots.length;
-            const currentDebugInfoCount = allDebugInfos.length;
-            const expectedCount = dotMixers.size;
-            
-            // Only do expensive checks if counts don't match OR if we have dots but no mixers
-            const needsFullCheck = (currentDotCount !== expectedCount) || 
-                                  (currentDebugInfoCount !== expectedCount) ||
-                                  (currentDotCount > 0 && dotMixers.size === 0);
-            
-            if (!needsFullCheck && currentDotCount === lastDotCount && currentDebugInfoCount === lastDebugInfoCount) {
-                // Counts match and haven't changed - skip expensive iteration
-                lastDotCount = currentDotCount;
-                lastDebugInfoCount = currentDebugInfoCount;
-                
-                // Still check for stale fades (lightweight)
-                dotMixers.forEach((mixer, touchId) => {
-                    if (mixer.isFading) {
-                        const now = performance.now();
-                        if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
-                            mixer.cleanupCompletely();
-                            dotMixers.delete(touchId);
-                        }
-                    }
-                });
-                return; // Skip expensive DOM iteration
-            }
-            
-            lastDotCount = currentDotCount;
-            lastDebugInfoCount = currentDebugInfoCount;
-            
-            // Find orphaned dots (dots in DOM but not tracked in dotMixers)
-            // CRITICAL: When we find orphaned dots, we must also fade out their sounds
-            allDots.forEach(dot => {
-                let foundMixer = null;
-                let foundTouchId = null;
-                
-                // First, try to find mixer using reverse lookup map
-                const mixerFromMap = dotToMixerMap.get(dot);
-                if (mixerFromMap) {
-                    // Found mixer via reverse lookup
-                    foundMixer = mixerFromMap;
-                    // Find the touchId for this mixer
-                    dotMixers.forEach((mixer, touchId) => {
-                        if (mixer === mixerFromMap) {
-                            foundTouchId = touchId;
-                        }
-                    });
-                } else {
-                    // Fallback: Search through all mixers directly
-                    dotMixers.forEach((mixer, touchId) => {
-                        if (mixer.dot === dot) {
-                            foundMixer = mixer;
-                            foundTouchId = touchId;
-                        }
-                    });
-                }
-                
-                if (!foundMixer && dot.parentNode) {
-                    // Truly orphaned dot - no mixer found at all
-                    // This means the mixer was removed but dot wasn't cleaned up
-                    // Remove it from DOM (sounds should have been cleaned up when mixer was removed)
-                    dot.parentNode.removeChild(dot);
-                    
-                    // Also check for orphaned debug info that might match this dot's position
-                    const dotRect = dot.getBoundingClientRect();
-                    allDebugInfos.forEach(debugInfo => {
-                        const debugRect = debugInfo.getBoundingClientRect();
-                        // If debug info is near the dot's position, it's likely associated
-                        const distance = Math.sqrt(
-                            Math.pow(debugRect.left - dotRect.left, 2) + 
-                            Math.pow(debugRect.top - dotRect.top, 2)
-                        );
-                        if (distance < 50 && debugInfo.parentNode) {
-                            // Likely associated - remove it too
-                            debugInfo.parentNode.removeChild(debugInfo);
-                        }
-                    });
-                }
-                // If foundMixer exists, it's properly tracked - don't interfere with active dragging
-            });
-            
-            // Find orphaned debug infos
-            allDebugInfos.forEach(debugInfo => {
-                let found = false;
-                dotMixers.forEach((mixer) => {
-                    if (mixer.debugInfo === debugInfo) {
-                        found = true;
-                    }
-                });
-                if (!found && debugInfo.parentNode) {
-                    // Orphaned debug info - remove it
-                    debugInfo.parentNode.removeChild(debugInfo);
-                }
-            });
-            
-            // Also check if any mixers have dots that are missing from DOM
-            // This catches cases where dots were removed but mixer still exists
-            // Only check mixers that are already fading (don't interfere with active dragging)
-            dotMixers.forEach((mixer, touchId) => {
-                // Only check mixers that are already fading - don't trigger new fades
-                if (mixer.isFading) {
-                    // Check if fade timeout has passed (safety check)
-                    const now = performance.now();
-                    if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
-                        // Fade should have completed - force cleanup
-                        mixer.cleanupCompletely();
-                        dotMixers.delete(touchId);
-                    }
-                }
-                // Don't check for missing dots on active mixers - let normal touch/mouse events handle cleanup
-            });
-        }, 200); // Check every 200ms (5x per second) - optimized with early exit
-
-        // Cleanup on visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                // Cancel animation frame
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                dotMixers.forEach((mixer) => {
-                    mixer.startFade();
-                });
-                dotMixers.clear();
-            } else {
-                // Restart animation loop when visible again
-                if (!animationFrameId) {
-                    animationFrameId = requestAnimationFrame(updateAllDotMixers);
-                }
-                
-                // MOBILE FIX: Resume audio context if it was suspended
-                if (audioInitialized && Tone.context.state === 'suspended') {
-                    Tone.context.resume().then(() => {
-                        console.log('Audio context resumed after visibility change');
-                    }).catch(err => {
-                        console.error('Failed to resume audio context:', err);
-                    });
-                }
-            }
-        });
-        
-        // MOBILE FIX: Monitor audio context state changes
-        if (Tone.context) {
-            Tone.context.addEventListener('statechange', () => {
-                console.log('Audio context state changed to:', Tone.context.state);
-                if (Tone.context.state === 'suspended' && audioInitialized) {
-                    console.warn('Audio context suspended! User interaction may be required.');
-                }
-            });
-        }
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            dotMixers.forEach((mixer) => {
-                mixer.startFade();
-            });
+        window.addEventListener('load', () => {
+            window.dottieApp = new DottieApp();
+            setupChordEditing();
+            updatePurplePanelLabels(); // Initialize with dashes
         });
     </script>
 </body>
 </html>
-
