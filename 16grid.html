@@ -152,9 +152,83 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             max-width: 150px;
         }
+
+        /* Startup popup overlay */
+        .startup-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        }
+
+        .startup-popup.hidden {
+            display: none;
+        }
+
+        .startup-popup-content {
+            background: linear-gradient(135deg, #2a4a6a, #1a2a3a);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+        }
+
+        .startup-popup-content h1 {
+            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .startup-popup-content p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #4ecdc4, #3a9a8a);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
+        }
+
+        .start-button:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
+    <!-- Startup popup -->
+    <div class="startup-popup" id="startup-popup">
+        <div class="startup-popup-content">
+            <h1>Water Synth Grid</h1>
+            <p>Touch and drag across the grid to create sounds.<br>Multi-touch supported!</p>
+            <button class="start-button" id="start-button">Start Audio</button>
+        </div>
+    </div>
+
     <div class="grid-container">
         <div class="grid-cell" data-cell="1">Area 1<br>Chord</div>
         <div class="grid-cell" data-cell="2">Area 2</div>
@@ -175,6 +249,32 @@
     </div>
 
     <script>
+        /*
+         * ORPHAN PREVENTION STRATEGIES:
+         * 
+         * 1. HEARTBEAT MECHANISM: Each DotMixer tracks last activity time.
+         *    If no activity for 2+ seconds, automatically fades out.
+         * 
+         * 2. GLOBAL TOUCH TRACKER: Maintains a Set of all active touches.
+         *    Compares against browser's touch list to detect orphans.
+         * 
+         * 3. ABORT CONTROLLER: Coordinates cleanup operations to prevent race conditions.
+         * 
+         * 4. AGGRESSIVE CLEANUP: Multiple cleanup strategies run every 500ms.
+         * 
+         * 5. ACTIVITY TRACKING: All position updates mark activity timestamp.
+         * 
+         * RECOMMENDED LIBRARIES (if issues persist):
+         * 
+         * - Hammer.js (https://hammerjs.github.io/): More reliable touch event handling
+         *   Handles edge cases like lost touches, gesture recognition, etc.
+         * 
+         * - Interact.js (https://interactjs.io/): Advanced drag/drop with better cleanup
+         *   Better for complex interactions but might be overkill
+         * 
+         * - Pointer Events Polyfill: For better cross-browser touch support
+         *   Helps with inconsistent touch event behavior across browsers
+         */
        
         class WaterSynthTone {
             constructor() {
@@ -646,6 +746,36 @@
                 
                 // Track if fading
                 this.isFading = false;
+                
+                // HEARTBEAT MECHANISM: Track last activity to detect stale touches
+                this.lastActivityTime = performance.now();
+                this.heartbeatInterval = null;
+                
+                // ABORT CONTROLLER: For coordinated cleanup
+                this.abortController = new AbortController();
+                
+                // Setup heartbeat check (detects stale touches that never got touchend)
+                this.setupHeartbeat();
+            }
+            
+            // Setup heartbeat to detect stale touches
+            setupHeartbeat() {
+                // Check every 500ms if touch is stale (no activity for 2 seconds)
+                this.heartbeatInterval = setInterval(() => {
+                    const now = performance.now();
+                    const timeSinceActivity = now - this.lastActivityTime;
+                    
+                    // If no activity for 2 seconds and not already fading, consider it stale
+                    if (timeSinceActivity > 2000 && !this.isFading) {
+                        console.warn(`Stale touch detected: ${this.touchId} (${timeSinceActivity.toFixed(0)}ms inactive)`);
+                        this.startFade();
+                    }
+                }, 500);
+            }
+            
+            // Update activity timestamp
+            markActivity() {
+                this.lastActivityTime = performance.now();
             }
             
             createVisualDot(x, y, areaNum) {
@@ -806,6 +936,9 @@
             
             // Update position and handle area transitions
             updatePosition(x, y, cell) {
+                // Mark activity for heartbeat
+                this.markActivity();
+                
                 this.currentX = x;
                 this.currentY = y;
                 
@@ -1090,6 +1223,15 @@
                 if (this.isFading) return;
                 this.isFading = true;
                 
+                // Abort any pending operations
+                this.abortController.abort();
+                
+                // Clear heartbeat interval
+                if (this.heartbeatInterval) {
+                    clearInterval(this.heartbeatInterval);
+                    this.heartbeatInterval = null;
+                }
+                
                 // Track fade start time for safety cleanup
                 this.fadeStartTime = performance.now();
                 
@@ -1121,10 +1263,19 @@
             
             // Complete cleanup - remove dot and all sounds
             cleanupCompletely() {
+                // Abort any pending operations
+                this.abortController.abort();
+                
                 // Clear timeout if it exists
                 if (this.fadeTimeoutId) {
                     clearTimeout(this.fadeTimeoutId);
                     this.fadeTimeoutId = null;
+                }
+                
+                // Clear heartbeat interval
+                if (this.heartbeatInterval) {
+                    clearInterval(this.heartbeatInterval);
+                    this.heartbeatInterval = null;
                 }
                 
                 // CRITICAL: Cleanup all area sounds FIRST (before removing visual elements)
@@ -1161,14 +1312,33 @@
 
         // Initialize synth
         let synth = null;
+        let audioInitialized = false;
 
-        // Initialize on user interaction
+        // Initialize audio context - only called from start button
         function initAudio() {
-            if (synth) return;
+            if (audioInitialized) return;
             
             Tone.start().then(() => {
                 synth = new WaterSynthTone();
+                audioInitialized = true;
                 console.log('Audio initialized');
+                
+                // Hide the startup popup
+                const popup = document.getElementById('startup-popup');
+                if (popup) {
+                    popup.classList.add('hidden');
+                }
+            }).catch((error) => {
+                console.error('Failed to initialize audio:', error);
+                alert('Failed to initialize audio. Please try again.');
+            });
+        }
+
+        // Setup start button
+        const startButton = document.getElementById('start-button');
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                initAudio();
             });
         }
 
@@ -1178,6 +1348,10 @@
         // Multitouch tracking - using DotMixer instances
         const dotMixers = new Map(); // Map of touchId -> DotMixer instance
         const dotToMixerMap = new WeakMap(); // Map of dot element -> DotMixer (for finding mixers from orphaned dots)
+        
+        // GLOBAL TOUCH TRACKER: Track all active touches from browser
+        // This helps detect when browser loses track of touches
+        const globalActiveTouches = new Set(); // Set of touch identifiers currently active
         
         // Performance optimization: Limit total active voices globally
         const MAX_TOTAL_VOICES = 150; // Limit total voices across all dots (6 dots * ~25 voices each)
@@ -1191,6 +1365,27 @@
                 });
             });
             return total;
+        }
+        
+        // GLOBAL CLEANUP: Force cleanup all orphaned mixers
+        function forceCleanupOrphanedMixers() {
+            // Get all currently active touches from browser
+            const browserActiveTouches = new Set();
+            
+            // We'll update this in touchmove/touchend handlers
+            // For now, check against our global tracker
+            
+            // Cleanup any mixers whose touches are no longer in browser's active list
+            dotMixers.forEach((mixer, touchId) => {
+                // If touch is not in global tracker and not fading, it's orphaned
+                if (!globalActiveTouches.has(touchId) && !mixer.isFading) {
+                    console.warn(`Force cleaning orphaned mixer: ${touchId}`);
+                    mixer.startFade();
+                    setTimeout(() => {
+                        dotMixers.delete(touchId);
+                    }, 700);
+                }
+            });
         }
 
         // Helper function to find cell from coordinates
@@ -1217,14 +1412,16 @@
         // Multitouch-aware touch handlers
         function handleTouchStart(e) {
             e.preventDefault();
-            initAudio();
             
-            if (!synth) return;
+            if (!audioInitialized || !synth) return;
             
             // Process all touches
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
+                
+                // Add to global tracker
+                globalActiveTouches.add(touchId);
                 
                 const cell = findCellFromCoordinates(touch.clientX, touch.clientY);
                 
@@ -1239,6 +1436,7 @@
                                 oldestMixer.startFade();
                             }
                             dotMixers.delete(oldestTouchId);
+                            globalActiveTouches.delete(oldestTouchId);
                         }
                     }
                     
@@ -1252,18 +1450,29 @@
         function handleTouchMove(e) {
             e.preventDefault();
             
-            // Check for orphaned touches
+            // Update global tracker with current browser touches
             const activeTouchIds = new Set();
             for (let i = 0; i < e.touches.length; i++) {
-                activeTouchIds.add(e.touches[i].identifier);
+                const touchId = e.touches[i].identifier;
+                activeTouchIds.add(touchId);
+                globalActiveTouches.add(touchId); // Keep in global tracker
             }
+            
+            // Remove touches from global tracker if they're not in browser's list
+            globalActiveTouches.forEach(touchId => {
+                if (!activeTouchIds.has(touchId)) {
+                    globalActiveTouches.delete(touchId);
+                }
+            });
             
             // Remove orphaned dots (touches that are no longer in the active list)
             dotMixers.forEach((mixer, touchId) => {
                 if (!activeTouchIds.has(touchId) && !mixer.isFading) {
+                    console.warn(`Orphaned touch detected in touchmove: ${touchId}`);
                     mixer.startFade();
                     setTimeout(() => {
                         dotMixers.delete(touchId);
+                        globalActiveTouches.delete(touchId);
                     }, 700);
                 }
             });
@@ -1289,6 +1498,9 @@
                 const touch = e.changedTouches[i];
                 const touchId = touch.identifier;
                 
+                // Remove from global tracker
+                globalActiveTouches.delete(touchId);
+                
                 const mixer = dotMixers.get(touchId);
                 if (mixer) {
                     mixer.startFade();
@@ -1305,8 +1517,7 @@
         
         document.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            initAudio();
-            if (!synth) return;
+            if (!audioInitialized || !synth) return;
             
             const cell = findCellFromCoordinates(e.clientX, e.clientY);
             if (!cell) return;
@@ -1390,7 +1601,12 @@
         animationFrameId = requestAnimationFrame(updateAllDotMixers);
         
         // Periodic cleanup check - ensures all dots are properly tracked and removed
+        // More aggressive cleanup with multiple strategies
         setInterval(() => {
+            // Strategy 1: Force cleanup orphaned mixers
+            forceCleanupOrphanedMixers();
+            
+            // Strategy 2: Original orphan detection
             // Check for any dots in DOM that aren't in our map
             const allDots = document.querySelectorAll('.touch-dot');
             const allDebugInfos = document.querySelectorAll('.dot-debug-info');
@@ -1476,7 +1692,7 @@
                 }
                 // Don't check for missing dots on active mixers - let normal touch/mouse events handle cleanup
             });
-        }, 1000); // Check every second
+        }, 500); // Check every 500ms (more frequent for better cleanup)
 
         // Cleanup on visibility change
         document.addEventListener('visibilitychange', () => {
