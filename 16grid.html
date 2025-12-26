@@ -1315,29 +1315,109 @@
         let audioInitialized = false;
 
         // Initialize audio context - only called from start button
-        function initAudio() {
+        // Mobile-friendly: Plays silent sound to unlock audio context
+        async function initAudio() {
             if (audioInitialized) return;
             
-            Tone.start().then(() => {
+            try {
+                // Start Tone.js audio context
+                await Tone.start();
+                
+                // MOBILE FIX: Check if context is suspended and resume if needed
+                const context = Tone.context;
+                if (context.state === 'suspended') {
+                    console.log('Audio context suspended, attempting to resume...');
+                    await context.resume();
+                }
+                
+                // MOBILE FIX: Play a silent sound immediately to "unlock" audio context
+                // This is required on iOS and some Android browsers
+                const unlockTone = new Tone.Oscillator(0, 'sine').toDestination();
+                unlockTone.volume.value = -Infinity; // Completely silent
+                unlockTone.start();
+                unlockTone.stop('+0.01'); // Stop after 10ms
+                
+                // Small delay to ensure unlock sound completes
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Verify context is running
+                if (context.state !== 'running') {
+                    throw new Error('Audio context failed to start. State: ' + context.state);
+                }
+                
+                // Create synth
                 synth = new WaterSynthTone();
                 audioInitialized = true;
-                console.log('Audio initialized');
+                console.log('Audio initialized successfully. Context state:', context.state);
                 
                 // Hide the startup popup
                 const popup = document.getElementById('startup-popup');
                 if (popup) {
                     popup.classList.add('hidden');
                 }
-            }).catch((error) => {
+                
+                // Update button text to show success
+                const startButton = document.getElementById('start-button');
+                if (startButton) {
+                    startButton.textContent = 'Audio Ready!';
+                    startButton.style.background = 'linear-gradient(135deg, #4ecdc4, #3a9a8a)';
+                    setTimeout(() => {
+                        startButton.textContent = 'Start Audio';
+                    }, 2000);
+                }
+            } catch (error) {
                 console.error('Failed to initialize audio:', error);
-                alert('Failed to initialize audio. Please try again.');
-            });
+                console.error('Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    userAgent: navigator.userAgent,
+                    contextState: Tone.context?.state
+                });
+                
+                // More helpful error message for mobile
+                const isMobile = /mobile|android|iphone|ipad/i.test(navigator.userAgent);
+                let errorMsg = 'Failed to initialize audio.';
+                
+                if (isMobile) {
+                    errorMsg = 'Audio failed to start on mobile.\n\nPlease try:\n1. Check device volume\n2. Turn off silent mode\n3. Tap the button again\n4. Check browser permissions';
+                } else {
+                    errorMsg = 'Failed to initialize audio. Please try again.';
+                }
+                
+                alert(errorMsg);
+                
+                // Show button error state
+                const startButton = document.getElementById('start-button');
+                if (startButton) {
+                    const originalText = startButton.textContent;
+                    startButton.textContent = 'Click to Retry';
+                    startButton.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                    setTimeout(() => {
+                        startButton.textContent = originalText;
+                        startButton.style.background = 'linear-gradient(135deg, #4ecdc4, #3a9a8a)';
+                    }, 3000);
+                }
+                
+                // Reset flag so user can retry
+                audioInitialized = false;
+            }
         }
 
-        // Setup start button
+        // Setup start button - use both click and touchstart for mobile compatibility
         const startButton = document.getElementById('start-button');
         if (startButton) {
-            startButton.addEventListener('click', () => {
+            // Use touchstart for mobile (fires before click, more reliable)
+            startButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                initAudio();
+            }, { passive: false });
+            
+            // Use click for desktop
+            startButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 initAudio();
             });
         }
@@ -1413,7 +1493,24 @@
         function handleTouchStart(e) {
             e.preventDefault();
             
-            if (!audioInitialized || !synth) return;
+            // MOBILE FIX: If audio not initialized, try to initialize on first touch
+            if (!audioInitialized) {
+                initAudio().catch(err => {
+                    console.error('Failed to initialize audio on touch:', err);
+                });
+                return; // Wait for audio to initialize
+            }
+            
+            // MOBILE FIX: Resume audio context if suspended (can happen on mobile)
+            if (Tone.context.state === 'suspended') {
+                Tone.context.resume().then(() => {
+                    console.log('Audio context resumed on touch');
+                }).catch(err => {
+                    console.error('Failed to resume audio context:', err);
+                });
+            }
+            
+            if (!synth) return;
             
             // Process all touches
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -1711,13 +1808,32 @@
                 if (!animationFrameId) {
                     animationFrameId = requestAnimationFrame(updateAllDotMixers);
                 }
+                
+                // MOBILE FIX: Resume audio context if it was suspended
+                if (audioInitialized && Tone.context.state === 'suspended') {
+                    Tone.context.resume().then(() => {
+                        console.log('Audio context resumed after visibility change');
+                    }).catch(err => {
+                        console.error('Failed to resume audio context:', err);
+                    });
+                }
             }
         });
+        
+        // MOBILE FIX: Monitor audio context state changes
+        if (Tone.context) {
+            Tone.context.addEventListener('statechange', () => {
+                console.log('Audio context state changed to:', Tone.context.state);
+                if (Tone.context.state === 'suspended' && audioInitialized) {
+                    console.warn('Audio context suspended! User interaction may be required.');
+                }
+            });
+        }
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId); 
+                cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
             dotMixers.forEach((mixer) => {
