@@ -1699,14 +1699,50 @@
         
         // Periodic cleanup check - ensures all dots are properly tracked and removed
         // More aggressive cleanup with multiple strategies
+        // OPTIMIZED: Cache DOM queries and skip expensive checks when possible
+        let lastDotCount = 0;
+        let lastDebugInfoCount = 0;
+        
         setInterval(() => {
-            // Strategy 1: Force cleanup orphaned mixers
+            // Strategy 1: Force cleanup orphaned mixers (lightweight - just Map iteration)
             forceCleanupOrphanedMixers();
             
             // Strategy 2: Original orphan detection
             // Check for any dots in DOM that aren't in our map
+            // OPTIMIZATION: Only query DOM if we suspect orphans (count mismatch)
             const allDots = document.querySelectorAll('.touch-dot');
             const allDebugInfos = document.querySelectorAll('.dot-debug-info');
+            
+            // Quick check: if counts match expected, skip expensive iteration
+            const currentDotCount = allDots.length;
+            const currentDebugInfoCount = allDebugInfos.length;
+            const expectedCount = dotMixers.size;
+            
+            // Only do expensive checks if counts don't match OR if we have dots but no mixers
+            const needsFullCheck = (currentDotCount !== expectedCount) || 
+                                  (currentDebugInfoCount !== expectedCount) ||
+                                  (currentDotCount > 0 && dotMixers.size === 0);
+            
+            if (!needsFullCheck && currentDotCount === lastDotCount && currentDebugInfoCount === lastDebugInfoCount) {
+                // Counts match and haven't changed - skip expensive iteration
+                lastDotCount = currentDotCount;
+                lastDebugInfoCount = currentDebugInfoCount;
+                
+                // Still check for stale fades (lightweight)
+                dotMixers.forEach((mixer, touchId) => {
+                    if (mixer.isFading) {
+                        const now = performance.now();
+                        if (mixer.fadeStartTime && (now - mixer.fadeStartTime) > 1000) {
+                            mixer.cleanupCompletely();
+                            dotMixers.delete(touchId);
+                        }
+                    }
+                });
+                return; // Skip expensive DOM iteration
+            }
+            
+            lastDotCount = currentDotCount;
+            lastDebugInfoCount = currentDebugInfoCount;
             
             // Find orphaned dots (dots in DOM but not tracked in dotMixers)
             // CRITICAL: When we find orphaned dots, we must also fade out their sounds
@@ -1789,7 +1825,7 @@
                 }
                 // Don't check for missing dots on active mixers - let normal touch/mouse events handle cleanup
             });
-        }, 500); // Check every 500ms (more frequent for better cleanup)
+        }, 200); // Check every 200ms (5x per second) - optimized with early exit
 
         // Cleanup on visibility change
         document.addEventListener('visibilitychange', () => {
