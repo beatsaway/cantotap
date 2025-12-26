@@ -1717,7 +1717,7 @@
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
+                cancelAnimationFrame(animationFrameId); 
                 animationFrameId = null;
             }
             dotMixers.forEach((mixer) => {
