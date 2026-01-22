@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Emoji Sound Pads</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&family=Yuji+Mai&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f2ee;
+        --fg: #1b1b1f;
+        --accent: #ffffff;
+        --shadow: rgba(15, 20, 35, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "LXGW WenKai TC", "Yuji Mai", system-ui, -apple-system,
+          "Segoe UI", sans-serif;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+      main {
+        width: 100%;
+        max-width: 720px;
+        display: grid;
+        gap: 16px;
+        padding: clamp(16px, 4vw, 32px);
+        text-align: center;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: clamp(18px, 3.5vw, 24px);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        opacity: 0.9;
+      }
+      .pad-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .pad {
+        aspect-ratio: 1 / 1;
+        border: none;
+        border-radius: 22px;
+        background: var(--accent);
+        color: inherit;
+        font-size: clamp(56px, 12vw, 96px);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 10px 25px var(--shadow);
+        transition: transform 120ms ease, box-shadow 120ms ease;
+        cursor: pointer;
+      }
+      .pad:active {
+        transform: translateY(2px) scale(0.98);
+        box-shadow: 0 6px 18px var(--shadow);
+      }
+      .status {
+        font-size: 14px;
+        opacity: 0.7;
+      }
+      @media (max-width: 700px) {
+        .pad-grid {
+          grid-template-columns: 1fr;
+        }
+        .pad {
+          width: 100%;
+          min-height: 110px;
+          aspect-ratio: 5 / 2;
+          font-size: clamp(64px, 18vw, 120px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="pad-grid" aria-label="Sound pads">
+        <button class="pad" type="button" data-sound="fun">🎉</button>
+        <button class="pad" type="button" data-sound="gag">😂</button>
+        <button class="pad" type="button" data-sound="piano">🎹</button>
+      </section>
+      <div class="status" id="status">Loading sounds…</div>
+    </main>
+    <script>
+      const statusEl = document.getElementById("status");
+      const pads = Array.from(document.querySelectorAll(".pad"));
+      const soundFiles = {
+        fun: "fun.wav",
+        gag: "gag.wav",
+        piano: "piano.wav",
+      };
+
+      let audioCtx;
+      const buffers = new Map();
+      const loadPromises = [];
+
+      function getAudioContext() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioCtx;
+      }
+
+      async function loadSound(name, url) {
+        const ctx = getAudioContext();
+        const response = await fetch(url);
+        const data = await response.arrayBuffer();
+        const buffer = await ctx.decodeAudioData(data);
+        buffers.set(name, buffer);
+      }
+
+      async function initAudio() {
+        try {
+          Object.entries(soundFiles).forEach(([name, url]) => {
+            loadPromises.push(loadSound(name, url));
+          });
+          await Promise.all(loadPromises);
+          statusEl.textContent = "";
+        } catch (error) {
+          statusEl.textContent = "Failed to load sounds";
+          console.error(error);
+        }
+      }
+
+      function playSound(name) {
+        const ctx = getAudioContext();
+        const buffer = buffers.get(name);
+        if (!buffer) return;
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const jitter = 0.04;
+        const rate = 1 + (Math.random() * 2 - 1) * jitter;
+        source.playbackRate.value = Math.max(0.85, Math.min(1.15, rate));
+        source.connect(ctx.destination);
+        source.start();
+      }
+
+      pads.forEach((pad) => {
+        pad.addEventListener("pointerdown", async () => {
+          const ctx = getAudioContext();
+          if (ctx.state !== "running") {
+            await ctx.resume();
+          }
+          playSound(pad.dataset.sound);
+        });
+      });
+
+      initAudio();
+    </script>
+  </body>
+</html>
