@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research: HK Company, Play Store & Tax</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --card: #fff;
+      --text: #1a1a1a;
+      --muted: #5f6368;
+      --accent: #1a73e8;
+      --border: #e8eaed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      margin: 0;
+      padding: 1rem;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .lang-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .lang-btn:hover { background: var(--border); }
+    .lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem;
+      color: var(--text);
+    }
+    nav {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    nav ul { margin: 0; padding: 0; list-style: none; }
+    nav li { margin: 0.5rem 0; }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    nav a:hover { text-decoration: underline; }
+    section {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+    }
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 1rem 0 0.5rem;
+      color: var(--text);
+    }
+    section p { margin: 0.5rem 0; }
+    section ul, section ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+    .meta { font-size: 0.875rem; color: var(--muted); margin-bottom: 0.75rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 0.75rem 0;
+    }
+    th, td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    th { background: var(--bg); font-weight: 600; }
+    tr:nth-child(even) { background: #fafafa; }
+    .disclaimer {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 1rem;
+    }
+    .press-date { font-size: 0.875rem; color: var(--muted); margin-top: 1rem; }
+    /* Language toggle: show only active language */
+    .lang-zh { display: none; }
+    html[lang="zh-Hant"] .lang-en { display: none !important; }
+    html[lang="zh-Hant"] .lang-zh { display: block !important; }
+    html[lang="zh-Hant"] .lang-zh.inline { display: inline !important; }
+    @media (prefers-reduced-motion: no-preference) {
+      nav a, section h2 { transition: color 0.15s; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="toolbar">
+      <h1 class="lang-en">Research: HK Company, Play Store & Tax</h1>
+      <h1 class="lang-zh">研究：香港公司、Play Store 與稅務</h1>
+      <div>
+        <button type="button" class="lang-btn active" id="btnEn" aria-pressed="true">English</button>
+        <button type="button" class="lang-btn" id="btnZh" aria-pressed="false">繁體中文</button>
+      </div>
+    </div>
+
+    <nav aria-label="Page contents">
+      <ul class="lang-en">
+        <li><a href="#playstore">Is a Hong Kong company required to receive Play Store payments?</a></li>
+        <li><a href="#individual-vs-company">Individual vs company: tax comparison and use of a company</a></li>
+        <li><a href="#how-company-saves-tax">How can a company achieve lower effective tax? (16.5% vs 15%)</a></li>
+        <li><a href="#registry-2025">Companies Registry statistics 2025</a></li>
+      </ul>
+      <ul class="lang-zh">
+        <li><a href="#playstore">在港開公司才能收 Play Store款項嗎？</a></li>
+        <li><a href="#individual-vs-company">個人與公司報稅比較及為何用公司</a></li>
+        <li><a href="#how-company-saves-tax">公司如何慳稅？（16.5% 高過 15% 仍可慳稅）</a></li>
+        <li><a href="#registry-2025">公司註冊處 2025 年統計數字</a></li>
+      </ul>
+    </nav>
+
+    <!-- Section 1: Play Store -->
+    <section id="playstore" aria-labelledby="h-playstore">
+      <h2 id="h-playstore" class="lang-en">Is a Hong Kong company required to receive Play Store payments?</h2>
+      <h2 id="h-playstore-zh" class="lang-zh">在港開公司才能收 Play 商店款項嗎？</h2>
+      <p class="meta lang-en">Summary based on web research</p>
+      <p class="meta lang-zh">根據網上資料整理</p>
+      <p class="lang-en"><strong>No.</strong> Registration of a Hong Kong company is not required to receive payments from the Google Play Store. You may receive payouts as an individual or through a company in your country of residence. The bank account must be in the same country as the address on your Google Payments profile.</p>
+      <p class="lang-zh"><strong>不需要。</strong>你不需要在香港註冊公司也可以收取 Google Play的款項。你可以以個人身份或透過你所在國家的公司收款。你的銀行戶口必須與 Google 付款資料上的地址屬同一國家。</p>
+
+      <h3 class="lang-en">Configuring Google Play developer payouts</h3>
+      <h3 class="lang-zh">設定 Google Play 開發者收款</h3>
+      <ul class="lang-en">
+        <li>Your <strong>business location</strong> in the payment profile must match the country where your bank account is located.</li>
+        <li>Google verifies the bank account by depositing a small amount (under US$1).</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>付款資料上的<strong>業務所在地</strong>必須與銀行戶口所在國家一致。</li>
+        <li>Google 會存入少額款項（少於 1 美元）以驗證你的銀行戶口。</li>
+      </ul>
+
+      <h3 class="lang-en">Payouts and fees</h3>
+      <h3 class="lang-zh">發款時間與費用</h3>
+      <ul class="lang-en">
+        <li><strong>Schedule:</strong> Payouts on the 15th of each month for the previous month (e.g. May sales → June 15).</li>
+        <li><strong>Threshold:</strong> At least US$100 before a payout is issued.</li>
+        <li><strong>Method:</strong> Wire transfer in USD in many countries; banks may charge a fee (often $0–$50).</li>
+        <li><strong>Processing time:</strong> 2–7 business days after the payout is initiated.</li>
+      </ul>
+      <ul class="lang-zh">
+        <li><strong>發款日：</strong>每月 15 日發放上一個月的款項（例如 5 月銷售 → 6 月 15 日）。</li>
+        <li><strong>門檻：</strong>累計至少 100 美元才會發款。</li>
+        <li><strong>方式：</strong>不少國家支援美元電匯；銀行可能收取費用（常見 0–50 美元）。</li>
+        <li><strong>到帳：</strong>發款後約 2–7 個工作天到帳，視銀行與地區而定。</li>
+      </ul>
+
+      <h3 class="lang-en">Taxes</h3>
+      <h3 class="lang-zh">稅務</h3>
+      <ul class="lang-en">
+        <li>Google may withhold tax (WHT) depending on your country.</li>
+        <li>An annual withholding tax statement is available in the Play Console (for information only; not a substitute for professional tax advice).</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>視你所屬國家，Google 可能會預扣稅款（WHT）。</li>
+        <li>Play 控制台可下載年度預扣稅報表（僅供參考，不構成稅務意見）。</li>
+      </ul>
+
+      <h3 class="lang-en">Options</h3>
+      <h3 class="lang-zh">兩種做法</h3>
+      <table class="lang-en">
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Requirement</th>
+            <th>Best suited to</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Register as an individual</td>
+            <td>Personal name and address; bank account in the same country</td>
+            <td>Developers seeking minimal initial setup</td>
+          </tr>
+          <tr>
+            <td>Register a local company</td>
+            <td>Company name and address; company bank account in the same country</td>
+            <td>Separation of business and personal finances, or compliance with local requirements</td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="lang-zh">
+        <thead>
+          <tr>
+            <th>做法</th>
+            <th>要求</th>
+            <th>適合</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>以個人名義</td>
+            <td>個人姓名與地址；同一國家的銀行戶口</td>
+            <td>剛起步、想最簡單</td>
+          </tr>
+          <tr>
+            <td>以當地公司名義</td>
+            <td>公司名稱與地址；公司銀行戶口在同一國家</td>
+            <td>分開公司與個人財務，或符合當地規定</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="lang-en"><strong>Recommendation:</strong> Register as an <strong>individual</strong> using your residential address and a local bank account that accepts USD. If you specify your country of residence, more specific guidance can be provided.</p>
+      <p class="lang-zh"><strong>建議：</strong>可先以<strong>個人</strong>身份，用住址及能收美元的本地銀行戶口開通。若提供所在國家，可再給更具體建議。</p>
+      <p class="disclaimer lang-en">This content is AI-generated and is for reference only.</p>
+      <p class="disclaimer lang-zh">以上內容為 AI 整理，僅供參考。</p>
+    </section>
+
+    <!-- Section 2: Individual vs company -->
+    <section id="individual-vs-company" aria-labelledby="h-individual">
+      <h2 id="h-individual" class="lang-en">Individual vs company: tax comparison and use of a company</h2>
+      <h2 class="lang-zh">個人與公司報稅比較及為何用公司？</h2>
+      <p class="meta lang-en">Summary based on web research</p>
+      <p class="meta lang-zh">根據網上資料整理</p>
+      <p class="lang-en">Whether to register a Hong Kong company depends on your objectives, income level, and the administrative burden you are willing to assume. For developers with substantial income, a Hong Kong company often offers tax efficiency and greater payment stability. For early-stage or low-income scenarios, the setup and maintenance costs may not be justified.</p>
+      <p class="lang-zh">是否在香港註冊公司要視乎你的目標、收入水平與是否願意處理行政。對不少有穩定收入的開發者而言，香港公司在稅務與收款穩定性上通常較佳；若剛起步或收入很低，成本可能未必值得。</p>
+
+      <h3 class="lang-en">Tax rates in Hong Kong (app income)</h3>
+      <h3 class="lang-zh">香港稅率（應用程式收入）</h3>
+      <table class="lang-en">
+        <thead>
+          <tr>
+            <th>Factor</th>
+            <th>Individual (sole proprietor)</th>
+            <th>Hong Kong company</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tax system</td>
+            <td>Profits tax on business income</td>
+            <td>Profits tax on company income</td>
+          </tr>
+          <tr>
+            <td>Standard rate</td>
+            <td>15% on assessable profits</td>
+            <td>16.5% on assessable profits</td>
+          </tr>
+          <tr>
+            <td>Two-tier (first HK$2M profit)</td>
+            <td>7.5%</td>
+            <td>8.25%</td>
+          </tr>
+          <tr>
+            <td>Tax on dividends</td>
+            <td>N/A (profit is personal)</td>
+            <td>0% (HK does not tax dividends)</td>
+          </tr>
+          <tr>
+            <td>Advantage</td>
+            <td>Simple, less admin</td>
+            <td>Tax savings, more deductions, legal separation</td>
+          </tr>
+          <tr>
+            <td>Disadvantage</td>
+            <td>All profit taxed as personal income</td>
+            <td>Setup and maintenance (secretary, accounting, audit)</td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="lang-zh">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>個人（獨資）</th>
+            <th>香港公司</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>稅制</td>
+            <td>業務利得稅</td>
+            <td>公司利得稅</td>
+          </tr>
+          <tr>
+            <td>標準稅率</td>
+            <td>應評稅利潤 15%</td>
+            <td>應評稅利潤 16.5%</td>
+          </tr>
+          <tr>
+            <td>兩級制（首 200 萬利潤）</td>
+            <td>7.5%</td>
+            <td>8.25%</td>
+          </tr>
+          <tr>
+            <td>股息稅</td>
+            <td>不適用（利潤即個人收入）</td>
+            <td>0%（香港不徵股息稅）</td>
+          </tr>
+          <tr>
+            <td>優點</td>
+            <td>簡單、行政少</td>
+            <td>慳稅、扣稅多、法律上與個人分離</td>
+          </tr>
+          <tr>
+            <td>缺點</td>
+            <td>全部利潤當個人收入課稅</td>
+            <td>成立與維持成本（秘書、會計、核數）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="lang-en">Reasons to use a company structure</h3>
+      <h3 class="lang-zh">為何選公司？</h3>
+      <ul class="lang-en">
+        <li><strong>Offshore claim:</strong> If users and operations are outside HK, you may claim profits as offshore and pay 0% in HK. Requires proper structure and advice; FSIE regime may affect some passive income.</li>
+        <li><strong>Deductions:</strong> R&D super-deduction (e.g. 300% on first HK$2M eligible spend), cloud, software, salaries, marketing, home office (if structured properly).</li>
+        <li><strong>Payment stability:</strong> Personal/Wise/Payoneer accounts can be frozen for large app payouts; a HK company with a business bank account is generally more stable.</li>
+        <li><strong>Patent box:</strong> Concessionary ~5% on profits from qualifying IP (e.g. certain software).</li>
+        <li><strong>Legal protection:</strong> Limited company = separate legal entity; separation between business and personal assets.</li>
+      </ul>
+      <ul class="lang-zh">
+        <li><strong>離岸申索：</strong>若用戶與營運都在香港以外，可申索利潤為離岸而在港 0% 課稅。需有適當架構及專業意見；FSIE 制度可能影響部分被動收入。</li>
+        <li><strong>扣稅：</strong>研發超級扣稅（如首 200 萬合資格開支 300% 扣減）、雲端、軟件、薪金、推廣、家居辦公室（若安排得當）等。</li>
+        <li><strong>收款穩定：</strong>個人或 Wise／Payoneer 大額應用程式收入易被凍結；香港公司配商業戶口一般較穩妥。</li>
+        <li><strong>專利盒：</strong>合資格知識產權（如某類軟件）利潤可享約 5% 優惠稅率。</li>
+        <li><strong>法律保障：</strong>有限公司為獨立法律實體，業務與個人資產分離。</li>
+      </ul>
+
+      <h3 class="lang-en">When to choose which structure</h3>
+      <h3 class="lang-zh">何時選哪一種</h3>
+      <p class="lang-en"><strong>Choose an individual structure</strong> if: early-stage venture, low income (e.g. under approximately HK$200,000 per year), minimal setup and ongoing fees are a priority, and you accept the higher liability and payment-freeze risk associated with personal or third-party payment accounts.</p>
+      <p class="lang-zh"><strong>選個人</strong>若：剛起步、收入低（例如每年約 20 萬港元以下）、想最少手續且無持續費用、可接受較高責任與收款被凍風險。</p>
+      <p class="lang-en"><strong>Consider a Hong Kong company</strong> if: you expect sustained or growing app revenue, wish to optimise tax (e.g. via an offshore claim), plan to scale or hire, or require a stable structure for receiving large platform payouts.</p>
+      <p class="lang-zh"><strong>考慮香港公司</strong>若：預期應用程式收入持續或增長、想合法慳稅（如離岸申索）、打算擴張或請人、或希望以穩定架構收取平台大額款項。</p>
+      <p class="disclaimer lang-en">This content is AI-generated and is for reference only.</p>
+      <p class="disclaimer lang-zh">以上內容為 AI 整理，僅供參考。</p>
+    </section>
+
+    <!-- Section 3: How company saves tax -->
+    <section id="how-company-saves-tax" aria-labelledby="h-saves">
+      <h2 id="h-saves" class="lang-en">How can a company achieve lower effective tax? (16.5% vs 15%)</h2>
+      <h2 class="lang-zh">公司如何慳稅？（16.5% 高過 15% 仍可慳稅）</h2>
+      <p class="meta lang-en">Summary based on web research</p>
+      <p class="meta lang-zh">根據網上資料整理</p>
+      <p class="lang-en">The headline company rate of 16.5% is higher than the 15% individual rate. In practice, a Hong Kong company often incurs a lower effective tax burden due to the two-tier profits tax regime, offshore claims, deductions, and the treatment of dividends.</p>
+      <p class="lang-zh">表面上看 16.5%（公司）高於 15%（個人）。實際上香港公司往往因兩級稅率、離岸申索、扣稅及股息處理而總體交稅更少。</p>
+
+      <h3 class="lang-en">Two-tier profits tax rate</h3>
+      <h3 class="lang-zh">兩級制稅率</h3>
+      <p class="lang-en">On the first <strong>HK$2 million</strong> of assessable profit: a company is taxed at <strong>8.25%</strong>, whereas an individual is taxed at 15%. On the first HK$2 million, the company therefore pays approximately half the tax of an individual.</p>
+      <p class="lang-zh">首<strong>200 萬</strong>港元利潤：公司交<strong>8.25%</strong>，個人交 15%。即首 200 萬公司稅額約為個人一半。</p>
+
+      <h3 class="lang-en">Offshore claim</h3>
+      <h3 class="lang-zh">離岸申索</h3>
+      <p class="lang-en">Hong Kong taxes on a <strong>territorial</strong> basis. If your app users and operations are outside Hong Kong, you may file an offshore claim. If the claim is accepted, those profits are not subject to Hong Kong profits tax (<strong>0%</strong>). The FSIE regime (in effect from January 2023) may require economic substance in Hong Kong; professional advice is essential.</p>
+      <p class="lang-zh">香港以<strong>地域</strong>來源徵稅。若應用程式用戶與營運均在港外，可提出離岸申索；若獲接受，該利潤<strong>0%</strong>課稅。FSIE（2023 年 1 月起）或要求在港具「經濟實質」，務必徵詢專業意見。</p>
+
+      <h3 class="lang-en">Patent box</h3>
+      <h3 class="lang-zh">專利盒</h3>
+      <p class="lang-en">Profits derived from qualifying intellectual property (e.g. copyrighted software) may be taxed at a concessionary rate of approximately <strong>5%</strong> under the patent box regime.</p>
+      <p class="lang-zh">合資格知識產權（如受版權保護的軟件）所產生的利潤，在專利盒制度下可享約<strong>5%</strong>稅率。</p>
+
+      <h3 class="lang-en">Deductions</h3>
+      <h3 class="lang-zh">扣稅項目</h3>
+      <table class="lang-en">
+        <thead>
+          <tr>
+            <th>Expense</th>
+            <th>Deductible by company?</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>R&D</td><td>Yes (enhanced)</td><td>300% on first HK$2M eligible R&D</td></tr>
+          <tr><td>Director’s salary</td><td>Yes</td><td>Deductible by the company; director pays salaries tax (2–17%) on the salary received</td></tr>
+          <tr><td>Cloud / tools</td><td>Yes</td><td>AWS, Google Cloud, GitHub, subscriptions</td></tr>
+          <tr><td>Home office</td><td>Yes (partial)</td><td>Portion of rent, utilities, internet</td></tr>
+          <tr><td>Personal expenses</td><td>No</td><td>Must be incurred wholly for business</td></tr>
+          <tr><td>Dividends to shareholder</td><td>N/A</td><td>Paid from after-tax profit; dividends are not subject to tax in Hong Kong</td></tr>
+        </tbody>
+      </table>
+      <table class="lang-zh">
+        <thead>
+          <tr>
+            <th>開支</th>
+            <th>公司可扣稅？</th>
+            <th>說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>研發</td><td>可（加強扣減）</td><td>首 200 萬合資格研發 300% 扣減</td></tr>
+          <tr><td>董事薪金</td><td>可</td><td>公司扣減；你按薪金繳薪俸稅（2–17%）</td></tr>
+          <tr><td>雲端／工具</td><td>可</td><td>AWS、Google Cloud、GitHub、訂閱等</td></tr>
+          <tr><td>家居辦公室</td><td>可（部分）</td><td>租金、水電、寬頻的業務比例</td></tr>
+          <tr><td>個人開支</td><td>不可</td><td>須純屬業務</td></tr>
+          <tr><td>派給你的股息</td><td>不適用</td><td>稅後利潤派發；香港股息免稅</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="lang-en">Salary vs. dividend</h3>
+      <h3 class="lang-zh">薪金與股息</h3>
+      <p class="lang-en">Pay a director’s salary (deductible by the company; the director pays salaries tax at 2–17% on that income). Distribute the remainder as dividends (not subject to tax in Hong Kong). This can reduce the overall effective tax rate.</p>
+      <p class="lang-zh">以薪金形式支薪（公司可扣減；你按 2–17% 繳薪俸稅）。其餘以股息派發（香港免稅）。可降低整體實際稅率。</p>
+
+      <h3 class="lang-en">Summary comparison</h3>
+      <h3 class="lang-zh">比較摘要</h3>
+      <table class="lang-en">
+        <thead>
+          <tr>
+            <th>Factor</th>
+            <th>Individual</th>
+            <th>HK company</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Tax on first $2M profit</td><td>15%</td><td>8.25%</td></tr>
+          <tr><td>Tax on profit &gt; $2M</td><td>15%</td><td>16.5%</td></tr>
+          <tr><td>Offshore claim</td><td>Not available</td><td>0% if successful</td></tr>
+          <tr><td>Patent box (software IP)</td><td>Not available</td><td>~5%</td></tr>
+          <tr><td>R&D deduction</td><td>Limited</td><td>300% deduction</td></tr>
+          <tr><td>Salary deduction</td><td>N/A</td><td>Yes (shifts income to personal salaries tax, which may be at a lower rate)</td></tr>
+          <tr><td>Tax on dividends</td><td>N/A</td><td>0%</td></tr>
+          <tr><td>Payment freeze risk</td><td>Higher (e.g. Wise/Payoneer)</td><td>Lower (business account)</td></tr>
+        </tbody>
+      </table>
+      <table class="lang-zh">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>個人</th>
+            <th>香港公司</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>首 200 萬利潤稅率</td><td>15%</td><td>8.25%</td></tr>
+          <tr><td>超過 200 萬利潤稅率</td><td>15%</td><td>16.5%</td></tr>
+          <tr><td>離岸申索</td><td>不適用</td><td>成功則 0%</td></tr>
+          <tr><td>專利盒（軟件 IP）</td><td>不適用</td><td>約 5%</td></tr>
+          <tr><td>研發扣稅</td><td>有限</td><td>300% 扣減</td></tr>
+          <tr><td>扣減薪金</td><td>不適用</td><td>可（轉為較低個人稅率）</td></tr>
+          <tr><td>股息稅</td><td>不適用</td><td>0%</td></tr>
+          <tr><td>收款被凍風險</td><td>較高（如 Wise／Payoneer）</td><td>較低（商業戶口）</td></tr>
+        </tbody>
+      </table>
+      <p class="lang-en"><strong>Conclusion:</strong> The 16.5% headline rate, combined with the two-tier regime, deductions, offshore claims, and tax-free dividend treatment, typically results in a lower <em>effective</em> tax burden than the 15% individual rate where few deductions apply.</p>
+      <p class="lang-zh"><strong>結論：</strong>16.5% 配合兩級制、扣稅、離岸申索與股息安排，實際稅率通常低於以個人身份交 15% 而扣稅不多的情況。</p>
+      <p class="disclaimer lang-en">This content is AI-generated and is for reference only.</p>
+      <p class="disclaimer lang-zh">以上內容為 AI 整理，僅供參考。</p>
+    </section>
+
+    <!-- Section 4: Registry 2025 -->
+    <section id="registry-2025" aria-labelledby="h-registry">
+      <h2 id="h-registry" class="lang-en">Companies Registry – statistics for 2025</h2>
+      <h2 class="lang-zh">公司註冊處 – 2025 年統計數字</h2>
+      <p class="meta lang-en">Press release (Companies Registry, January 16, 2026)</p>
+      <p class="meta lang-zh">新聞稿（公司註冊處，2026 年 1 月 16 日）</p>
+
+      <h3 class="lang-en">Local and re-domiciled companies</h3>
+      <h3 class="lang-zh">本地公司與遷冊公司</h3>
+      <ul class="lang-en">
+        <li><strong>195,343</strong> local companies and re-domiciled companies newly registered in 2025.</li>
+        <li>By end-2025: <strong>1,557,103</strong> local and re-domiciled companies (up 96,609 from 2024) — all-time high.</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>2025 年新註冊的本地公司及遷冊公司共<strong>195,343</strong>間。</li>
+        <li>截至 2025 年底：<strong>1,557,103</strong> 間本地及遷冊公司（較 2024 年增 96,609 間）— 歷年新高。</li>
+      </ul>
+
+      <h3 class="lang-en">Non-Hong Kong companies</h3>
+      <h3 class="lang-zh">非香港公司</h3>
+      <ul class="lang-en">
+        <li><strong>1,532</strong> non-Hong Kong companies newly registered (new place of business in HK) in 2025.</li>
+        <li>By end-2025: <strong>15,586</strong> registered non-Hong Kong companies (up 3% from 2024).</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>2025 年新註冊的非香港公司（在港新設營業地點）共<strong>1,532</strong>間。</li>
+        <li>截至 2025 年底：註冊非香港公司<strong>15,586</strong>間（較 2024 年增 3%）。</li>
+      </ul>
+
+      <h3 class="lang-en">Re-domiciliation (from 23 May 2025)</h3>
+      <h3 class="lang-zh">遷冊制度（2025 年 5 月 23 日起）</h3>
+      <ul class="lang-en">
+        <li>Over 420 enquiries and 30 applications by end-2025.</li>
+        <li>Six non-HK corporations (Luxembourg, Cayman Islands, Bermuda), including one insurance company, successfully re-domiciled to HK.</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>截至 2025 年底接獲逾 420 宗查詢及 30 宗申請。</li>
+        <li>六間非香港公司（盧森堡、開曼群島、百慕達），包括一間保險公司，已成功遷冊來港。</li>
+      </ul>
+
+      <h3 class="lang-en">Other 2025 figures</h3>
+      <h3 class="lang-zh">2025 年其他數字</h3>
+      <ul class="lang-en">
+        <li>Charges on properties: <strong>12,912</strong> (up 6.4% from 2024).</li>
+        <li>Notifications of payments/releases: <strong>20,789</strong> (up 14.2%).</li>
+        <li>Prospectuses registered: <strong>180</strong> (2024: 157).</li>
+        <li>Documents delivered for registration: <strong>3,360,723</strong> (up 7%).</li>
+        <li>Document image searches: <strong>5,229,202</strong> (up 0.7%).</li>
+        <li><strong>Limited partnership funds (LPFs):</strong> 389 new in 2025; total 1,347 (up 35.1%).</li>
+        <li><strong>Open-ended fund companies (OFCs):</strong> 210 new in 2025; total 676 (up 43.2%).</li>
+        <li>Trust or company service provider licences: 760 new; total <strong>7,220</strong> licensees.</li>
+        <li>Money lender licences: 155 new; total <strong>2,015</strong> licensed money lenders.</li>
+      </ul>
+      <ul class="lang-zh">
+        <li>公司財產押記登記：<strong>12,912</strong> 宗（較 2024 年增 6.4%）。</li>
+        <li>清償／解除通知登記：<strong>20,789</strong> 宗（增 14.2%）。</li>
+        <li>招股章程登記：<strong>180</strong> 份（2024 年：157）。</li>
+        <li>交付登記的文件：<strong>3,360,723</strong> 份（增 7%）。</li>
+        <li>文件影像查閱：<strong>5,229,202</strong> 次（增 0.7%）。</li>
+        <li><strong>有限合夥基金（LPF）：</strong>2025 年新註冊 389 隻；總數 1,347（增 35.1%）。</li>
+        <li><strong>開放式基金公司（OFC）：</strong>2025 年新成立 210 間；總數 676（增 43.2%）。</li>
+        <li>信託或公司服務提供者牌照：新發 760 個；持牌人總數<strong>7,220</strong>。</li>
+        <li>放債人牌照：新發 155 個；持牌放債人總數<strong>2,015</strong>。</li>
+      </ul>
+
+      <p class="lang-en">Details: <a href="https://www.cr.gov.hk" target="_blank" rel="noopener">www.cr.gov.hk</a> → Statistics.</p>
+      <p class="lang-zh">詳情：<a href="https://www.cr.gov.hk" target="_blank" rel="noopener">www.cr.gov.hk</a> → 統計數字。</p>
+      <p class="press-date lang-en">Ends / Friday, January 16, 2026 — Issued at HKT 9:30</p>
+      <p class="press-date lang-zh">完／2026 年 1 月 16 日（星期五）— 香港時間 9:30 發出</p>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'research-lang';
+      var btnEn = document.getElementById('btnEn');
+      var btnZh = document.getElementById('btnZh');
+      var html = document.documentElement;
+
+      function setLang(lang) {
+        if (lang === 'zh-Hant') {
+          html.setAttribute('lang', 'zh-Hant');
+          btnEn.classList.remove('active');
+          btnEn.setAttribute('aria-pressed', 'false');
+          btnZh.classList.add('active');
+          btnZh.setAttribute('aria-pressed', 'true');
+        } else {
+          html.setAttribute('lang', 'en');
+          btnEn.classList.add('active');
+          btnEn.setAttribute('aria-pressed', 'true');
+          btnZh.classList.remove('active');
+          btnZh.setAttribute('aria-pressed', 'false');
+        }
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+      }
+
+      btnEn.addEventListener('click', function () { setLang('en'); });
+      btnZh.addEventListener('click', function () { setLang('zh-Hant'); });
+
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === 'zh-Hant') setLang('zh-Hant');
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>
