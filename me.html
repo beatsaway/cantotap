@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negotiation tips — For my reference</title>
+    <style>
+        :root {
+            --bg: #1a1b1e;
+            --card: #25262a;
+            --text: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent: #67e8f9;
+            --warn: #fcd34d;
+            --good: #86efac;
+            --border: rgba(255,255,255,.08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            margin: 0;
+            padding: 2rem 1rem 4rem;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1 { font-size: 1.35rem; margin-top: 0; color: var(--accent); }
+        h2 { font-size: 1.05rem; margin-top: 1.75rem; margin-bottom: 0.5rem; color: var(--text); }
+        p, li { color: var(--text-muted); margin: 0.4rem 0; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+        }
+        ul { padding-left: 1.2rem; }
+        li { margin: 0.5rem 0; }
+        .tip { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin: 0.75rem 0; }
+        .warn { border-left-color: var(--warn); }
+        .good { border-left-color: var(--good); }
+        strong { color: var(--text); }
+        .sub { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+    <h1>Negotiation tips — for my reference</h1>
+    <p class="sub">Private checklist when discussing a project with a client.</p>
+
+    <div class="card">
+        <h2>Before quoting</h2>
+        <ul>
+            <li><strong>Get their budget range</strong> — “Do you have a budget in mind for this?” so you don’t over- or under-price.</li>
+            <li><strong>Clarify must-haves vs nice-to-haves</strong> — Scope the MVP first; extras = extra fee.</li>
+            <li><strong>Who decides and who pays?</strong> — Decision-maker and budget holder; avoid long chains of approval.</li>
+            <li><strong>Timeline</strong> — Rush = premium or reduced scope. Agree a realistic deadline.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>When they say “too expensive”</h2>
+        <div class="tip good">
+            <strong>Don’t drop price immediately.</strong> Ask: “What would need to change for this to work?” Then reduce <strong>scope</strong> (fewer features, phases) or <strong>timeline</strong> (fewer revisions), not just the number.
+        </div>
+        <div class="tip">
+            Offer 2 options: “Option A at full scope — $X. Option B with [fewer features] — $Y.” Let them choose.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>What to get in writing</h2>
+        <ul>
+            <li>Scope: list of deliverables / features (even short).</li>
+            <li>Fee (total or hourly + cap) and currency (HKD).</li>
+            <li>Payment: deposit % and when; when the rest is due (e.g. on delivery).</li>
+            <li>Revision rounds included (e.g. 2 rounds); what counts as “new scope”.</li>
+            <li>Timeline: key dates or phases.</li>
+        </ul>
+        <p class="sub">Email confirmation is enough for small projects; consider a short agreement for larger ones.</p>
+    </div>
+
+    <div class="card">
+        <h2>Red flags to watch</h2>
+        <div class="tip warn">
+            <strong>Vague scope</strong> — “We’ll add things as we go.” Push for a phase 1 scope; anything extra = change order / new quote.
+        </div>
+        <div class="tip warn">
+            <strong>Payment after “everything is done”</strong> — Always get a deposit (e.g. 30–50%) before starting. Milestone payments for longer projects.
+        </div>
+        <div class="tip warn">
+            <strong>“We have no budget but we’ll give you exposure”</strong> — Say no unless you intentionally do pro bono. Exposure doesn’t pay rent.
+        </div>
+        <div class="tip warn">
+            <strong>Endless revisions</strong> — Cap rounds in the scope (e.g. 2 rounds). Extra rounds = extra fee or fixed add-on.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>During the project</h2>
+        <ul>
+            <li><strong>Scope creep</strong> — New requests = “That’s outside the agreed scope. I can quote an add-on.”</li>
+            <li><strong>Stick to the scope doc</strong> — If they keep adding, refer back: “This wasn’t in the original list; we can add it for $X.”</li>
+            <li><strong>Don’t deliver full project before final payment</strong> — Hand over code/site after the agreed balance is received (or use escrow if needed).</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Quick script</h2>
+        <div class="tip good">
+            “For a project like this I usually work with a fixed scope and fee. I’ll send you a short scope and quote. Once you confirm and the deposit is paid, we’ll start. Any changes to scope we’ll agree in writing and adjust the fee or timeline.”
+        </div>
+    </div>
+
+    <p class="sub" style="margin-top: 2rem;">Keep this page private. Use scope.html for client-facing reference.</p>
+</body>
+</html>
