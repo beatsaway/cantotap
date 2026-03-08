@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How the Cloudflare ecosystem works – Learning cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b9eb0;
+      --accent: #5eb4f6;
+      --accent-soft: rgba(94, 180, 246, 0.15);
+      --success: #3fb950;
+      --highlight: #f0883e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.25s ease;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--text);
+    }
+    .card p {
+      margin: 0 0 1rem;
+      font-size: 0.98rem;
+      color: var(--text);
+    }
+    .card p:last-child { margin-bottom: 0; }
+    .card .muted { color: var(--muted); font-size: 0.9rem; }
+    .card code, .card .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+    .card ul {
+      margin: 0 0 1rem;
+      padding-left: 1.25rem;
+    }
+    .card li { margin-bottom: 0.35rem; }
+    .card .tip {
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      padding: 0.6rem 0.9rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      gap: 1rem;
+    }
+    .btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+    }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover { background: #7ac4fa; }
+    .card[data-hidden="true"] { display: none; }
+    .end-msg {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--muted);
+    }
+    .end-msg strong { color: var(--success); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>How the Cloudflare ecosystem works</h1>
+    <p class="subtitle">Concept by concept, like a short story. For anyone curious how apps run on the internet.</p>
+
+    <div class="progress">
+      <span class="progress-label">Card <span id="current">1</span> of <span id="total">0</span></span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+    </div>
+
+    <div id="cards">
+      <!-- 1 -->
+      <div class="card" data-card="1">
+        <div class="card-number">1 — The big picture</div>
+        <h2>Where do websites and apps actually run?</h2>
+        <p>When you open a website or use an app, your phone or computer talks to <strong>another computer somewhere in the world</strong>. That “other computer” is a server. Servers used to be big machines in a room that companies had to buy and maintain.</p>
+        <p>Today we often use <strong>the cloud</strong>: someone else runs those computers in data centers around the world, and we just write code and put it there. Cloudflare is one of those “someones”—and they run a huge network very close to where people actually are.</p>
+      </div>
+
+      <!-- 2 -->
+      <div class="card" data-card="2">
+        <div class="card-number">2 — The edge</div>
+        <h2>What is Cloudflare’s “edge”?</h2>
+        <p><strong>Edge</strong> means “as close as possible to the user.” Cloudflare has data centers in hundreds of cities. So instead of your code running in one faraway server, it can run in a machine near the person who’s using your app.</p>
+        <p>That means <strong>faster responses</strong> and less delay. Think of it like having a copy of your app in many cities instead of in just one.</p>
+      </div>
+
+      <!-- 3 -->
+      <div class="card" data-card="3">
+        <div class="card-number">3 — Code without a server</div>
+        <h2>What is a Worker?</h2>
+        <p>A <strong>Cloudflare Worker</strong> is a small piece of <strong>your code</strong> that runs on Cloudflare’s edge. You don’t rent a whole server or install an operating system. You just write a script (in JavaScript, TypeScript, Rust, etc.) that handles requests—like “when someone visits this URL, do this.”</p>
+        <p>So: <strong>Worker = your logic running at the edge.</strong> It can talk to APIs, save data, and return responses. You deploy it with a tool called <code>wrangler</code> and get a URL. That’s your “backend” if you want.</p>
+      </div>
+
+      <!-- 4 -->
+      <div class="card" data-card="4">
+        <div class="card-number">4 — Why “state” matters</div>
+        <h2>What happens when you need to remember something?</h2>
+        <p>By default, when a Worker runs, it does its job and then it’s done. It doesn’t “remember” anything for the next request. If you want to <strong>remember</strong> data—like “this user visited Paris” or “this is the last score”—you need <strong>state</strong>: somewhere to store and read it.</p>
+        <p>That “somewhere” is usually a <strong>database</strong> or a <strong>key–value store</strong>. Cloudflare gives you both: <strong>KV</strong> (simple key–value) and <strong>D1</strong> (a SQL database).</p>
+      </div>
+
+      <!-- 5 -->
+      <div class="card" data-card="5">
+        <div class="card-number">5 — Key and value</div>
+        <h2>What is a key–value store?</h2>
+        <p>Imagine a wall of lockers. Each locker has a <strong>number</strong> (the key) and inside is your <strong>stuff</strong> (the value). You don’t search “all lockers with red backpacks”—you say “open locker 42” and you get whatever is in there.</p>
+        <p>A <strong>key–value store</strong> is like that: you <strong>put</strong>(key, value) and later <strong>get</strong>(key). For example: key = <code>"France"</code>, value = <code>"Paris"</code>. No tables, no SQL—just keys and values. Very fast for “give me the value for this key.”</p>
+      </div>
+
+      <!-- 6 -->
+      <div class="card" data-card="6">
+        <div class="card-number">6 — Workers KV</div>
+        <h2>Cloudflare’s key–value store</h2>
+        <p><strong>Workers KV</strong> is Cloudflare’s key–value store. You create a “namespace” (like one wall of lockers), connect it to your Worker in <code>wrangler.toml</code>, and in code you do <code>get(key)</code> and <code>put(key, value)</code>.</p>
+        <p>It’s great for <strong>caching</strong> (e.g. “save this API result under this key so next time we don’t call the API again”) and for simple data like “country → city.” It’s not SQL—no queries, no relations. Keys and values are usually strings (or JSON as a string).</p>
+        <div class="tip">Real example: an app that tracks “cities I visited per country” can store France → Paris in KV. POST /France with { "city": "Paris" } saves it; GET /France returns Paris.</div>
+      </div>
+
+      <!-- 7 -->
+      <div class="card" data-card="7">
+        <div class="card-number">7 — When key–value isn’t enough</div>
+        <h2>When do you need a real database?</h2>
+        <p>KV is perfect when you only need “look up by one key.” But sometimes you need <strong>tables</strong>, <strong>relationships</strong>, and <strong>queries</strong> like “all movies with rating &gt; 8” or “users who signed up this month.” For that you use a <strong>SQL database</strong>: tables, columns, rows, and a language (SQL) to query them.</p>
+        <p>Cloudflare’s SQL database is called <strong>D1</strong>. It’s serverless (you don’t manage the server) and works with Workers. You write SQL (create table, select, update) and run it from your Worker.</p>
+      </div>
+
+      <!-- 8 -->
+      <div class="card" data-card="8">
+        <div class="card-number">8 — D1: SQL at the edge</div>
+        <h2>What is D1?</h2>
+        <p><strong>D1</strong> is Cloudflare’s SQL database (built on SQLite). You define <strong>tables</strong> (e.g. movies: id, title, release_date, rating) using <strong>migrations</strong>—files that describe changes to the database. You run migrations locally and then with <code>--remote</code> for production.</p>
+        <p>In your Worker you do things like: <code>db.prepare("SELECT * FROM movies").all()</code> or <code>prepare("UPDATE movies SET rating = ? WHERE id = ?").bind(10, 1).run()</code>. So your code runs at the edge and the data lives in D1—all on Cloudflare.</p>
+      </div>
+
+      <!-- 9 -->
+      <div class="card" data-card="9">
+        <div class="card-number">9 — Bindings: connecting the dots</div>
+        <h2>How does a Worker talk to KV or D1?</h2>
+        <p>You don’t hardcode passwords or database addresses in your code. In <code>wrangler.toml</code> you declare <strong>bindings</strong>: “my Worker has a KV namespace called CACHE” or “a D1 database called DB.” Cloudflare injects those into your Worker at runtime.</p>
+        <p>So in code you write <code>c.env.CACHE</code> or <code>c.env.DB</code> and you get the KV or D1 interface. That keeps secrets and config out of your code and lets you switch between local and production by config.</p>
+      </div>
+
+      <!-- 10 -->
+      <div class="card" data-card="10">
+        <div class="card-number">10 — Front end vs back end</div>
+        <h2>Where does the “website” part live?</h2>
+        <p>The <strong>back end</strong> is the Worker: it handles API requests, reads/writes KV or D1, and returns JSON or other data. The <strong>front end</strong> is the thing users see—HTML, CSS, JavaScript in the browser. You can build a “headless” app that’s only an API (no UI); then any client (browser, app) can call it.</p>
+        <p>If you want a real website (pages, buttons, forms), you can host that on <strong>Cloudflare Pages</strong>: push your front-end code to Git, connect the repo to Pages, and Cloudflare builds and serves it. So: <strong>Pages = front end</strong>, <strong>Workers + KV/D1 = back end</strong>. They can work together.</p>
+      </div>
+
+      <!-- 11 -->
+      <div class="card" data-card="11">
+        <div class="card-number">11 — Where everything actually lives</div>
+        <h2>The full picture</h2>
+        <ul>
+          <li><strong>Your code</strong> lives in a repo (e.g. GitHub) and on your laptop. You edit it there.</li>
+          <li><strong>Runtime</strong>: when you deploy, that code runs on Cloudflare Workers (the edge).</li>
+          <li><strong>Data</strong>: stored in KV (key–value) or D1 (SQL), both on Cloudflare.</li>
+          <li><strong>Front end</strong> (optional): static site on Cloudflare Pages, or any app that calls your Worker URL.</li>
+        </ul>
+        <p>So you don’t “do everything inside Cloudflare”—you keep code in Git and run it on Cloudflare. Wrangler is the tool that deploys your Worker and connects it to KV/D1.</p>
+      </div>
+
+      <!-- 12 -->
+      <div class="card" data-card="12">
+        <div class="card-number">12 — Free tier and cost</div>
+        <h2>Does it cost money?</h2>
+        <p>Cloudflare has a <strong>free tier</strong> (no credit card for Workers/KV). For example: 100,000 Worker requests per day, KV with 100,000 reads/day and 1,000 writes/day and 1 GB storage. Many small projects and learning experiments stay at <strong>$0/month</strong>.</p>
+        <p>When you grow, you pay for what you use (e.g. more requests, more storage). So you can learn and build real apps without paying until you need more.</p>
+      </div>
+
+      <!-- 13 -->
+      <div class="card" data-card="13">
+        <div class="card-number">13 — One sentence per piece</div>
+        <h2>Quick recap</h2>
+        <ul>
+          <li><strong>Edge</strong> = run code and data close to users, worldwide.</li>
+          <li><strong>Worker</strong> = your back-end code running at the edge, no server to manage.</li>
+          <li><strong>KV</strong> = key–value store; great for cache and simple lookups (get/put).</li>
+          <li><strong>D1</strong> = SQL database; tables, queries, migrations.</li>
+          <li><strong>Pages</strong> = host your front-end (static site) on Cloudflare.</li>
+          <li><strong>Wrangler</strong> = CLI to develop and deploy Workers and wire up KV/D1.</li>
+        </ul>
+        <p>You write code → Wrangler deploys it to Workers → your app runs at the edge and uses KV or D1 for state. That’s the Cloudflare ecosystem in a nutshell.</p>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button type="button" class="btn btn-ghost" id="btnPrev" aria-label="Previous card">← Previous</button>
+      <button type="button" class="btn btn-primary" id="btnNext" aria-label="Next card">Next →</button>
+    </div>
+
+    <p class="end-msg" id="endMsg" style="display: none;">You’ve gone through all the cards. <strong>You now have a story of how the Cloudflare ecosystem works.</strong> Re-read any card by using Previous, or refresh to start from the beginning.</p>
+  </div>
+
+  <script>
+    (function() {
+      var cards = document.querySelectorAll('#cards .card');
+      var total = cards.length;
+      var current = 1;
+      var currentEl = document.getElementById('current');
+      var totalEl = document.getElementById('total');
+      var progressFill = document.getElementById('progressFill');
+      var btnPrev = document.getElementById('btnPrev');
+      var btnNext = document.getElementById('btnNext');
+      var endMsg = document.getElementById('endMsg');
+
+      totalEl.textContent = total;
+
+      function showCard(n) {
+        current = Math.max(1, Math.min(n, total));
+        cards.forEach(function(card, i) {
+          card.setAttribute('data-hidden', i + 1 !== current);
+        });
+        currentEl.textContent = current;
+        progressFill.style.width = (current / total * 100) + '%';
+        btnPrev.style.visibility = current === 1 ? 'hidden' : 'visible';
+        if (current === total) {
+          btnNext.textContent = 'Finish';
+          endMsg.style.display = 'block';
+        } else {
+          btnNext.textContent = 'Next →';
+          endMsg.style.display = 'none';
+        }
+      }
+
+      btnNext.addEventListener('click', function() {
+        if (current === total) return;
+        showCard(current + 1);
+      });
+      btnPrev.addEventListener('click', function() {
+        showCard(current - 1);
+      });
+
+      showCard(1);
+    })();
+  </script>
+</body>
+</html>
