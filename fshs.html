@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full-stack tutorial: Worker + Supabase + Pages – Learning cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b9eb0;
+      --accent: #5eb4f6;
+      --accent-soft: rgba(94, 180, 246, 0.15);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 620px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin: 0 0 0.5rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    .progress { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--muted); }
+    .progress-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.25s ease; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 1.5rem; }
+    .card-number { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); margin-bottom: 0.75rem; }
+    .card h2 { font-size: 1.15rem; font-weight: 600; margin: 0 0 0.75rem; }
+    .card p { margin: 0 0 0.75rem; font-size: 0.95rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .card ul { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+    .card li { margin-bottom: 0.3rem; }
+    .card code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--accent-soft); color: var(--accent); padding: 0.15em 0.4em; border-radius: 4px; }
+    .card .step { margin: 0.5rem 0; padding-left: 1rem; border-left: 3px solid var(--border); }
+    .nav { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 1rem; }
+    .btn { font-family: inherit; font-size: 0.95rem; font-weight: 600; padding: 0.6rem 1.2rem; border-radius: 8px; border: none; cursor: pointer; }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-primary:hover { background: #7ac4fa; }
+    .card[data-hidden="true"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Full-stack tutorial: Worker + Supabase + Pages</h1>
+    <p class="subtitle">Step-by-step how-to for high schoolers. One repo, auth, API, and front end.</p>
+
+    <div class="progress">
+      <span>Card <span id="current">1</span> of <span id="total">0</span></span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+    </div>
+
+    <div id="cards">
+      <div class="card" data-card="1">
+        <div class="card-number">Step 1 — The big picture</div>
+        <h2>What we're building</h2>
+        <p>A full-stack app with:</p>
+        <ul>
+          <li><strong>Front end</strong> – the page users see (HTML, forms, buttons). Hosted on <strong>Cloudflare Pages</strong>.</li>
+          <li><strong>Back end (API)</strong> – code that saves and loads data. Runs on a <strong>Cloudflare Worker</strong>.</li>
+          <li><strong>Database</strong> – where data is stored. We use <strong>Cloudflare D1</strong> (SQL) and connect it to the Worker.</li>
+          <li><strong>Login</strong> – so each user only sees their own data. We use <strong>Supabase</strong> for sign-in and get a token; the Worker checks that token.</li>
+        </ul>
+        <p>Everything lives in <strong>one GitHub repo</strong>. The Worker uses the repo to deploy the API; Pages uses the same repo and only publishes the <code>public</code> folder as the website.</p>
+      </div>
+
+      <div class="card" data-card="2">
+        <div class="card-number">Step 2 — Create a Cloudflare Worker</div>
+        <h2>Set up the back end (API)</h2>
+        <p>In <strong>Cloudflare Dashboard</strong> → <strong>Workers & Pages</strong> → <strong>Create application</strong> → create a <strong>Worker</strong> (e.g. “Connect to GitHub” or use a template).</p>
+        <p>When it asks for a repo, connect your GitHub and pick (or create) a repository. Cloudflare will use this repo to build and deploy your Worker. You get a URL like <code>your-project.workers.dev</code> – that’s your API.</p>
+        <p>In the Worker’s <strong>Settings</strong> you can add <strong>Variables and Secrets</strong> (e.g. Supabase URL and anon key) and <strong>Bindings</strong> (e.g. a D1 database). The Worker code runs at the edge and can read/write D1 and call Supabase to check login tokens.</p>
+      </div>
+
+      <div class="card" data-card="3">
+        <div class="card-number">Step 3 — GitHub for the Worker</div>
+        <h2>One repo for the whole app</h2>
+        <p>Your GitHub repo (e.g. <code>yourname/chordslash</code>) contains:</p>
+        <ul>
+          <li><strong>Worker code</strong> – e.g. <code>src/index.ts</code>, <code>wrangler.json</code>. When you <strong>push to main</strong>, Cloudflare builds and deploys the Worker automatically.</li>
+          <li><strong>Front end files</strong> – inside a folder called <code>public</code> (HTML, CSS, JS). We’ll tell Cloudflare Pages to use only this folder later.</li>
+        </ul>
+        <p>So: one repo, two “deployments” – the Worker uses the whole repo to run the API; Pages will use only the <code>public</code> folder for the site. No need for a second repo.</p>
+      </div>
+
+      <div class="card" data-card="4">
+        <div class="card-number">Step 4 — Supabase auth setup</div>
+        <h2>Let users log in</h2>
+        <p>Go to <strong>supabase.com</strong> → create a new project (name it, set a database password, pick a region). Enable <strong>Email signup</strong> in Authentication settings.</p>
+        <p>In <strong>Project Settings → API</strong> copy your <strong>Project URL</strong> and the <strong>anon (publishable) key</strong>. You’ll use these in:</p>
+        <ul>
+          <li>Your <strong>front end</strong> – to sign users in and get a session token.</li>
+          <li>Your <strong>Worker</strong> – so it can check that token (e.g. add <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in the Worker’s Variables or in <code>wrangler.json</code>).</li>
+        </ul>
+        <p>Create a test user (e.g. in Supabase → Authentication → Users) so you can try logging in from your app.</p>
+      </div>
+
+      <div class="card" data-card="5">
+        <div class="card-number">Step 5 — Worker: API + auth + database</div>
+        <h2>What the Worker does</h2>
+        <p>Your Worker code should:</p>
+        <ul>
+          <li>Handle routes like <code>GET /progressions</code> and <code>POST /progressions</code>.</li>
+          <li>Read the <code>Authorization: Bearer &lt;token&gt;</code> header and call Supabase to verify the token and get the user id.</li>
+          <li>Use that user id to read/write only that user’s rows in D1 (e.g. a <code>chord_progressions</code> table).</li>
+          <li>Send <strong>CORS</strong> headers (e.g. <code>Access-Control-Allow-Origin: *</code>) so the browser can call the API from your front-end URL.</li>
+        </ul>
+        <p>Create the D1 table (e.g. in Cloudflare Dashboard → D1 → your database → Console) and add the D1 binding to the Worker. Deploy by pushing to GitHub or running <code>npm run deploy</code> from the repo.</p>
+      </div>
+
+      <div class="card" data-card="6">
+        <div class="card-number">Step 6 — Front end in the same repo</div>
+        <h2>Add a <code>public</code> folder</h2>
+        <p>Inside your repo, create a folder named <code>public</code>. Put your HTML file(s) there (e.g. <code>public/test-progressions.html</code> or <code>public/index.html</code>).</p>
+        <p>In the HTML you:</p>
+        <ul>
+          <li>Load Supabase JS and let users log in (email/password). Supabase keeps the session in the browser (e.g. localStorage).</li>
+          <li>When calling your API, send the token: <code>Authorization: Bearer &lt;session.access_token&gt;</code>.</li>
+          <li>Point the fetch URL to your Worker: <code>https://your-project.workers.dev/progressions</code>.</li>
+        </ul>
+        <p>Commit and push the <code>public</code> folder to the same repo. Next we’ll tell Cloudflare Pages to serve it.</p>
+      </div>
+
+      <div class="card" data-card="7">
+        <div class="card-number">Step 7 — Cloudflare Pages from the same repo</div>
+        <h2>Deploy the front end</h2>
+        <p>In <strong>Cloudflare Dashboard</strong> → <strong>Workers & Pages</strong> → <strong>Create application</strong>. At the bottom click <strong>“Looking to deploy Pages? Get started”</strong>.</p>
+        <p>Choose <strong>Import an existing Git repository</strong> and select the <strong>same repo</strong> you use for the Worker (e.g. <code>yourname/chordslash</code>).</p>
+        <p>In <strong>Set up builds and deployments</strong>:</p>
+        <ul>
+          <li>Project name: e.g. <code>chordslash</code> (your site will be at <code>chordslash.pages.dev</code>).</li>
+          <li>Production branch: <code>main</code>.</li>
+          <li>Framework preset: <strong>None</strong>.</li>
+          <li>Build command: <strong>leave empty</strong>.</li>
+          <li>Build output directory: type <strong><code>public</code></strong> (so Pages serves only the <code>public</code> folder, not the whole repo).</li>
+        </ul>
+        <p>Click <strong>Save and Deploy</strong>. When it’s done, your front end is live at <code>https://your-project.pages.dev</code> (and e.g. <code>/test-progressions.html</code>).</p>
+      </div>
+
+      <div class="card" data-card="8">
+        <div class="card-number">Step 8 — You’re done</div>
+        <h2>What you have now</h2>
+        <ul>
+          <li><strong>Front end</strong> → Cloudflare Pages (<code>*.pages.dev</code>). Users open the page, log in with Supabase, and use the app.</li>
+          <li><strong>API</strong> → Cloudflare Worker (<code>*.workers.dev</code>). It checks the Supabase token and reads/writes D1.</li>
+          <li><strong>Auth</strong> → Supabase. Login lives in the browser; the Worker only verifies the token.</li>
+          <li><strong>Data</strong> → D1 (and any tables you created). Stored per user using the verified user id.</li>
+        </ul>
+        <p>To update the <strong>API</strong>: push to <code>main</code> → Worker redeploys. To update the <strong>front end</strong>: push to <code>main</code> → Pages redeploys from the <code>public</code> folder. One repo, full stack.</p>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button type="button" class="btn btn-ghost" id="btnPrev">← Previous</button>
+      <button type="button" class="btn btn-primary" id="btnNext">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var cards = document.querySelectorAll('#cards .card');
+      var total = cards.length;
+      var current = 1;
+      document.getElementById('total').textContent = total;
+
+      function showCard(n) {
+        current = Math.max(1, Math.min(n, total));
+        cards.forEach(function(card, i) {
+          card.setAttribute('data-hidden', i + 1 !== current);
+        });
+        document.getElementById('current').textContent = current;
+        document.getElementById('progressFill').style.width = (current / total * 100) + '%';
+        document.getElementById('btnPrev').style.visibility = current === 1 ? 'hidden' : 'visible';
+        document.getElementById('btnNext').textContent = current === total ? 'Done' : 'Next →';
+      }
+
+      document.getElementById('btnNext').addEventListener('click', function() {
+        if (current < total) showCard(current + 1);
+      });
+      document.getElementById('btnPrev').addEventListener('click', function() {
+        showCard(current - 1);
+      });
+      showCard(1);
+    })();
+  </script>
+</body>
+</html>
