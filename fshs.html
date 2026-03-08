@@ -141,13 +141,26 @@
       </div>
 
       <div class="card" data-card="8">
-        <div class="card-number">Step 8 — You’re done</div>
+        <div class="card-number">Step 8 — Adding Stripe payments (optional)</div>
+        <h2>How you might do payments</h2>
+        <p>If you want to charge users (e.g. a “Pro” plan), you can use <strong>Stripe</strong>. Important: your <strong>Stripe secret key</strong> must never be in the front end or in GitHub. It stays only in the Worker as a <strong>Secret</strong>.</p>
+        <ul>
+          <li><strong>Worker</strong> – Add a route like <code>POST /create-checkout</code> or <code>POST /billing-portal</code>. The Worker verifies the user (Supabase token), then calls Stripe’s API with the secret key to create a Checkout Session or a link to the Customer Portal. Return the URL to the front end.</li>
+          <li><strong>Front end</strong> – A “Upgrade” or “Manage billing” button calls your Worker (with the auth token). The Worker returns a Stripe URL; the front end redirects the user there to pay or manage their subscription.</li>
+          <li><strong>D1 (optional)</strong> – Store the Stripe customer id or subscription status per user (keyed by Supabase user id) so your Worker knows who is paid and who isn’t.</li>
+        </ul>
+        <p>So: Stripe runs <strong>inside the Worker</strong> (secret key in Variables/Secrets). The browser only ever gets a one-time URL to Stripe’s hosted page. No payment details touch your front end.</p>
+      </div>
+
+      <div class="card" data-card="9">
+        <div class="card-number">Step 9 — You’re done</div>
         <h2>What you have now</h2>
         <ul>
           <li><strong>Front end</strong> → Cloudflare Pages (<code>*.pages.dev</code>). Users open the page, log in with Supabase, and use the app.</li>
           <li><strong>API</strong> → Cloudflare Worker (<code>*.workers.dev</code>). It checks the Supabase token and reads/writes D1.</li>
           <li><strong>Auth</strong> → Supabase. Login lives in the browser; the Worker only verifies the token.</li>
           <li><strong>Data</strong> → D1 (and any tables you created). Stored per user using the verified user id.</li>
+          <li><strong>Payments (optional)</strong> → Stripe. The Worker uses your secret key to create checkout or portal links; the front end only redirects the user to Stripe.</li>
         </ul>
         <p>To update the <strong>API</strong>: push to <code>main</code> → Worker redeploys. To update the <strong>front end</strong>: push to <code>main</code> → Pages redeploys from the <code>public</code> folder. One repo, full stack.</p>
       </div>
