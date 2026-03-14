@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hedera (HBAR) — Guide</title>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --surface: #1a1f28;
+      --surface2: #232a35;
+      --text: #e6e9ef;
+      --text2: #9ca0a8;
+      --accent: #00d395;
+      --accent-dim: #00a876;
+      --radius: 12px;
+      --space: 1rem;
+      --space-lg: 1.5rem;
+      --tap: 44px;
+      --header-h: 44px;
+      --font: system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      font-size: 1rem;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+      padding-bottom: calc(var(--space-lg) + 60px);
+    }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 0 var(--space-lg); }
+    .pad { padding: var(--space-lg) 0; }
+
+    /* Header — compact, thin */
+    header {
+      background: var(--surface);
+      padding: 0.35rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--surface2);
+      min-height: var(--header-h);
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--space); width: 100%; }
+    h1 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--accent); }
+    header select {
+      font-size: 0.8125rem;
+      padding: 0.35rem 0.5rem;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      font-family: inherit;
+      cursor: pointer;
+      min-height: 28px;
+    }
+    header select:hover, header select:focus { color: var(--accent); outline: none; }
+
+    /* Sections — scroll-margin so target isn’t under sticky header */
+    section {
+      padding: var(--space-lg) 0;
+      scroll-margin-top: var(--header-h, 44px);
+    }
+    section:not(:last-child) { border-bottom: 1px solid var(--surface2); }
+    h2 {
+      margin: 0 0 var(--space);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    h3 { margin: var(--space) 0 0.5rem; font-size: 1rem; font-weight: 600; color: var(--text2); }
+    p { margin: 0 0 0.75rem; color: var(--text2); }
+    p:last-child { margin-bottom: 0; }
+    strong { color: var(--text); }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: var(--space);
+      margin-bottom: var(--space);
+    }
+    .card:last-child { margin-bottom: 0; }
+    .card h3 { margin-top: 0; }
+
+    /* Tables → simple blocks on mobile */
+    .table-block { margin: var(--space) 0; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--surface2);
+      min-height: var(--tap);
+      align-items: baseline;
+    }
+    .row:last-child { border-bottom: none; }
+    .row .k { font-weight: 600; color: var(--text); min-width: 8ch; }
+    .row .v { color: var(--text2); flex: 1; }
+
+    /* Lists */
+    ul { margin: 0.5rem 0; padding-left: 1.25rem; color: var(--text2); }
+    li { margin-bottom: 0.35rem; }
+    li::marker { color: var(--accent-dim); }
+
+    /* Accordion / details */
+    details { margin-bottom: var(--space); }
+    details summary {
+      cursor: pointer;
+      padding: var(--space);
+      background: var(--surface);
+      border-radius: var(--radius);
+      font-weight: 600;
+      color: var(--text);
+      list-style: none;
+      min-height: var(--tap);
+      display: flex;
+      align-items: center;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after { content: "+"; margin-left: auto; color: var(--accent); font-size: 1.25rem; }
+    details[open] summary::after { content: "−"; }
+    details .inner { padding: var(--space); padding-top: 0; }
+    details .inner > *:first-child { margin-top: 0; }
+
+    /* Short summary boxes */
+    .summary-box {
+      background: rgba(0,211,149,0.08);
+      border: 1px solid var(--accent-dim);
+      border-radius: var(--radius);
+      padding: var(--space);
+      margin: var(--space) 0;
+    }
+    .summary-box h3 { margin-top: 0; color: var(--accent); }
+    .summary-box p { margin-bottom: 0.5rem; }
+    .summary-box p:last-child { margin-bottom: 0; }
+
+    /* Footer */
+    footer {
+      padding: var(--space-lg) 0;
+      text-align: center;
+      color: var(--text2);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Hedera (HBAR)</h1>
+      <select id="navSelect" aria-label="Jump to section">
+        <option value="">Sections</option>
+        <option value="#what">What is Hedera</option>
+        <option value="#artists">For Artists</option>
+        <option value="#hubs">Hubs & Market</option>
+        <option value="#earn">Earning HBAR</option>
+        <option value="#gallery">Gallery Idea</option>
+        <option value="#hashflip">Hashflip</option>
+        <option value="#cost">Build Cost</option>
+        <option value="#model">Transparent Model</option>
+        <option value="#incentives">Who / Remove</option>
+        <option value="#who">Who Invented</option>
+        <option value="#tunefm">Tune.fm</option>
+      </select>
+    </div>
+  </header>
+  <script>
+    document.getElementById('navSelect').addEventListener('change', function() {
+      var v = this.value;
+      if (v) { window.location.hash = v; this.selectedIndex = 0; }
+    });
+  </script>
+
+  <main class="wrap pad">
+    <section id="what">
+      <h2>What is Hedera?</h2>
+      <div class="card">
+        <p>Hedera = a public network (Hashgraph consensus, not Ethereum-style).</p>
+        <p><strong>Coin:</strong> HBAR — used for fees (gas) and staking.</p>
+        <p><strong>NFTs:</strong> Supported via HIP-412. You mint on Hedera and pay fees in HBAR.</p>
+      </div>
+      <h3>Partnerships & council</h3>
+      <p>Google (Council + node), IBM (supply chain), LG, Tata, and others. Enterprise focus: high-speed, low-cost, secure. Governing Council of up to 39 organizations (e.g. Avery Dennison, Boeing, Deutsche Telekom, FIS, Zain). Hashgraph consensus — no traditional PoW/PoS.</p>
+      <h3>Recent</h3>
+      <p>Accenture NAV AI on Hedera; HBAR Foundation, Swirlds Labs, Hashgraph Association fund developers. Early 2026: focus on enterprise adoption.</p>
+    </section>
+
+    <section id="artists">
+      <h2>Hedera for artists</h2>
+      <div class="card">
+        <h3>Pros</h3>
+        <ul>
+          <li>Very low, predictable fees</li>
+          <li>Fast — settles in seconds</li>
+          <li>Ecosystem: SentX, Kabila, GoMint, Mintbar.xyz (HIP-412, IPFS)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Cons</h3>
+        <ul>
+          <li>Smaller NFT audience vs Ethereum, Solana</li>
+          <li>Wallets: HashPack, Blade (not MetaMask by default)</li>
+          <li>Less artist buzz than Zora/Base</li>
+        </ul>
+      </div>
+      <p><strong>When it makes sense:</strong> You want cheap, fast minting and don’t mind a smaller collector base; or you’re already in the Hedera ecosystem; or you care about sustainability.</p>
+    </section>
+
+    <section id="hubs">
+      <h2>Market share & hubs</h2>
+      <p>Hedera NFT is <strong>small and stable</strong>, not clearly shrinking. ~259k holders, modest volume. To get customers:</p>
+      <div class="table-block">
+        <div class="row"><span class="k">Kabila</span><span class="v">kabila.app — launchpad + marketplace, 2% secondary</span></div>
+        <div class="row"><span class="k">SentX</span><span class="v">sentx.io — minting, auctions, launchpad</span></div>
+        <div class="row"><span class="k">ĦASH AXIS</span><span class="v">hashaxis.com — 1/1 and collections</span></div>
+        <div class="row"><span class="k">GoMint</span><span class="v">Curated, hUSDC, serious art</span></div>
+      </div>
+      <p>Wallets: HashPack, Blade. Promote on Twitter, Discord, Instagram; link to your collection.</p>
+      <h3>Not just art — what’s on Hedera</h3>
+      <ul>
+        <li>Tickets (e.g. MINGO, 54 countries)</li>
+        <li>Supply chain / carbon (TrackTrace)</li>
+        <li>Loyalty, POAP-style access</li>
+        <li>Music/film rights, fashion, gaming, carbon credits, credentials</li>
+      </ul>
+    </section>
+
+    <section id="earn">
+      <h2>Earning HBAR</h2>
+      <p>You <strong>don’t</strong> earn from minting (you pay a small fee). You <strong>earn</strong> when you <strong>sell</strong> the NFT and from <strong>royalties</strong> on resales.</p>
+      <div class="table-block">
+        <div class="row"><span class="k">Mint</span><span class="v">No — you (or buyer) pay HBAR</span></div>
+        <div class="row"><span class="k">First sale</span><span class="v">Yes — buyer pays you in HBAR (or stablecoin)</span></div>
+        <div class="row"><span class="k">Resales</span><span class="v">Yes — % royalty in HBAR if marketplace supports it</span></div>
+      </div>
+    </section>
+
+    <section id="gallery">
+      <h2>Gallery idea: upload site + business models</h2>
+      <p>Art-first site: free up to 5 images; after that, upload fee. Behind the scenes: fee → HBAR → mint NFT on Hedera. No “NFT” in the UI.</p>
+      <h3>Ways to make money</h3>
+      <ul>
+        <li>Upload fee margin (charge more than mint cost)</li>
+        <li>Conversion spread (fiat → HBAR)</li>
+        <li>Subscriptions (Pro/Creator)</li>
+        <li>Sale commission when they sell</li>
+        <li>Royalty share, featured placement, premium features, B2B</li>
+      </ul>
+    </section>
+
+    <section id="hashflip">
+      <h2>Hashflip learnings (art gallery / auction)</h2>
+      <p>Hashflip = Hedera raffles + coin flip; simple HBAR transfers, Hedera PRNG for fair draw.</p>
+      <ul>
+        <li>Keep money flow simple (HBAR transfer = bid/ticket)</li>
+        <li>Use Hedera PRNG for raffles and tie-breakers</li>
+        <li>Low HBAR entry, live feed, creator-led</li>
+        <li>Integrate SentX/Kabila; offer auction + raffle + buy-now</li>
+        <li>Clear fees; “Built on Hedera” for trust</li>
+      </ul>
+    </section>
+
+    <section id="cost">
+      <h2>Cost to build Hedera art gallery</h2>
+      <p><strong>Build:</strong> ~$0–2k (DIY) or $5k–30k (with help). <strong>Per upload:</strong> ~$0.02–0.03 (mint + storage). Format: 800×1024 WebP works well.</p>
+      <h3>Business models</h3>
+      <p>Upload fee after N free; subscription; featured placement; sale commission; royalty share; tiered resolution; B2B; tips.</p>
+    </section>
+
+    <section id="model">
+      <h2>Transparent gallery model</h2>
+      <p>Art lasts forever; each piece purchasable. Buyer can show name on piece (optional) and leave a comment. Platform takes clear %; artists/buyers choose HBAR or USD with real-time rate. “We use profit from fees to pay for hosting all artworks.”</p>
+      <details>
+        <summary>Flow</summary>
+        <div class="inner">
+          <p>Artist uploads → mint on Hedera + IPFS → list. Artist sets price (HBAR or USD). Buyer pays → platform fee → rest to artist. Buyer opts in for name + comment. Platform reports fees → hosting.</p>
+        </div>
+      </details>
+    </section>
+
+    <section id="incentives">
+      <h2>Who uploads & removal</h2>
+      <p><strong>Best fit:</strong> Real artists, galleries (permanent portfolio, credibility, one link). Also cultural/meme/coders. Incentives: “lasts forever,” ownership, discovery, sell later.</p>
+      <p><strong>Removal:</strong> Offer “Hide from gallery” (delist on your site only). Optional “Burn” NFT (token gone; IPFS may remain). State in ToS.</p>
+    </section>
+
+    <section id="who">
+      <h2>Who invented Hedera & ecosystem</h2>
+      <div class="table-block">
+        <div class="row"><span class="k">Leemon Baird</span><span class="v">Hashgraph inventor, Chief Scientist</span></div>
+        <div class="row"><span class="k">Mance Harmon</span><span class="v">Co-founder, Council governance</span></div>
+      </div>
+      <p>Founded 2018, Dallas. Incentive: trust layer, “100-year company,” enterprise-grade infra; HBAR for fees and staking.</p>
+      <h3>What devs use Hedera for</h3>
+      <p>Payments, supply chain, ticketing, identity, DeFi, NFTs, gaming.</p>
+      <h3>Music / art B2C examples</h3>
+      <ul>
+        <li><strong>Tune.fm</strong> — JAM token, streaming micropayments, music NFTs</li>
+        <li><strong>Inky’s Art Club</strong> — art passes, royalties</li>
+        <li>HIP-412 multi-file NFTs, Hashflip, Mingo</li>
+      </ul>
+    </section>
+
+    <section id="tunefm">
+      <h2>Tune.fm</h2>
+      <p><strong>Age:</strong> Company founded 2019; JAM on Hedera 2021 (~6 years company, ~4 on Hedera).</p>
+      <p><strong>Recent:</strong> $20M (Jan 2024), $50M GEM token program (Sept 2024); well-funded. Product: per-minute JAM to artists, ~90% to artist, NFTs, AI discovery. JAM small cap; adoption still early/niche.</p>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>Hedera (HBAR) — mobile guide. Content from project notes.</p>
+  </footer>
+</body>
+</html>
